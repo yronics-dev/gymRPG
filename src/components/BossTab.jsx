@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
 import { DungeonScene } from './PixelScene';
-import { generateDailyBoss, generateBossPool } from '../utils/bossGenerator';
+import { generateDailyBoss, generateBossPool, generateTrainingBoss } from '../utils/bossGenerator';
 import { getLevel, getPlayerBattleStats, getTodayKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
@@ -41,7 +41,9 @@ function BossCard({ boss, isToday, cleared }) {
       )}
 
       <div className="flex items-end gap-4">
-        <BossSprite boss={boss} size={80} />
+        <div style={{ animation: 'pixelBob 2.2s ease-in-out infinite' }}>
+          <BossSprite boss={boss} size={80} />
+        </div>
         <div className="flex-1">
           <div className="neon-text mb-0.5" style={{ color: theme.color, fontSize: '7px', letterSpacing: '2px' }}>
             {boss.emoji} {boss.element} BOSS
@@ -202,8 +204,7 @@ export default function BossTab({
   const theme       = ELEMENT_THEMES[boss.element];
 
   function pickTrainingBoss() {
-    const pool = generateBossPool(20);
-    return pool[Math.floor(Math.random() * pool.length)];
+    return generateTrainingBoss(playerLevel, Date.now());
   }
 
   function startTraining() {
@@ -411,7 +412,9 @@ export default function BossTab({
                 border: `1px solid ${ELEMENT_THEMES[b.element].color}33`,
               }}
             >
-              <BossSprite boss={b} size={36} />
+              <div style={{ animation: `pixelBob ${1.8 + i * 0.1}s ease-in-out infinite` }}>
+                <BossSprite boss={b} size={36} />
+              </div>
               <div className="neon-text text-center mt-1" style={{ color: '#334155', fontSize: '6px' }}>
                 {b.name.split(' ')[1]}
               </div>

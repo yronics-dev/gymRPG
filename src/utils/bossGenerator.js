@@ -24,10 +24,10 @@ function createBossPrototype(seed) {
   const weakness = pick(rng, MUSCLE_GROUPS);
   const emoji   = pick(rng, BOSS_EMOJIS);
 
-  const { baseHP, baseATK, baseSpeed } = BOSS_CONFIG;
-  const bHP    = Math.floor(baseHP.min  + rng() * (baseHP.max  - baseHP.min));
-  const bATK   = Math.floor(baseATK.min + rng() * (baseATK.max - baseATK.min));
-  const bSpeed = Math.max(1, Math.floor(baseSpeed.min + rng() * (baseSpeed.max - baseSpeed.min)));
+  // ±25% random variance around the base values
+  const bHP    = Math.floor(BOSS_CONFIG.baseHP    * (0.75 + rng() * 0.5));
+  const bATK   = Math.floor(BOSS_CONFIG.baseATK   * (0.75 + rng() * 0.5));
+  const bSpeed = Math.max(1, Math.floor(BOSS_CONFIG.baseSpeed * (0.75 + rng() * 0.5)));
 
   return {
     id: `boss-${seed}`,
