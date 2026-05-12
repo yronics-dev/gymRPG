@@ -1,0 +1,140 @@
+/* ═══════════════════════════════════════════
+   CHARACTER IDLE ANIMATIONS
+═══════════════════════════════════════════ */
+
+@keyframes levelUpPop {
+  0%   { transform: scale(0.4) translateY(30px); opacity: 0; }
+  60%  { transform: scale(1.08) translateY(-8px); opacity: 1; }
+  80%  { transform: scale(0.96) translateY(0px); }
+  100% { transform: scale(1) translateY(0px); opacity: 1; }
+}
+
+@keyframes pixelBob {
+  0%, 100% { transform: translateY(0px) scaleY(1); }
+  25%       { transform: translateY(-5px) scaleY(1.02); }
+  75%       { transform: translateY(-2px) scaleY(0.99); }
+}
+
+@keyframes pixelBobHeavy {
+  0%, 100% { transform: translateY(0px); }
+  30%       { transform: translateY(-8px); }
+  60%       { transform: translateY(-4px); }
+}
+
+@keyframes pixelBreath {
+  0%, 100% { transform: scaleX(1) scaleY(1); }
+  50%       { transform: scaleX(1.02) scaleY(1.01); }
+}
+
+/* ═══════════════════════════════════════════
+   CHARACTER ATTACK ANIMATIONS
+═══════════════════════════════════════════ */
+
+@keyframes pixelAttack {
+  0%   { transform: translateX(0px) scaleX(1) rotate(0deg); }
+  20%  { transform: translateX(10px) scaleX(1.15) rotate(3deg); }
+  40%  { transform: translateX(20px) scaleX(1.2) rotate(5deg); }
+  60%  { transform: translateX(14px) scaleX(1.1) rotate(2deg); }
+  80%  { transform: translateX(4px) scaleX(1.02) rotate(1deg); }
+  100% { transform: translateX(0px) scaleX(1) rotate(0deg); }
+}
+
+@keyframes pixelAttackHeavy {
+  0%   { transform: translateX(0px) scale(1); }
+  15%  { transform: translateX(-8px) scale(0.9); }
+  40%  { transform: translateX(28px) scale(1.25); }
+  65%  { transform: translateX(14px) scale(1.1); }
+  85%  { transform: translateX(4px) scale(1.02); }
+  100% { transform: translateX(0px) scale(1); }
+}
+
+/* ═══════════════════════════════════════════
+   AURA EFFECTS BY STAGE
+═══════════════════════════════════════════ */
+
+@keyframes auraGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px var(--aura-color)) brightness(1); }
+  50%       { filter: drop-shadow(0 0 18px var(--aura-color)) drop-shadow(0 0 32px var(--aura-color)) brightness(1.1); }
+}
+
+@keyframes auraEpic {
+  0%   { filter: drop-shadow(0 0 10px var(--aura-color)) drop-shadow(0 0 20px var(--aura-color)); }
+  33%  { filter: drop-shadow(0 0 20px var(--aura-color)) drop-shadow(0 0 40px var(--aura-color)) drop-shadow(0 0 60px var(--aura-color)) brightness(1.15); }
+  66%  { filter: drop-shadow(0 0 15px var(--aura-color)) drop-shadow(0 0 30px var(--aura-color)) brightness(1.1); }
+  100% { filter: drop-shadow(0 0 10px var(--aura-color)) drop-shadow(0 0 20px var(--aura-color)); }
+}
+
+@keyframes auraLegendary {
+  0%   { filter: drop-shadow(0 0 12px #22d3ee) drop-shadow(0 0 24px #22d3ee) hue-rotate(0deg) brightness(1.1); }
+  25%  { filter: drop-shadow(0 0 20px #a855f7) drop-shadow(0 0 40px #a855f7) hue-rotate(60deg) brightness(1.2); }
+  50%  { filter: drop-shadow(0 0 24px #facc15) drop-shadow(0 0 48px #facc15) hue-rotate(120deg) brightness(1.3); }
+  75%  { filter: drop-shadow(0 0 20px #f87171) drop-shadow(0 0 40px #f87171) hue-rotate(200deg) brightness(1.2); }
+  100% { filter: drop-shadow(0 0 12px #22d3ee) drop-shadow(0 0 24px #22d3ee) hue-rotate(360deg) brightness(1.1); }
+}
+
+/* ═══════════════════════════════════════════
+   HIT / DAMAGE RECEIVED
+═══════════════════════════════════════════ */
+
+@keyframes takeDamage {
+  0%   { transform: translateX(0) rotate(0deg); filter: brightness(1); }
+  15%  { transform: translateX(-10px) rotate(-5deg); filter: brightness(3) saturate(0); }
+  30%  { transform: translateX(10px) rotate(5deg); filter: brightness(2) saturate(0); }
+  50%  { transform: translateX(-6px) rotate(-3deg); filter: brightness(1.5) saturate(0.5); }
+  70%  { transform: translateX(6px) rotate(2deg); filter: brightness(1.2); }
+  100% { transform: translateX(0) rotate(0deg); filter: brightness(1); }
+}
+
+@keyframes knockback {
+  0%   { transform: translateX(0) scaleX(1); }
+  30%  { transform: translateX(-20px) scaleX(0.85); }
+  60%  { transform: translateX(-10px) scaleX(0.95); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+
+/* ═══════════════════════════════════════════
+   VICTORY / CELEBRATION
+═══════════════════════════════════════════ */
+
+@keyframes victoryDance {
+  0%,100% { transform: translateY(0) rotate(0deg) scale(1); }
+  20%     { transform: translateY(-12px) rotate(-5deg) scale(1.05); }
+  40%     { transform: translateY(-8px) rotate(5deg) scale(1.08); }
+  60%     { transform: translateY(-14px) rotate(-3deg) scale(1.1); }
+  80%     { transform: translateY(-6px) rotate(4deg) scale(1.05); }
+}
+
+/* ═══════════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════════ */
+
+.character-idle       { animation: pixelBob 2s ease-in-out infinite; }
+.character-idle-heavy { animation: pixelBobHeavy 2.4s ease-in-out infinite; }
+.character-breath     { animation: pixelBreath 3s ease-in-out infinite; }
+
+.character-attack .character-sprite {
+  animation: pixelAttack 0.55s ease-in-out;
+}
+.character-attack-heavy .character-sprite {
+  animation: pixelAttackHeavy 0.7s ease-in-out;
+}
+
+.character-idle .character-sprite     { animation: none; }
+.character-idle-heavy .character-sprite { animation: none; }
+
+.aura-stage-1 { --aura-color: #10b981; animation: auraGlow 2.5s ease-in-out infinite; }
+.aura-stage-2 { --aura-color: #f59e0b; animation: auraGlow 2.2s ease-in-out infinite; }
+.aura-stage-3 { --aura-color: #64748b; animation: auraGlow 2s ease-in-out infinite; }
+.aura-stage-4 { --aura-color: #a855f7; animation: auraEpic 1.8s ease-in-out infinite; }
+.aura-stage-5 { --aura-color: #a78bfa; animation: auraEpic 1.5s ease-in-out infinite; }
+.aura-stage-6 { animation: auraLegendary 4s linear infinite; }
+
+.character-take-damage { animation: takeDamage 0.45s ease-out; }
+.character-knockback   { animation: knockback 0.35s ease-out; }
+.character-victory     { animation: victoryDance 0.7s ease-in-out infinite; }
+
+.pixel-text {
+  font-family: 'Courier New', monospace;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+}

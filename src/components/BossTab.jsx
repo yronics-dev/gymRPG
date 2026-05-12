@@ -1,0 +1,389 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
+import { DungeonScene } from './PixelScene';
+import { generateDailyBoss, generateBossPool } from '../utils/bossGenerator';
+import { getLevel, getPlayerBattleStats, getTodayKey } from '../utils/gameLogic';
+import BossSprite from './BossSprite';
+import BattleArena from './BattleArena';
+import { generateTrainingBoss } from '../utils/bossGenerator';
+
+function DiffBadge({ label }) {
+  const cfg = {
+    HARD:   { color: '#f87171', bg: 'rgba(248,113,113,0.12)', text: '💀 HARD' },
+    EASY:   { color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  text: '😌 EASY' },
+    NORMAL: { color: '#facc15', bg: 'rgba(250,204,21,0.10)',  text: '⚔️ NORMAL' },
+  }[label] || { color: '#facc15', bg: 'transparent', text: label };
+  return (
+    <span className="neon-text px-2 py-0.5 rounded-sm" style={{
+      background: cfg.bg, border: `1px solid ${cfg.color}44`,
+      color: cfg.color, fontSize: '7px', letterSpacing: '1px',
+    }}>
+      {cfg.text}
+    </span>
+  );
+}
+
+function BossCard({ boss, isToday, cleared }) {
+  const theme = ELEMENT_THEMES[boss.element];
+  return (
+    <div className="relative overflow-hidden rounded-sm p-5" style={{
+      background: `linear-gradient(135deg, ${theme.bg}cc, #080e1a)`,
+      border: `2px solid ${cleared ? '#facc15' : `${theme.color}66`}`,
+      boxShadow: cleared ? '0 0 24px rgba(250,204,21,0.3)' : `0 0 20px ${theme.glow}`,
+    }}>
+      <div style={{ position: 'absolute', top: -2, left: -2, width: 6, height: 6, background: cleared ? '#facc15' : theme.color, boxShadow: `0 0 6px ${cleared ? '#facc15' : theme.color}` }} />
+      <div style={{ position: 'absolute', bottom: -2, right: -2, width: 6, height: 6, background: cleared ? '#facc15' : theme.color, boxShadow: `0 0 6px ${cleared ? '#facc15' : theme.color}` }} />
+
+      {cleared ? (
+        <div className="absolute top-3 right-3 neon-text" style={{ color: '#facc15', fontSize: '8px', textShadow: '0 0 8px #facc15' }}>✓ CLEARED</div>
+      ) : isToday && (
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          {boss.diffLabel && <DiffBadge label={boss.diffLabel} />}
+          <span className="neon-text px-2 py-0.5 rounded-sm" style={{ background: `${theme.color}22`, color: theme.color, border: `1px solid ${theme.color}44`, fontSize: '7px' }}>TODAY</span>
+        </div>
+      )}
+
+      <div className="flex items-end gap-4">
+        {/* Idle-bobbing boss sprite */}
+        <div style={{ animation: 'pixelBob 2.2s ease-in-out infinite' }}>
+          <BossSprite boss={boss} size={80} />
+        </div>
+        <div className="flex-1">
+          <div className="neon-text mb-0.5" style={{ color: theme.color, fontSize: '7px', letterSpacing: '2px' }}>
+            {boss.emoji} {boss.element} BOSS
+          </div>
+          <div className="font-black text-white text-xl leading-tight" style={{ fontFamily: 'Courier New', textShadow: `0 0 8px ${theme.color}66` }}>
+            {boss.name}
+          </div>
+          <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '7px' }}>LEVEL {boss.level}</div>
+          <div className="flex gap-4 mt-3">
+            <div>
+              <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>HP</div>
+              <div className="neon-text" style={{ color: '#4ade80', fontSize: '11px' }}>{boss.maxHP}</div>
+            </div>
+            <div>
+              <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>ATK</div>
+              <div className="neon-text" style={{ color: '#f87171', fontSize: '11px' }}>{boss.atk}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>WEAK:</span>
+        <span className="neon-text px-2 py-0.5 rounded-sm" style={{
+          background: `${MUSCLE_COLORS[boss.weakness]}22`,
+          color: MUSCLE_COLORS[boss.weakness],
+          border: `1px solid ${MUSCLE_COLORS[boss.weakness]}55`,
+          fontSize: '7px',
+        }}>
+          {boss.weakness}
+        </span>
+        <span className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>+25% dmg if trained</span>
+      </div>
+    </div>
+  );
+}
+
+function WeekCalendar({ bossHistory, playerLevel, currentDayKey }) {
+  const days = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const boss = generateDailyBoss(key, playerLevel);
+    const theme = ELEMENT_THEMES[boss.element];
+    const history = bossHistory[key];
+    const isToday = key === currentDayKey;
+    days.push({ key, d, boss, theme, history, isToday });
+  }
+
+  return (
+    <div>
+      <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>7-DAY HISTORY</div>
+      <div className="flex gap-1.5">
+        {days.map(({ key, d, boss, theme, history, isToday }) => {
+          const cleared = history?.cleared === true;
+          const lost    = history?.attempted && !history?.cleared;
+          return (
+            <div key={key} className="flex-1 flex flex-col items-center rounded-sm py-2 gap-1" style={{
+              background: isToday ? `${theme.bg}cc` : '#0a1020',
+              border: `1px solid ${cleared ? '#22c55e' : lost ? '#f87171' : isToday ? `${theme.color}66` : 'rgba(255,255,255,0.05)'}`,
+            }}>
+              <div className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>
+                {d.toLocaleDateString('en-US', { weekday: 'narrow' })}
+              </div>
+              <div style={{ fontSize: '14px' }}>{theme.emoji}</div>
+              <div style={{ fontSize: '10px' }}>
+                {cleared ? (
+                  <span className="flex items-center justify-center w-5 h-5 rounded-sm neon-text" style={{ background: '#166534', color: '#4ade80', fontSize: '8px', boxShadow: '0 0 6px #4ade80' }}>W</span>
+                ) : lost ? (
+                  <span className="flex items-center justify-center w-5 h-5 rounded-sm neon-text" style={{ background: '#7f1d1d', color: '#f87171', fontSize: '8px' }}>L</span>
+                ) : (
+                  <span className="neon-text" style={{ color: '#334155', fontSize: '8px' }}>–</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BossOutlook({ playerLevel }) {
+  const days = [];
+  const today = new Date();
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split('T')[0];
+    const boss = generateDailyBoss(key, playerLevel);
+    days.push({ key, d, boss });
+  }
+  const labels = ['TOM', '+2', '+3', '+4', '+5', '+6', '+7'];
+
+  return (
+    <div className="mt-5">
+      <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>UPCOMING BOSSES</div>
+      <div className="flex gap-1.5">
+        {days.map(({ key, boss }, index) => {
+          const theme = ELEMENT_THEMES[boss.element];
+          // Show first 4 chars of boss prefix + element emoji for unique identification
+          const abbr = boss.name.split(' ')[0].substring(0, 4).toUpperCase();
+          return (
+            <div key={key} className="flex-1 flex flex-col items-center rounded-sm py-2 gap-0.5"
+              style={{ background: 'rgba(6,10,20,0.82)', border: `1px solid ${theme.color}44` }}>
+              <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{labels[index]}</div>
+              <div style={{ fontSize: '12px' }}>{theme.emoji}</div>
+              <div className="neon-text text-center leading-tight" style={{ color: theme.color, fontSize: '5px', letterSpacing: '0.5px' }}>{abbr}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function BossTab({
+  muscleXP, workouts, bossHistory, coins, statUpgrades = {}, equippedAura,
+  equippedClothing = {}, onBossCleared, onBossDefeat, todayKey,
+}) {
+  const currentDayKey = todayKey || getTodayKey();
+  const playerLevel   = Math.max(1, getLevel(muscleXP));
+  const boss          = generateDailyBoss(currentDayKey, playerLevel);
+  const todayHistory  = bossHistory[currentDayKey];
+  const cleared       = todayHistory?.cleared;
+
+  const todayWorkout = workouts.find(w => w.date === currentDayKey && w.completed);
+  const todayMuscles = todayWorkout
+    ? [...new Set(todayWorkout.exercises.map(e => e.muscleGroup))]
+    : [];
+
+  const [inBattle, setInBattle]         = useState(false);
+  const [inTraining, setInTraining]     = useState(false);
+  const [trainingBoss, setTrainingBoss] = useState(null);
+
+  const pStats      = getPlayerBattleStats(muscleXP, statUpgrades);
+  const bossGallery = generateBossPool();
+  const theme       = ELEMENT_THEMES[boss.element];
+
+  function pickTrainingBoss() {
+    return generateTrainingBoss(playerLevel, Date.now());
+  }
+
+  function startTraining() {
+    setTrainingBoss(pickTrainingBoss());
+    setInTraining(true);
+  }
+
+  function handleVictory() {
+    onBossCleared(currentDayKey, boss.name);
+    setInBattle(false);
+  }
+
+  function handleDefeat() {
+    if (onBossDefeat) onBossDefeat(currentDayKey, boss.name);
+    setInBattle(false);
+  }
+
+  if (inBattle) {
+    return (
+      <BattleArena
+        boss={boss} muscleXP={muscleXP} playerLevel={playerLevel}
+        todayMuscles={todayMuscles} statUpgrades={statUpgrades}
+        equippedAura={equippedAura} equippedClothing={equippedClothing}
+        onVictory={handleVictory} onDefeat={handleDefeat}
+        onClose={() => setInBattle(false)}
+      />
+    );
+  }
+
+  if (inTraining && trainingBoss) {
+    return (
+      <BattleArena
+        boss={trainingBoss} muscleXP={muscleXP} playerLevel={playerLevel}
+        todayMuscles={todayMuscles} statUpgrades={statUpgrades}
+        equippedAura={equippedAura} equippedClothing={equippedClothing}
+        isTraining
+        onVictory={() => { setTrainingBoss(pickTrainingBoss()); }}
+        onDefeat={()  => { setTrainingBoss(pickTrainingBoss()); }}
+        onClose={() => setInTraining(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="flex-1 relative overflow-hidden">
+      <DungeonScene />
+      <div className="absolute inset-0 overflow-y-auto z-10 px-4 pb-6">
+
+        <div className="pt-4 mb-4">
+          <div className="neon-text" style={{ color: theme.color, fontSize: '11px' }}>DAILY BOSS</div>
+          <p className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()}
+          </p>
+        </div>
+
+        {/* Gold */}
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-sm p-3" style={{
+          background: 'rgba(6,10,20,0.82)', border: '1px solid rgba(250,204,21,0.2)', boxShadow: '0 0 12px rgba(250,204,21,0.05)',
+        }}>
+          <div>
+            <div className="neon-text" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>GOLD</div>
+            <div className="neon-text mt-0.5" style={{ color: '#facc15', fontSize: '16px', textShadow: '0 0 10px #facc15' }}>
+              {coins ?? 0} 🪙
+            </div>
+          </div>
+          <div className="neon-text text-right" style={{ color: '#334155', fontSize: '7px' }}>EARN 1 COIN PER<br />BOSS VICTORY</div>
+        </div>
+
+        <BossCard boss={boss} isToday cleared={cleared} />
+
+        {/* Battle entry */}
+        <div className="mt-4">
+          {cleared ? (
+            <div className="rounded-sm p-4 text-center" style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}>
+              <div style={{ fontSize: '32px', lineHeight: 1.2 }}>🏆</div>
+              <div className="neon-text mt-2" style={{ color: '#facc15', fontSize: '10px', textShadow: '0 0 10px #facc15' }}>BOSS CLEARED!</div>
+              <div className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>NEW BOSS AT MIDNIGHT</div>
+            </div>
+          ) : !todayWorkout ? (
+            <div className="rounded-sm p-5 text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>🏋️</div>
+              <div className="neon-text" style={{ color: '#334155', fontSize: '8px' }}>
+                COMPLETE A WORKOUT FIRST<br />TO UNLOCK BATTLE
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="rounded-sm p-3" style={{ background: 'rgba(6,10,20,0.82)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>YOUR STATS</div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'HP',    val: pStats.maxHP,                        color: '#4ade80' },
+                    { label: 'ATK',   val: pStats.atk,                          color: '#f87171' },
+                    { label: 'DEF',   val: `${pStats.defPct.toFixed(0)}%`,       color: '#60a5fa' },
+                    { label: 'DODGE', val: `${pStats.dodgePct.toFixed(0)}%`,     color: '#facc15' },
+                  ].map(s => (
+                    <div key={s.label} className="text-center">
+                      <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>{s.label}</div>
+                      <div className="neon-text" style={{ color: s.color, fontSize: '10px' }}>{s.val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {todayMuscles.includes(boss.weakness) && (
+                <div className="neon-text text-center py-2 px-3 rounded-sm" style={{
+                  background: 'rgba(250,204,21,0.08)', color: '#facc15',
+                  border: '1px solid rgba(250,204,21,0.25)', fontSize: '7px', letterSpacing: '1px',
+                }}>
+                  ⚡ {boss.weakness.toUpperCase()} WEAKNESS BONUS ACTIVE!
+                </div>
+              )}
+              <button onClick={() => setInBattle(true)} className="w-full py-4 rounded-sm pixel-btn" style={{
+                background: `linear-gradient(135deg, ${theme.bg}dd, #080e1a)`,
+                border: `2px solid ${theme.color}`,
+                color: theme.color,
+                boxShadow: `0 0 28px ${theme.glow}, inset 0 0 20px ${theme.glow}22`,
+                fontSize: '12px', letterSpacing: '4px',
+              }}>
+                ⚔️ BATTLE!
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Training Ground */}
+        <div className="mt-6">
+          <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>⚔️ TRAINING GROUND</div>
+          <div className="rounded-sm p-4" style={{
+            background: 'rgba(6,10,20,0.82)',
+            border: `1px solid ${todayWorkout ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.06)'}`,
+          }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span style={{ fontSize: '28px', filter: todayWorkout ? 'drop-shadow(0 0 8px #a855f7)' : 'none', opacity: todayWorkout ? 1 : 0.4 }}>🥊</span>
+              <div>
+                <div className="neon-text" style={{ color: todayWorkout ? '#a855f7' : '#334155', fontSize: '9px', letterSpacing: '1px' }}>TRAINING GROUND</div>
+                <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>
+                  {todayWorkout ? 'Fight random bosses — no daily limit' : 'Complete a workout to unlock'}
+                </div>
+              </div>
+            </div>
+            {todayWorkout && (
+              <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px' }}>
+                • No extra rewards &nbsp;• New boss each run
+              </div>
+            )}
+            <button
+              onClick={startTraining}
+              disabled={!todayWorkout}
+              className="w-full py-3 rounded-sm pixel-btn"
+              style={{
+                background: todayWorkout ? 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.06))' : 'rgba(255,255,255,0.02)',
+                border: `2px solid ${todayWorkout ? '#a855f7' : 'rgba(255,255,255,0.08)'}`,
+                color: todayWorkout ? '#a855f7' : '#334155',
+                boxShadow: todayWorkout ? '0 0 16px rgba(168,85,247,0.25)' : 'none',
+                fontSize: '10px', letterSpacing: '3px',
+                opacity: todayWorkout ? 1 : 0.5,
+                cursor: todayWorkout ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {todayWorkout ? '🥊 ENTER TRAINING' : '🔒 LOCKED'}
+            </button>
+          </div>
+        </div>
+
+        {/* Week calendar */}
+        <div className="mt-6">
+          <WeekCalendar bossHistory={bossHistory} playerLevel={playerLevel} currentDayKey={currentDayKey} />
+        </div>
+
+        <BossOutlook playerLevel={playerLevel} />
+
+        {/* Boss gallery */}
+        <div className="mt-6">
+          <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>BOSS GALLERY</div>
+          <div className="grid grid-cols-5 gap-2">
+            {bossGallery.map((b, i) => (
+              <div key={i} className="flex flex-col items-center rounded-sm p-2" style={{
+                background: 'rgba(6,10,20,0.82)',
+                border: `1px solid ${ELEMENT_THEMES[b.element].color}33`,
+              }}>
+                <div style={{ animation: `pixelBob ${1.8 + i * 0.1}s ease-in-out infinite` }}>
+                  <BossSprite boss={b} size={36} />
+                </div>
+                <div className="neon-text text-center mt-1" style={{ color: '#334155', fontSize: '6px' }}>
+                  {b.name.split(' ')[1]}
+                </div>
+                <div style={{ fontSize: '10px' }}>{ELEMENT_THEMES[b.element].emoji}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
