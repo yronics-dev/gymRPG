@@ -55,11 +55,12 @@ export function generateTrainingBoss(playerLevel = 1, rngSeed = Date.now()) {
 // Daily boss: generated directly from the date string so every day is unique
 export function generateDailyBoss(dateStr, playerLevel = 1) {
   const rng      = makeRng(stringHash(dateStr));
-  const element  = pick(rng, ELEMENTS);
-  const prefix   = pick(rng, BOSS_PREFIXES);
-  const suffix   = pick(rng, BOSS_SUFFIXES);
-  const weakness = pick(rng, MUSCLE_GROUPS);
-  const emoji    = pick(rng, BOSS_EMOJIS);
+  // Use a separate seed per property so nearby dates don't cluster on the same element
+  const element  = pick(makeRng(stringHash(dateStr + '_el')),  ELEMENTS);
+  const prefix   = pick(makeRng(stringHash(dateStr + '_pfx')), BOSS_PREFIXES);
+  const suffix   = pick(makeRng(stringHash(dateStr + '_sfx')), BOSS_SUFFIXES);
+  const weakness = pick(makeRng(stringHash(dateStr + '_wk')),  MUSCLE_GROUPS);
+  const emoji    = pick(makeRng(stringHash(dateStr + '_em')),  BOSS_EMOJIS);
 
   const diffRng  = makeRng(stringHash(dateStr + '_diff'));
   const diffMult = 1 + (diffRng() * 2 - 1) * BOSS_CONFIG.diffVariance;

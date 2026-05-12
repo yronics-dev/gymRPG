@@ -15,6 +15,7 @@ import CharacterTab from './components/CharacterTab';
 import BossTab from './components/BossTab';
 import HistoryTab from './components/HistoryTab';
 import LoginScreen from './components/LoginScreen';
+import PerksTab from './components/PerksTab';
 
 const DEFAULT_TIMER = 60;
 
@@ -305,6 +306,9 @@ export default function App() {
         leagueKills={leagueKills}
         onLeagueBossDefeated={handleLeagueBossDefeated}
       />
+    ),
+    perks: (
+      <PerksTab />
     ),
     history: (
       <HistoryTab workouts={workouts} />

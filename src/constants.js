@@ -155,17 +155,17 @@ export const BOSS_SUFFIXES = [
 
 export const REST_DURATION = 120;
 export const BOSS_BONUS_XP = 500;
-export const WEAKNESS_BONUS_MULTIPLIER = 1.25;
+export const WEAKNESS_BONUS_MULTIPLIER = 1.10;
 export const BOSS_CONFIG = {
-  baseHP: 110,
-  baseATK: 14,
+  baseHP: 160,
+  baseATK: 18,
   baseSpeed: 10,
-  levelHPScale: 8,
-  levelATKScale: 1.8,
+  levelHPScale: 10,
+  levelATKScale: 2.2,
   levelSpeedScale: 0.3,
-  hpVariance: 2.0,
-  atkVariance: 0.8,
-  diffVariance: 0.22,
+  hpVariance: 2.5,
+  atkVariance: 1.0,
+  diffVariance: 0.25,
 };
 
 /* ═══════════════════════════════════════════

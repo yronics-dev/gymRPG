@@ -4,13 +4,14 @@ const TABS = [
   { id: 'workout',   label: 'TRAIN',  icon: '🏋️', activeColor: '#22d3ee' },
   { id: 'character', label: 'HERO',   icon: '⚔️',  activeColor: '#a855f7' },
   { id: 'boss',      label: 'BOSS',   icon: '👹',  activeColor: '#f87171' },
+  { id: 'perks',     label: 'PERKS',  icon: '✨',  activeColor: '#4ade80' },
   { id: 'history',   label: 'LOG',    icon: '📜',  activeColor: '#facc15' },
 ];
 
 export default function Navigation({ active, onChange, bossCleared, workoutDoneToday }) {
   return (
     <nav
-      className="safe-bottom flex-none grid grid-cols-4"
+      className="safe-bottom flex-none grid grid-cols-5"
       style={{
         background: '#060d1a',
         borderTop: '1px solid rgba(34,211,238,0.12)',
