@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
 import { DungeonScene } from './PixelScene';
-import { generateDailyBoss, generateBossPool, generateTrainingBoss } from '../utils/bossGenerator';
+import { generateDailyBoss, generateBossPool, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
 import { getLevel, getPlayerBattleStats, getTodayKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
@@ -182,7 +182,7 @@ function BossOutlook({ playerLevel }) {
 
 export default function BossTab({
   muscleXP, workouts, bossHistory, coins, statUpgrades = {}, equippedAura,
-  onBossCleared, onBossDefeat, todayKey,
+  onBossCleared, onBossDefeat, todayKey, leagueKills = 0, onLeagueBossDefeated,
 }) {
   const currentDayKey = todayKey || getTodayKey();
   const playerLevel   = Math.max(1, getLevel(muscleXP));
@@ -198,6 +198,10 @@ export default function BossTab({
   const [inBattle, setInBattle]           = useState(false);
   const [inTraining, setInTraining]       = useState(false);
   const [trainingBoss, setTrainingBoss]   = useState(null);
+  const [inLeague, setInLeague]           = useState(false);
+  const [leagueGoldFlash, setLeagueGoldFlash] = useState(false);
+
+  const leagueBoss = generateLeagueBoss(playerLevel, leagueKills);
 
   const pStats      = getPlayerBattleStats(muscleXP, statUpgrades);
   const bossGallery = generateBossPool();
@@ -210,6 +214,16 @@ export default function BossTab({
   function startTraining() {
     setTrainingBoss(pickTrainingBoss());
     setInTraining(true);
+  }
+
+  function handleLeagueVictory() {
+    const willEarnGold = (leagueKills + 1) % 5 === 0;
+    if (onLeagueBossDefeated) onLeagueBossDefeated();
+    if (willEarnGold) {
+      setLeagueGoldFlash(true);
+      setTimeout(() => setLeagueGoldFlash(false), 3000);
+    }
+    setInLeague(false);
   }
 
   function handleVictory() {
@@ -251,6 +265,22 @@ export default function BossTab({
         onVictory={() => { setTrainingBoss(pickTrainingBoss()); }}
         onDefeat={() => { setTrainingBoss(pickTrainingBoss()); }}
         onClose={() => setInTraining(false)}
+      />
+    );
+  }
+
+  if (inLeague) {
+    return (
+      <BattleArena
+        boss={leagueBoss}
+        muscleXP={muscleXP}
+        playerLevel={playerLevel}
+        todayMuscles={todayMuscles}
+        statUpgrades={statUpgrades}
+        equippedAura={equippedAura}
+        onVictory={handleLeagueVictory}
+        onDefeat={() => setInLeague(false)}
+        onClose={() => setInLeague(false)}
       />
     );
   }
@@ -388,6 +418,91 @@ export default function BossTab({
             }}
           >
             🥊 ENTER TRAINING
+          </button>
+        </div>
+      </div>
+
+      {/* League Mode */}
+      <div className="mt-6">
+        <div className="neon-text mb-2" style={{ color: '#facc15', fontSize: '7px', letterSpacing: '3px' }}>🏆 LEAGUE MODE</div>
+
+        {leagueGoldFlash && (
+          <div
+            className="neon-text text-center py-2 px-3 rounded-sm mb-3"
+            style={{ background: 'rgba(250,204,21,0.15)', color: '#facc15', border: '1px solid rgba(250,204,21,0.5)', fontSize: '9px', letterSpacing: '2px', boxShadow: '0 0 20px rgba(250,204,21,0.3)' }}
+          >
+            ✨ +1 GOLD EARNED! ✨
+          </div>
+        )}
+
+        <div className="rounded-sm p-4" style={{ background: 'rgba(6,10,20,0.82)', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 16px rgba(250,204,21,0.06)' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="neon-text" style={{ color: '#facc15', fontSize: '10px', letterSpacing: '2px' }}>
+                TIER {leagueBoss.tier}
+              </div>
+              <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>
+                {leagueKills} boss{leagueKills !== 1 ? 'es' : ''} slain
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>NEXT GOLD</div>
+              <div className="neon-text" style={{ color: '#facc15', fontSize: '13px', textShadow: '0 0 8px #facc15' }}>
+                {leagueKills % 5}/5 🪙
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-4" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '2px', height: '6px', overflow: 'hidden' }}>
+            <div style={{
+              width: `${(leagueKills % 5) / 5 * 100}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #ca8a04, #facc15)',
+              boxShadow: '0 0 8px #facc15',
+              transition: 'width 0.4s ease',
+            }} />
+          </div>
+
+          {/* League boss preview */}
+          <div
+            className="flex items-center gap-3 mb-3 p-2 rounded-sm"
+            style={{ background: `${ELEMENT_THEMES[leagueBoss.element].bg}44`, border: `1px solid ${ELEMENT_THEMES[leagueBoss.element].color}33` }}
+          >
+            <div style={{ animation: 'pixelBob 2s ease-in-out infinite', flexShrink: 0 }}>
+              <BossSprite boss={leagueBoss} size={52} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="neon-text" style={{ color: ELEMENT_THEMES[leagueBoss.element].color, fontSize: '7px', letterSpacing: '1px' }}>
+                {leagueBoss.emoji} {leagueBoss.element} · {leagueBoss.diffLabel}
+              </div>
+              <div className="neon-text" style={{ color: '#e2e8f0', fontSize: '9px', marginTop: '2px' }}>{leagueBoss.name}</div>
+              <div className="flex gap-3 mt-1.5">
+                <span className="neon-text" style={{ color: '#4ade80', fontSize: '7px' }}>HP {leagueBoss.maxHP}</span>
+                <span className="neon-text" style={{ color: '#f87171', fontSize: '7px' }}>ATK {leagueBoss.atk}</span>
+                <span className="neon-text" style={{ color: '#facc15', fontSize: '7px' }}>×{leagueBoss.scaleMult.toFixed(1)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', lineHeight: '1.6' }}>
+            • Bosses get harder each run &nbsp;• 1 🪙 every 5 slain &nbsp;• No workout required
+          </div>
+
+          <button
+            onClick={() => setInLeague(true)}
+            className="w-full py-3 rounded-sm pixel-btn"
+            style={{
+              background: 'linear-gradient(135deg, rgba(250,204,21,0.18), rgba(250,204,21,0.06))',
+              border: '2px solid #facc15',
+              color: '#facc15',
+              boxShadow: '0 0 20px rgba(250,204,21,0.25)',
+              fontSize: '10px',
+              letterSpacing: '3px',
+            }}
+          >
+            🏆 ENTER LEAGUE
           </button>
         </div>
       </div>

@@ -24,7 +24,6 @@ function createBossPrototype(seed) {
   const weakness = pick(rng, MUSCLE_GROUPS);
   const emoji   = pick(rng, BOSS_EMOJIS);
 
-  // ±25% random variance around the base values
   const bHP    = Math.floor(BOSS_CONFIG.baseHP    * (0.75 + rng() * 0.5));
   const bATK   = Math.floor(BOSS_CONFIG.baseATK   * (0.75 + rng() * 0.5));
   const bSpeed = Math.max(1, Math.floor(BOSS_CONFIG.baseSpeed * (0.75 + rng() * 0.5)));
@@ -47,33 +46,68 @@ export function generateTrainingBoss(playerLevel = 1, rngSeed = Date.now()) {
   const base  = pool[index];
   const lvl   = Math.max(1, playerLevel);
   const rng   = makeRng((rngSeed * 31) >>> 0);
-  const maxHP = Math.max(30, Math.floor(base.baseHP + lvl * BOSS_CONFIG.levelHPScale + rng() * lvl * BOSS_CONFIG.hpVariance));
+  const maxHP = Math.max(100, Math.floor(base.baseHP + lvl * BOSS_CONFIG.levelHPScale + rng() * lvl * BOSS_CONFIG.hpVariance));
   const atk   = Math.max(3,  Math.floor(base.baseAtk + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance));
   const speed = Math.floor(base.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale + rng() * 5);
   return { ...base, maxHP, atk, speed, level: lvl, diffMult: 1, diffLabel: 'NORMAL' };
 }
 
-function getBossIndexForKey(key, poolSize) {
-  return stringHash(String(key)) % poolSize;
-}
-
+// Daily boss: generated directly from the date string so every day is unique
 export function generateDailyBoss(dateStr, playerLevel = 1) {
-  const pool  = generateBossPool();
-  const index = getBossIndexForKey(dateStr, pool.length);
-  const base  = pool[index];
+  const rng      = makeRng(stringHash(dateStr));
+  const element  = pick(rng, ELEMENTS);
+  const prefix   = pick(rng, BOSS_PREFIXES);
+  const suffix   = pick(rng, BOSS_SUFFIXES);
+  const weakness = pick(rng, MUSCLE_GROUPS);
+  const emoji    = pick(rng, BOSS_EMOJIS);
 
-  // Seeded daily difficulty modifier (±BOSS_CONFIG.diffVariance)
   const diffRng  = makeRng(stringHash(dateStr + '_diff'));
   const diffMult = 1 + (diffRng() * 2 - 1) * BOSS_CONFIG.diffVariance;
 
-  const lvl   = Math.max(1, playerLevel);
-  const rng   = makeRng(stringHash(String(dateStr)));
-  const maxHP = Math.floor((base.baseHP + lvl * BOSS_CONFIG.levelHPScale  + rng() * lvl * BOSS_CONFIG.hpVariance)  * diffMult);
-  const atk   = Math.floor((base.baseAtk + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance) * diffMult);
-  const speed = Math.floor(base.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale + rng() * 5);
+  const lvl  = Math.max(1, playerLevel);
+  const bHP  = Math.floor(BOSS_CONFIG.baseHP   * (0.75 + rng() * 0.5));
+  const bATK = Math.floor(BOSS_CONFIG.baseATK  * (0.75 + rng() * 0.5));
+  const bSpd = Math.max(1, Math.floor(BOSS_CONFIG.baseSpeed * (0.75 + rng() * 0.5)));
 
-  // diffLabel: show player a hint
+  const maxHP = Math.max(100, Math.floor((bHP  + lvl * BOSS_CONFIG.levelHPScale  + rng() * lvl * BOSS_CONFIG.hpVariance)  * diffMult));
+  const atk   = Math.max(3,   Math.floor((bATK + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance) * diffMult));
+  const speed = Math.floor(bSpd + lvl * BOSS_CONFIG.levelSpeedScale + rng() * 5);
+
   const diffLabel = diffMult >= 1.10 ? 'HARD' : diffMult <= 0.90 ? 'EASY' : 'NORMAL';
 
-  return { ...base, maxHP, atk, speed, level: lvl, diffMult, diffLabel };
+  return {
+    id: `boss-daily-${dateStr}`,
+    name: `${prefix} ${suffix}`,
+    element, weakness, emoji,
+    baseHP: bHP, baseAtk: bATK, baseSpeed: bSpd,
+    maxHP, atk, speed, level: lvl, diffMult, diffLabel,
+  };
+}
+
+// League boss: scales +12% per kill, unique boss per kill count
+export function generateLeagueBoss(playerLevel = 1, killCount = 0) {
+  const rng      = makeRng(stringHash(`league_boss_${killCount}`));
+  const element  = pick(rng, ELEMENTS);
+  const prefix   = pick(rng, BOSS_PREFIXES);
+  const suffix   = pick(rng, BOSS_SUFFIXES);
+  const weakness = pick(rng, MUSCLE_GROUPS);
+  const emoji    = pick(rng, BOSS_EMOJIS);
+
+  const lvl       = Math.max(1, playerLevel);
+  const scaleMult = 1 + killCount * 0.12;
+  const tier      = Math.floor(killCount / 5) + 1;
+
+  const maxHP = Math.max(100, Math.floor((BOSS_CONFIG.baseHP  + lvl * BOSS_CONFIG.levelHPScale)  * scaleMult));
+  const atk   = Math.max(3,   Math.floor((BOSS_CONFIG.baseATK + lvl * BOSS_CONFIG.levelATKScale) * scaleMult));
+  const speed = Math.max(1,   Math.floor(BOSS_CONFIG.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale));
+
+  const diffLabel = killCount < 5 ? 'NORMAL' : killCount < 15 ? 'HARD' : 'ELITE';
+
+  return {
+    id: `boss-league-${killCount}`,
+    name: `${prefix} ${suffix}`,
+    element, weakness, emoji,
+    baseHP: BOSS_CONFIG.baseHP, baseAtk: BOSS_CONFIG.baseATK, baseSpeed: BOSS_CONFIG.baseSpeed,
+    maxHP, atk, speed, level: lvl, diffMult: scaleMult, diffLabel, scaleMult, tier,
+  };
 }

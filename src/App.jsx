@@ -42,6 +42,7 @@ export default function App() {
   const [muscleVolumePRs, setMuscleVolumePRs] = useLocalStorage(`${u}gymrpg_volume_prs`, {});
   const [bossHistory, setBossHistory]   = useLocalStorage(`${u}gymrpg_boss_history`, {});
   const [coins, setCoins]               = useLocalStorage(`${u}gymrpg_coins`, 0);
+  const [leagueKills, setLeagueKills]   = useLocalStorage(`${u}gymrpg_league_kills`, 0);
   const [characterName, setCharacterName] = useLocalStorage(`${u}gymrpg_character_name`, 'Hero');
   const [timerTotal, setTimerTotal]     = useLocalStorage(`${u}gymrpg_timer_duration`, DEFAULT_TIMER);
 
@@ -172,6 +173,12 @@ export default function App() {
   }
 
   // On defeat: subtract XP penalty distributed across all muscle groups
+  function handleLeagueBossDefeated() {
+    const next = leagueKills + 1;
+    setLeagueKills(next);
+    if (next % 5 === 0) setCoins(prev => prev + 1);
+  }
+
   function handleBossDefeat(dateKey, bossName) {
     const penalty = BOSS_CONFIG.defeat50XP || 50;
     const perMuscle = penalty / MUSCLE_GROUPS.length;
@@ -293,6 +300,8 @@ export default function App() {
         onBossCleared={handleBossCleared}
         onBossDefeat={handleBossDefeat}
         todayKey={todayKey}
+        leagueKills={leagueKills}
+        onLeagueBossDefeated={handleLeagueBossDefeated}
       />
     ),
     history: (
