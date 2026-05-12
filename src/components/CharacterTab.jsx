@@ -373,6 +373,7 @@ export default function CharacterTab({
   currentUser, onLogout,
   onBuyStatUpgrade, onBuyAura, onEquipAura,
   ownedClothing = [], equippedClothing = {}, onBuyClothing, onEquipClothing,
+  timerTotal = 60, onChangeTimerDuration,
 }) {
   const stats   = getStats(muscleXP);
   const statXP  = getStatXP(muscleXP);
@@ -524,6 +525,42 @@ export default function CharacterTab({
             {MUSCLE_GROUPS.map(m => (
               <MuscleRankRow key={m} muscle={m} xp={muscleXP[m] || 0} isFocus={focusSet.has(m)} />
             ))}
+          </div>
+        </div>
+
+        {/* Timer settings */}
+        <div className="mt-5 rounded-sm overflow-hidden" style={{ border: '1px solid rgba(34,211,238,0.2)', background: '#080e1a' }}>
+          <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'linear-gradient(90deg, rgba(34,211,238,0.1), transparent)', borderBottom: '1px solid rgba(34,211,238,0.15)' }}>
+            <div className="neon-text" style={{ color: '#22d3ee', fontSize: '9px', letterSpacing: '2px' }}>⏱️ REST TIMER</div>
+            <div className="neon-text" style={{ color: '#22d3ee', fontSize: '11px', textShadow: '0 0 10px #22d3ee' }}>{Math.floor(timerTotal / 60)}m {timerTotal % 60}s</div>
+          </div>
+          <div className="p-4 flex flex-col gap-3">
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: '30s', secs: 30 },
+                { label: '1m', secs: 60 },
+                { label: '2m', secs: 120 },
+                { label: '3m', secs: 180 },
+              ].map(preset => (
+                <button
+                  key={preset.secs}
+                  onClick={() => onChangeTimerDuration?.(preset.secs)}
+                  className="pixel-btn py-2 rounded-sm text-center"
+                  style={{
+                    background: timerTotal === preset.secs ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${timerTotal === preset.secs ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                    color: timerTotal === preset.secs ? '#22d3ee' : '#475569',
+                    fontSize: '8px',
+                    letterSpacing: '1px',
+                  }}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="text-center">
+              <span className="neon-text" style={{ color: '#334155', fontSize: '7px', letterSpacing: '1px' }}>💡 Timer starts after each exercise</span>
+            </div>
           </div>
         </div>
 

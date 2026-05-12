@@ -277,6 +277,8 @@ export default function App() {
         equippedClothing={equippedClothing}
         onBuyClothing={handleBuyClothing}
         onEquipClothing={handleEquipClothing}
+        timerTotal={timerTotal}
+        onChangeTimerDuration={handleTimerChangeDuration}
       />
     ),
     boss: (

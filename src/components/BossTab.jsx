@@ -164,9 +164,12 @@ function BossOutlook({ playerLevel }) {
               className="flex-1 flex flex-col items-center rounded-sm py-2 gap-0.5"
               style={{ background: 'rgba(6,10,20,0.82)', border: `1px solid ${theme.color}44` }}
             >
-              <div className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>{labels[index]}</div>
+              <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{labels[index]}</div>
               <div style={{ fontSize: '14px' }}>{boss.emoji}</div>
-              <div className="neon-text text-center" style={{ color: theme.color, fontSize: '6px' }}>{boss.element}</div>
+              <div className="neon-text text-center" style={{ color: theme.color, fontSize: '5px', lineHeight: '1', minHeight: '10px' }}>
+                {boss.name.substring(0, 12)}
+              </div>
+              <div className="neon-text text-center" style={{ color: '#334155', fontSize: '5px' }}>{boss.element}</div>
             </div>
           );
         })}

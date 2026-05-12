@@ -147,6 +147,17 @@ export const BOSS_SUFFIXES = [
 export const REST_DURATION = 120;
 export const BOSS_BONUS_XP = 500;
 export const WEAKNESS_BONUS_MULTIPLIER = 1.25;
+export const BOSS_CONFIG = {
+  baseHP: 40,
+  baseATK: 8,
+  baseSpeed: 10,
+  levelHPScale: 3.5,
+  levelATKScale: 0.8,
+  levelSpeedScale: 0.3,
+  hpVariance: 1.2,
+  atkVariance: 0.5,
+  diffVariance: 0.15,
+};
 
 /* ═══════════════════════════════════════════
    BOSS DIALOGUES
@@ -245,6 +256,18 @@ export const GOLD_SHOP = {
     { id: 'aura_rainbow', label: 'Mythic Aura',   cost: 10, color: 'rainbow' },
   ],
 };
+
+/* ═══════════════════════════════════════════
+   MUSCLE RANKS (XP-based progression)
+═══════════════════════════════════════════ */
+export const MUSCLE_RANKS = [
+  { min: 0,    name: 'Novice',      color: '#6b7280', textColor: '#9ca3af' },
+  { min: 500,  name: 'Intermediate', color: '#3b82f6', textColor: '#93c5fd' },
+  { min: 1500, name: 'Advanced',    color: '#f59e0b', textColor: '#fbbf24' },
+  { min: 3500, name: 'Expert',      color: '#ef4444', textColor: '#fca5a5' },
+  { min: 6500, name: 'Master',      color: '#8b5cf6', textColor: '#d8b4fe' },
+  { min: 12000, name: 'Legendary',  color: '#facc15', textColor: '#fef08a' },
+];
 
 /* ═══════════════════════════════════════════
    CHARACTER EVOLUTION STAGES
