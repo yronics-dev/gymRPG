@@ -3,7 +3,12 @@ import { MUSCLE_TO_STAT, MUSCLE_GROUPS, WEAKNESS_BONUS_MULTIPLIER, MUSCLE_RANKS 
 export const INITIAL_MUSCLE_XP = Object.fromEntries(MUSCLE_GROUPS.map(m => [m, 0]));
 
 export function getTodayKey() {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function getDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 export function isCardioExercise(muscleGroup) {

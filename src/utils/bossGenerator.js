@@ -94,14 +94,14 @@ export function generateLeagueBoss(playerLevel = 1, killCount = 0) {
   const emoji    = pick(rng, BOSS_EMOJIS);
 
   const lvl       = Math.max(1, playerLevel);
-  const scaleMult = 1 + killCount * 0.12;
+  const scaleMult = 1 + killCount * 0.22;   // +22% per kill: boss #10 = ×3.2, boss #25 = ×6.5
   const tier      = Math.floor(killCount / 5) + 1;
 
-  const maxHP = Math.max(100, Math.floor((BOSS_CONFIG.baseHP  + lvl * BOSS_CONFIG.levelHPScale)  * scaleMult));
-  const atk   = Math.max(3,   Math.floor((BOSS_CONFIG.baseATK + lvl * BOSS_CONFIG.levelATKScale) * scaleMult));
-  const speed = Math.max(1,   Math.floor(BOSS_CONFIG.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale));
+  const maxHP = Math.max(100, Math.floor((BOSS_CONFIG.baseHP  + lvl * BOSS_CONFIG.levelHPScale  * 1.5) * scaleMult));
+  const atk   = Math.max(3,   Math.floor((BOSS_CONFIG.baseATK + lvl * BOSS_CONFIG.levelATKScale * 1.5) * scaleMult));
+  const speed = Math.max(1,   Math.floor((BOSS_CONFIG.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale) * (1 + killCount * 0.05)));
 
-  const diffLabel = killCount < 5 ? 'NORMAL' : killCount < 15 ? 'HARD' : 'ELITE';
+  const diffLabel = killCount < 3 ? 'NORMAL' : killCount < 10 ? 'HARD' : killCount < 20 ? 'ELITE' : 'LEGENDARY';
 
   return {
     id: `boss-league-${killCount}`,

@@ -124,7 +124,10 @@ export const MUSCLE_COLORS = {
   Cardio:    '#f472b6',
 };
 
-export const ELEMENTS = ['Fire', 'Ice', 'Shadow', 'Thunder', 'Earth', 'Wind'];
+export const ELEMENTS = [
+  'Fire', 'Ice', 'Shadow', 'Thunder', 'Earth', 'Wind',
+  'Void', 'Storm', 'Lava', 'Crystal', 'Poison', 'Blood',
+];
 
 export const ELEMENT_THEMES = {
   Fire:    { color: '#f87171', bg: '#7f1d1d', emoji: '🔥', glow: 'rgba(248,113,113,0.5)', particle: '#f87171' },
@@ -133,6 +136,12 @@ export const ELEMENT_THEMES = {
   Thunder: { color: '#fde047', bg: '#713f12', emoji: '⚡', glow: 'rgba(253,224,71,0.5)',  particle: '#fde047' },
   Earth:   { color: '#86efac', bg: '#14532d', emoji: '🌍', glow: 'rgba(134,239,172,0.5)', particle: '#86efac' },
   Wind:    { color: '#6ee7b7', bg: '#064e3b', emoji: '💨', glow: 'rgba(110,231,183,0.5)', particle: '#6ee7b7' },
+  Void:    { color: '#a78bfa', bg: '#1e1b4b', emoji: '🌀', glow: 'rgba(167,139,250,0.5)', particle: '#a78bfa' },
+  Storm:   { color: '#7dd3fc', bg: '#0c2840', emoji: '🌩️', glow: 'rgba(125,211,252,0.5)', particle: '#7dd3fc' },
+  Lava:    { color: '#fb923c', bg: '#431407', emoji: '🌋', glow: 'rgba(251,146,60,0.5)',  particle: '#fb923c' },
+  Crystal: { color: '#e0f2fe', bg: '#0f2744', emoji: '💎', glow: 'rgba(224,242,254,0.5)', particle: '#e0f2fe' },
+  Poison:  { color: '#a3e635', bg: '#1a2e05', emoji: '☠️', glow: 'rgba(163,230,53,0.5)',  particle: '#a3e635' },
+  Blood:   { color: '#fca5a5', bg: '#450a0a', emoji: '🩸', glow: 'rgba(252,165,165,0.5)', particle: '#fca5a5' },
 };
 
 export const BOSS_PREFIXES = [
@@ -148,15 +157,15 @@ export const REST_DURATION = 120;
 export const BOSS_BONUS_XP = 500;
 export const WEAKNESS_BONUS_MULTIPLIER = 1.25;
 export const BOSS_CONFIG = {
-  baseHP: 40,
-  baseATK: 8,
+  baseHP: 110,
+  baseATK: 14,
   baseSpeed: 10,
-  levelHPScale: 3.5,
-  levelATKScale: 0.8,
+  levelHPScale: 8,
+  levelATKScale: 1.8,
   levelSpeedScale: 0.3,
-  hpVariance: 1.2,
-  atkVariance: 0.5,
-  diffVariance: 0.15,
+  hpVariance: 2.0,
+  atkVariance: 0.8,
+  diffVariance: 0.22,
 };
 
 /* ═══════════════════════════════════════════

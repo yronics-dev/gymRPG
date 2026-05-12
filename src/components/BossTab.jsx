@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
 import { DungeonScene } from './PixelScene';
 import { generateDailyBoss, generateBossPool, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
-import { getLevel, getPlayerBattleStats, getTodayKey } from '../utils/gameLogic';
+import { getLevel, getPlayerBattleStats, getTodayKey, getDateKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
 
@@ -91,7 +91,7 @@ function WeekCalendar({ bossHistory, playerLevel, currentDayKey }) {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
+    const key = getDateKey(d);
     const boss = generateDailyBoss(key, playerLevel);
     const theme = ELEMENT_THEMES[boss.element];
     const history = bossHistory[key];
@@ -148,7 +148,7 @@ function BossOutlook({ playerLevel }) {
   for (let i = 1; i <= 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() + i);
-    const key = d.toISOString().split('T')[0];
+    const key = getDateKey(d);
     const boss = generateDailyBoss(key, playerLevel);
     days.push({ key, d, boss });
   }

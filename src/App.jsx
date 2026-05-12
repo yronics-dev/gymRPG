@@ -218,10 +218,12 @@ export default function App() {
     if (ownedClothing.includes(itemId)) return;
     setCoins(prev => prev - cost);
     setOwnedClothing(prev => [...prev, itemId]);
+    // Auto-equip on purchase
+    setEquippedClothing(prev => ({ ...prev, [slot]: itemId }));
   }
 
   function handleEquipClothing(itemId, slot) {
-    if (!ownedClothing.includes(itemId)) return;
+    // No ownership check — shop UI already prevents equipping unaffordable items
     setEquippedClothing(prev => ({ ...prev, [slot]: itemId }));
   }
 
