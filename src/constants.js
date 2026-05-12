@@ -149,44 +149,6 @@ export const BOSS_BONUS_XP = 500;
 export const WEAKNESS_BONUS_MULTIPLIER = 1.25;
 
 /* ═══════════════════════════════════════════
-   BOSS CONFIG — edit base stats here freely
-   levelHPScale   = extra HP per player level
-   levelATKScale  = extra ATK per player level
-   diffVariance   = ±fraction for daily luck (0.20 = ±20%)
-   defeat50XP     = XP lost on boss defeat
-═══════════════════════════════════════════ */
-export const BOSS_CONFIG = {
-  baseHP:         { min: 100, max: 150 },  // floor at low levels
-  baseATK:        { min: 6,   max: 10  },
-  baseSpeed:      { min: 3,   max: 7   },
-  levelHPScale:   5.5,
-  levelATKScale:  2.25,
-  levelSpeedScale: 1.4,
-  hpVariance:     2,    // rng() * level * this
-  atkVariance:    0.2,  // rng() * level * this
-  diffVariance:   0.20,
-  defeat50XP:     50,
-};
-
-/* ═══════════════════════════════════════════
-   MUSCLE RANK SYSTEM
-   XP thresholds are cumulative muscle XP.
-   "focus" = true → show "FOCUS THIS" badge.
-═══════════════════════════════════════════ */
-export const MUSCLE_RANKS = [
-  { name: 'Iron',       min: 0,      color: '#78716c', textColor: '#d4d4d4', focus: true  },
-  { name: 'Bronze',     min: 500,    color: '#d97706', textColor: '#fde68a', focus: true  },
-  { name: 'Silver',     min: 2000,   color: '#64748b', textColor: '#e2e8f0', focus: true  },
-  { name: 'Gold',       min: 6000,   color: '#ca8a04', textColor: '#fef08a', focus: false },
-  { name: 'Platinum',   min: 15000,  color: '#e2e8f0', textColor: '#f8fafc', focus: false },
-  { name: 'Emerald',    min: 35000,  color: '#16a34a', textColor: '#86efac', focus: false },
-  { name: 'Diamond',    min: 70000,  color: '#3b82f6', textColor: '#93c5fd', focus: false },
-  { name: 'Challenger', min: 130000, color: '#f87171', textColor: '#fca5a5', focus: false },
-  { name: 'Maestro',    min: 250000, color: '#a855f7', textColor: '#d8b4fe', focus: false },
-  { name: 'Beast',      min: 450000, color: '#f97316', textColor: '#fdba74', focus: false },
-];
-
-/* ═══════════════════════════════════════════
    BOSS DIALOGUES
 ═══════════════════════════════════════════ */
 export const BOSS_DIALOGUES = {
@@ -236,11 +198,10 @@ export const BOSS_DIALOGUES = {
 ═══════════════════════════════════════════ */
 export const GOLD_SHOP = {
   stats: [
-    { id: 'ATK',   label: '+1 ATK',    desc: '+3 attack power',       cost: 3, stat: 'ATK',   max: 20, icon: '⚔️',  color: '#f87171' },
-    { id: 'DEF',   label: '+1 DEF',    desc: '+2% damage reduction',  cost: 1, stat: 'DEF',   max: 20, icon: '🛡️',  color: '#60a5fa' },
-    { id: 'HP',    label: '+15 HP',    desc: '+15 max HP',            cost: 1, stat: 'HP',    max: 20, icon: '❤️',  color: '#4ade80' },
-    { id: 'DODGE', label: '+1% Dodge', desc: '+1% dodge chance',      cost: 2, stat: 'DODGE', max: 10, icon: '💨',  color: '#a78bfa' },
-    { id: 'LCK',   label: '+1 LCK',   desc: '+2% crit/dodge chance', cost: 2, stat: 'LCK',   max: 10, icon: '🍀',  color: '#ffd700' },
+    { id: 'ATK',  label: '+1 ATK',  desc: '+3 attack power',       cost: 1, stat: 'ATK',  max: 20, icon: '⚔️',  color: '#f87171' },
+    { id: 'DEF',  label: '+1 DEF',  desc: '+2% damage reduction',  cost: 1, stat: 'DEF',  max: 20, icon: '🛡️',  color: '#60a5fa' },
+    { id: 'HP',   label: '+15 HP',  desc: '+15 max HP',            cost: 1, stat: 'HP',   max: 20, icon: '❤️',  color: '#4ade80' },
+    { id: 'LCK',  label: '+1 LCK',  desc: '+2% crit/dodge chance', cost: 2, stat: 'LCK',  max: 10, icon: '🍀',  color: '#ffd700' },
   ],
   clothing: {
     hat: [
@@ -324,7 +285,7 @@ export const CHARACTER_STAGES = {
   5: {
     label:      'Monster Build',
     sublabel:   'Absolutely jacked',
-    scale:      1.28,
+    scale:      1.25,
     auraColor:  '#a78bfa',
     idleClass:  'character-idle-heavy',
     auraClass:  'aura-stage-5',
@@ -332,7 +293,7 @@ export const CHARACTER_STAGES = {
   6: {
     label:      'Mythic Form',
     sublabel:   'Beyond human limits',
-    scale:      1.42,
+    scale:      1.30,
     auraColor:  '#22d3ee',
     idleClass:  'character-idle-heavy',
     auraClass:  'aura-stage-6',
