@@ -19,6 +19,17 @@ import PerksTab from './components/PerksTab';
 
 const DEFAULT_TIMER = 60;
 
+const WOODEN_SWORD = {
+  id: 'starter_wooden_sword',
+  name: 'Wooden Sword',
+  slot: 'weapon',
+  icon: '🪵',
+  rarity: 'Common',
+  rarityColor: '#94a3b8',
+  rarityGlow: 'rgba(148,163,184,0.2)',
+  atk: 2, def: 0, hp: 0, crit: 0, dodge: 0,
+};
+
 export default function App() {
   // ── Auth ────────────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState(() =>
@@ -46,6 +57,7 @@ export default function App() {
   const [leagueKills, setLeagueKills]   = useLocalStorage(`${u}gymrpg_league_kills`, 0);
   const [characterName, setCharacterName] = useLocalStorage(`${u}gymrpg_character_name`, 'Hero');
   const [timerTotal, setTimerTotal]     = useLocalStorage(`${u}gymrpg_timer_duration`, DEFAULT_TIMER);
+  const [language, setLanguage]         = useLocalStorage(`gymrpg_language`, 'en');
 
   // Stat upgrades purchased with gold
   const [statUpgrades, setStatUpgrades] = useLocalStorage(`${u}gymrpg_stat_upgrades`, {
@@ -63,6 +75,22 @@ export default function App() {
   const [equippedClothing, setEquippedClothing] = useLocalStorage(`${u}gymrpg_equipped_clothing`, {
     hat: 'hat_none', pants: 'pants_none', shoes: 'shoes_none', accessory: 'acc_none',
   });
+
+  // Dungeon loot system
+  const [inventory, setInventory]         = useLocalStorage(`${u}gymrpg_inventory`, [WOODEN_SWORD]);
+  const [equippedItems, setEquippedItems] = useLocalStorage(`${u}gymrpg_equipped_items`, {
+    helmet: null, chest: null, boots: null, weapon: WOODEN_SWORD, ring: null, special: null,
+  });
+
+  // Give wooden sword to any player who has no weapons at all (existing accounts)
+  useEffect(() => {
+    const hasAnyWeapon = inventory.some(i => i.slot === 'weapon');
+    if (!hasAnyWeapon) {
+      setInventory(prev => [...prev, WOODEN_SWORD]);
+      setEquippedItems(prev => prev.weapon ? prev : { ...prev, weapon: WOODEN_SWORD });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [currentDayKey, setCurrentDayKey] = useState(getTodayKey());
 
@@ -196,6 +224,23 @@ export default function App() {
     }));
   }
 
+  function handleLootEarned(item) {
+    // Add to inventory and auto-equip
+    setInventory(prev => {
+      const without = prev.filter(i => i.id !== item.id);
+      return [...without, item];
+    });
+    setEquippedItems(prev => ({ ...prev, [item.slot]: item }));
+  }
+
+  function handleEquipInventoryItem(item) {
+    setEquippedItems(prev => ({ ...prev, [item.slot]: item }));
+  }
+
+  function handleUnequipItem(slot) {
+    setEquippedItems(prev => ({ ...prev, [slot]: null }));
+  }
+
   function handleBuyStatUpgrade(stat, cost) {
     if (coins < cost) return;
     setCoins(prev => prev - cost);
@@ -289,6 +334,12 @@ export default function App() {
         onEquipClothing={handleEquipClothing}
         timerTotal={timerTotal}
         onChangeTimerDuration={handleTimerChangeDuration}
+        language={language}
+        onChangeLanguage={setLanguage}
+        inventory={inventory}
+        equippedItems={equippedItems}
+        onEquipItem={handleEquipInventoryItem}
+        onUnequipItem={handleUnequipItem}
       />
     ),
     boss: (
@@ -300,11 +351,13 @@ export default function App() {
         statUpgrades={statUpgrades}
         equippedAura={equippedAuraColor}
         equippedClothing={equippedClothing}
+        equippedItems={equippedItems}
         onBossCleared={handleBossCleared}
         onBossDefeat={handleBossDefeat}
         todayKey={todayKey}
         leagueKills={leagueKills}
         onLeagueBossDefeated={handleLeagueBossDefeated}
+        onLootEarned={handleLootEarned}
       />
     ),
     perks: (

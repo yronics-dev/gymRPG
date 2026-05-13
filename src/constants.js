@@ -156,12 +156,14 @@ export const BOSS_SUFFIXES = [
 export const REST_DURATION = 120;
 export const BOSS_BONUS_XP = 500;
 export const WEAKNESS_BONUS_MULTIPLIER = 1.10;
+// Boss config — baseATK lowered so fresh players aren't one-shot;
+// HP and ATK scale up smoothly with level.
 export const BOSS_CONFIG = {
-  baseHP: 160,
-  baseATK: 18,
+  baseHP: 140,
+  baseATK: 13,
   baseSpeed: 10,
-  levelHPScale: 10,
-  levelATKScale: 2.2,
+  levelHPScale: 12,
+  levelATKScale: 1.8,
   levelSpeedScale: 0.3,
   hpVariance: 2.5,
   atkVariance: 1.0,
@@ -277,6 +279,78 @@ export const MUSCLE_RANKS = [
   { min: 6500, name: 'Master',      color: '#8b5cf6', textColor: '#d8b4fe' },
   { min: 12000, name: 'Legendary',  color: '#facc15', textColor: '#fef08a' },
 ];
+
+/* ═══════════════════════════════════════════
+   DUNGEON — MOB TYPES
+═══════════════════════════════════════════ */
+// Mob multipliers are relative to the dungeon final boss stats (not player stats).
+// hpMult × boss.maxHP = mob HP,  atkMult × boss.atk = mob ATK
+// Wave scaling adds +15% per wave, so later waves naturally hit harder.
+export const MOB_TYPES = [
+  { id: 'zombie',   name: 'Zombie',   emoji: '🧟', hpMult: 0.38, atkMult: 0.50, speed: 5  },
+  { id: 'skeleton', name: 'Skeleton', emoji: '💀', hpMult: 0.28, atkMult: 0.60, speed: 10 },
+  { id: 'bat',      name: 'Bat',      emoji: '🦇', hpMult: 0.22, atkMult: 0.46, speed: 14 },
+  { id: 'vampire',  name: 'Vampire',  emoji: '🧛', hpMult: 0.46, atkMult: 0.70, speed: 12 },
+  { id: 'werewolf', name: 'Werewolf', emoji: '🐺', hpMult: 0.55, atkMult: 0.80, speed: 11 },
+  { id: 'goblin',   name: 'Goblin',   emoji: '👺', hpMult: 0.32, atkMult: 0.55, speed: 13 },
+  { id: 'ghost',    name: 'Ghost',    emoji: '👻', hpMult: 0.25, atkMult: 0.48, speed: 15 },
+  { id: 'spider',   name: 'Spider',   emoji: '🕷️', hpMult: 0.35, atkMult: 0.56, speed: 12 },
+  { id: 'demon',    name: 'Demon',    emoji: '😈', hpMult: 0.65, atkMult: 0.90, speed: 9  },
+  { id: 'slime',    name: 'Slime',    emoji: '🟩', hpMult: 0.50, atkMult: 0.38, speed: 6  },
+];
+
+/* ═══════════════════════════════════════════
+   DUNGEON — LOOT SYSTEM
+═══════════════════════════════════════════ */
+export const LOOT_RARITIES = [
+  { name: 'Common',    color: '#94a3b8', glow: 'rgba(148,163,184,0.3)', weight: 50, mult: 1.0 },
+  { name: 'Rare',      color: '#60a5fa', glow: 'rgba(96,165,250,0.4)',  weight: 30, mult: 1.6 },
+  { name: 'Epic',      color: '#c084fc', glow: 'rgba(192,132,252,0.5)', weight: 15, mult: 2.5 },
+  { name: 'Legendary', color: '#facc15', glow: 'rgba(250,204,21,0.6)',  weight: 5,  mult: 4.0 },
+];
+
+// Common-tier values below. Rarity multiplier is applied on top (Rare×1.6, Epic×2.5, Legendary×4).
+// A fully Common-equipped hero gains roughly: +15 ATK, +20% DEF, +80 HP, +5% CRIT, +5% DODGE.
+// Legendary full set would be roughly ×4 those values — very powerful, earned through dedication.
+export const LOOT_BASE = {
+  helmet: [
+    { name: 'Iron Helm',    icon: '⛑️',  atk: 0, def: 3, hp: 15 },
+    { name: 'Shadow Hood',  icon: '🪖',  atk: 2, def: 1, hp: 8  },
+    { name: 'Spiked Crown', icon: '👑',  atk: 3, def: 0, hp: 10 },
+    { name: 'Bone Mask',    icon: '💀',  atk: 1, def: 3, hp: 8  },
+  ],
+  chest: [
+    { name: 'Chain Mail',   icon: '🔗', atk: 0, def: 5, hp: 25 },
+    { name: 'Leather Vest', icon: '🦺', atk: 2, def: 3, hp: 20 },
+    { name: 'Battle Plate', icon: '🛡️', atk: 0, def: 7, hp: 30 },
+    { name: 'Runed Robe',   icon: '🎽', atk: 3, def: 1, hp: 15 },
+  ],
+  boots: [
+    { name: 'Speed Boots',  icon: '👟', atk: 0, def: 0, hp: 8,  dodge: 4 },
+    { name: 'Iron Treads',  icon: '🥾', atk: 0, def: 3, hp: 12, dodge: 0 },
+    { name: 'Ninja Wraps',  icon: '🩴', atk: 1, def: 0, hp: 8,  dodge: 5 },
+    { name: 'Cursed Shoes', icon: '👠', atk: 3, def: 0, hp: 0,  dodge: 3 },
+  ],
+  weapon: [
+    { name: 'Iron Sword',   icon: '⚔️', atk: 5, def: 0, hp: 0  },
+    { name: 'Battle Axe',   icon: '🪓', atk: 8, def: 0, hp: 0  },
+    { name: 'Magic Staff',  icon: '🪄', atk: 6, def: 0, hp: 8  },
+    { name: 'Shadow Blade', icon: '🗡️', atk: 4, def: 0, hp: 0, crit: 6 },
+    { name: 'Holy Mace',    icon: '🏑', atk: 5, def: 1, hp: 8  },
+  ],
+  ring: [
+    { name: 'Ring of War',   icon: '💍', atk: 3, def: 0, hp: 8  },
+    { name: 'Ring of Life',  icon: '💍', atk: 0, def: 0, hp: 25 },
+    { name: 'Shield Ring',   icon: '💍', atk: 0, def: 4, hp: 8  },
+    { name: 'Phantom Ring',  icon: '💍', atk: 1, def: 1, hp: 0, dodge: 4 },
+  ],
+  special: [
+    { name: 'Amulet of Fury', icon: '📿', atk: 4, def: 0, hp: 8  },
+    { name: 'Dragon Scale',   icon: '🐉', atk: 0, def: 5, hp: 25 },
+    { name: 'Orb of Chaos',   icon: '🔮', atk: 6, def: 0, hp: 0, crit: 8 },
+    { name: 'Soul Crystal',   icon: '💠', atk: 3, def: 3, hp: 12 },
+  ],
+};
 
 /* ═══════════════════════════════════════════
    CHARACTER EVOLUTION STAGES

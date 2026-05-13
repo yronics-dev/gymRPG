@@ -5,6 +5,7 @@ import { generateDailyBoss, generateBossPool, generateTrainingBoss, generateLeag
 import { getLevel, getPlayerBattleStats, getTodayKey, getDateKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
+import DungeonRun from './DungeonRun';
 
 function BossCard({ boss, isToday, cleared }) {
   const theme = ELEMENT_THEMES[boss.element];
@@ -182,7 +183,9 @@ function BossOutlook({ playerLevel }) {
 
 export default function BossTab({
   muscleXP, workouts, bossHistory, coins, statUpgrades = {}, equippedAura,
+  equippedClothing = {}, equippedItems = {},
   onBossCleared, onBossDefeat, todayKey, leagueKills = 0, onLeagueBossDefeated,
+  onLootEarned,
 }) {
   const currentDayKey = todayKey || getTodayKey();
   const playerLevel   = Math.max(1, getLevel(muscleXP));
@@ -200,6 +203,8 @@ export default function BossTab({
   const [trainingBoss, setTrainingBoss]   = useState(null);
   const [inLeague, setInLeague]           = useState(false);
   const [leagueGoldFlash, setLeagueGoldFlash] = useState(false);
+  const [inDungeon, setInDungeon]         = useState(false);
+  const [dungeonResult, setDungeonResult] = useState(null); // null | 'win' | 'lose'
 
   const leagueBoss = generateLeagueBoss(playerLevel, leagueKills);
 
@@ -234,6 +239,28 @@ export default function BossTab({
   function handleDefeat() {
     if (onBossDefeat) onBossDefeat(currentDayKey, boss.name);
     setInBattle(false);
+  }
+
+  if (inDungeon) {
+    return (
+      <DungeonRun
+        muscleXP={muscleXP}
+        statUpgrades={statUpgrades}
+        equippedAura={equippedAura}
+        equippedClothing={equippedClothing}
+        equippedItems={equippedItems}
+        playerLevel={playerLevel}
+        todayMuscles={todayMuscles}
+        finalBoss={generateTrainingBoss(playerLevel, Date.now())}
+        onLootEarned={item => { if (onLootEarned) onLootEarned(item); }}
+        onComplete={(won) => {
+          setInDungeon(false);
+          setDungeonResult(won ? 'win' : 'lose');
+          setTimeout(() => setDungeonResult(null), 4000);
+        }}
+        onClose={() => setInDungeon(false)}
+      />
+    );
   }
 
   if (inBattle) {
@@ -387,6 +414,70 @@ export default function BossTab({
             </button>
           </div>
         )}
+      </div>
+
+      {/* Dungeon Run result flash */}
+      {dungeonResult && (
+        <div
+          className="neon-text text-center py-2 px-3 rounded-sm mb-4"
+          style={{
+            background: dungeonResult === 'win' ? 'rgba(250,204,21,0.12)' : 'rgba(248,113,113,0.1)',
+            border: `1px solid ${dungeonResult === 'win' ? 'rgba(250,204,21,0.4)' : 'rgba(248,113,113,0.3)'}`,
+            color: dungeonResult === 'win' ? '#facc15' : '#f87171',
+            fontSize: '9px', letterSpacing: '2px',
+          }}
+        >
+          {dungeonResult === 'win' ? '🏆 DUNGEON CLEARED! LOOT ACQUIRED!' : '💀 DUNGEON FAILED — TRAIN HARDER!'}
+        </div>
+      )}
+
+      {/* Dungeon Run */}
+      <div className="mt-6">
+        <div className="neon-text mb-2" style={{ color: '#c084fc', fontSize: '7px', letterSpacing: '3px' }}>⚔️ DUNGEON RUN</div>
+        <div
+          className="rounded-sm p-4"
+          style={{ background: 'rgba(6,10,20,0.85)', border: '1px solid rgba(192,132,252,0.3)', boxShadow: '0 0 16px rgba(192,132,252,0.06)' }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <span style={{ fontSize: '28px', filter: 'drop-shadow(0 0 10px #c084fc)' }}>🏰</span>
+            <div>
+              <div className="neon-text" style={{ color: '#c084fc', fontSize: '9px', letterSpacing: '1px' }}>DUNGEON RUN</div>
+              <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>
+                Fight mobs → face a boss → open a chest
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3 mb-3 text-center">
+            {[
+              { icon: '🧟', label: '3 WAVES' },
+              { icon: '👾', label: '5 MOBS' },
+              { icon: '💀', label: '1 BOSS' },
+              { icon: '📦', label: 'LOOT' },
+            ].map(s => (
+              <div key={s.label} className="flex-1">
+                <div style={{ fontSize: '18px' }}>{s.icon}</div>
+                <div className="neon-text" style={{ color: '#334155', fontSize: '6px', marginTop: '2px' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px' }}>
+            • No workout required &nbsp;• Loot equips on your hero &nbsp;• Boosts battle stats
+          </div>
+          <button
+            onClick={() => setInDungeon(true)}
+            className="w-full py-3 rounded-sm pixel-btn"
+            style={{
+              background: 'linear-gradient(135deg, rgba(192,132,252,0.18), rgba(192,132,252,0.06))',
+              border: '2px solid #c084fc',
+              color: '#c084fc',
+              boxShadow: '0 0 20px rgba(192,132,252,0.25)',
+              fontSize: '10px',
+              letterSpacing: '3px',
+            }}
+          >
+            🏰 ENTER DUNGEON
+          </button>
+        </div>
       </div>
 
       {/* Training Ground */}

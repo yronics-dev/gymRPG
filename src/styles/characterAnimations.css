@@ -9,6 +9,17 @@
   100% { transform: scale(1) translateY(0px); opacity: 1; }
 }
 
+@keyframes progressFill {
+  0%   { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(0px); opacity: 0.7; }
+  50%  { transform: translateY(-12px); opacity: 0.9; }
+  100% { transform: translateY(0px); opacity: 0.7; }
+}
+
 @keyframes pixelBob {
   0%, 100% { transform: translateY(0px) scaleY(1); }
   25%       { transform: translateY(-5px) scaleY(1.02); }

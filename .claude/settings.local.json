@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run *)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(grep -n \"^      </div>$\\\\|^        </div>$\\\\|^    </div>$\\\\|^  </div>$\\\\|^</div>$\" /Users/ricardokeus/gymrpg/src/components/CharacterTab.jsx)",
+      "Bash(npx vite *)"
     ]
   }
 }

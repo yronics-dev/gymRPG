@@ -96,11 +96,11 @@ export function getTotalXP(muscleXP) {
 }
 
 export function getSpriteStage(level) {
-  if (level >= 50) return 6;
-  if (level >= 40) return 5;
-  if (level >= 30) return 4;
-  if (level >= 20) return 3;
-  if (level >= 10) return 2;
+  if (level >= 200) return 6;
+  if (level >= 150) return 5;
+  if (level >= 100) return 4;
+  if (level >= 50)  return 3;
+  if (level >= 25)  return 2;
   return 1;
 }
 
@@ -131,7 +131,7 @@ export function getMuscleRankProgress(xp) {
   return (xp - current.min) / (next.min - current.min);
 }
 
-export function getPlayerBattleStats(muscleXP, statUpgrades = {}) {
+export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems = {}) {
   const stats   = getStats(muscleXP);
   const atkUp   = statUpgrades.ATK   || 0;
   const defUp   = statUpgrades.DEF   || 0;
@@ -139,14 +139,28 @@ export function getPlayerBattleStats(muscleXP, statUpgrades = {}) {
   const lckUp   = statUpgrades.LCK   || 0;
   const dodgeUp = statUpgrades.DODGE || 0;
 
+  // Loot bonuses from equipped items
+  const items = Object.values(equippedItems).filter(Boolean);
+  const lootATK   = items.reduce((s, it) => s + (it.atk   || 0), 0);
+  const lootDEF   = items.reduce((s, it) => s + (it.def   || 0), 0);
+  const lootHP    = items.reduce((s, it) => s + (it.hp    || 0), 0);
+  const lootCrit  = items.reduce((s, it) => s + (it.crit  || 0), 0);
+  const lootDodge = items.reduce((s, it) => s + (it.dodge || 0), 0);
+
   return {
-    maxHP:    Math.max(100, 70 + stats.VIT * 5 + hpUp * 15),
-    atk:      Math.floor(5 + stats.ATK * 0.8) + atkUp * 3,
-    defPct:   Math.min(55, stats.DEF * 0.6 + defUp * 2),
-    dodgePct: Math.min(35, stats.AGI * 0.4 + dodgeUp),
-    staPct:   Math.min(25, stats.STA * 0.4),
+    // Base HP 85 (up from 70) so new players survive longer; VIT worth 6 HP/point (up from 5)
+    maxHP:    Math.max(100, 85 + stats.VIT * 6 + hpUp * 15 + lootHP),
+    // Base ATK 8 (up from 5) + ATK stat scales at 1.0x (up from 0.8x) = more rewarding training
+    atk:      Math.floor(8 + stats.ATK * 1.0) + atkUp * 3 + lootATK,
+    // DEF scales at 0.7% per point (up from 0.6), cap raised to 60% (from 55%)
+    defPct:   Math.min(60, stats.DEF * 0.7 + defUp * 2 + lootDEF),
+    // DODGE scales at 0.5% per point (up from 0.4), cap raised to 40% (from 35%)
+    dodgePct: Math.min(40, stats.AGI * 0.5 + dodgeUp + lootDodge),
+    // Stamina bonus chance raised cap to 30% (from 25%)
+    staPct:   Math.min(30, stats.STA * 0.5),
     speed:    stats.AGI,
-    critPct:  10 + lckUp * 2,
+    // Crit capped at 50% to prevent absurd values from stacking loot
+    critPct:  Math.min(50, 10 + lckUp * 2 + lootCrit),
     luckPct:  lckUp * 2,
   };
 }
