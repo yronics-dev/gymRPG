@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import GameIcon from './GameIcon';
 
 function getAccounts() {
   try { return JSON.parse(localStorage.getItem('gymrpg_accounts') || '{}'); }
@@ -50,10 +51,12 @@ export default function LoginScreen({ onLogin }) {
       {/* Logo */}
       <div className="relative z-10 text-center mb-8">
         <div style={{
-          fontSize: '52px', lineHeight: 1,
+          lineHeight: 1,
           filter: 'drop-shadow(0 0 24px rgba(34,211,238,0.6))',
           animation: 'pixelBob 2s ease-in-out infinite',
-        }}>⚔️</div>
+        }}>
+          <GameIcon name="sword" size={52} color="#22d3ee" />
+        </div>
         <div className="neon-text mt-3" style={{ color: '#22d3ee', fontSize: '20px', letterSpacing: '6px' }}>
           GYMRPG
         </div>
@@ -143,8 +146,9 @@ export default function LoginScreen({ onLogin }) {
         </div>
 
         {error && (
-          <div className="neon-text mt-2" style={{ color: '#f87171', fontSize: '7px', letterSpacing: '1px' }}>
-            ⚠ {error}
+          <div className="neon-text mt-2 flex items-center gap-1.5" style={{ color: '#f87171', fontSize: '7px', letterSpacing: '1px' }}>
+            <GameIcon name="impact" size={10} color="#f87171" />
+            {error}
           </div>
         )}
 
@@ -159,7 +163,7 @@ export default function LoginScreen({ onLogin }) {
             fontSize: '10px', letterSpacing: '3px',
           }}
         >
-          {mode === 'login' ? '⚔️ ENTER ARENA' : '✨ CREATE HERO'}
+          {mode === 'login' ? 'ENTER ARENA' : 'CREATE HERO'}
         </button>
       </div>
 

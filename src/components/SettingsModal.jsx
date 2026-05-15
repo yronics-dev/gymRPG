@@ -1,4 +1,5 @@
 import React from 'react';
+import GameIcon from './GameIcon';
 
 const TIMER_PRESETS = [
   { label: '30s', secs: 30 },
@@ -28,8 +29,9 @@ export default function SettingsModal({
           className="flex items-center justify-between px-4 py-3"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(34,211,238,0.05)' }}
         >
-          <div className="neon-text" style={{ color: '#22d3ee', fontSize: '10px', letterSpacing: '3px' }}>
-            ⚙️ {language === 'nl' ? 'INSTELLINGEN' : 'SETTINGS'}
+          <div className="neon-text flex items-center gap-2" style={{ color: '#22d3ee', fontSize: '10px', letterSpacing: '3px' }}>
+            <GameIcon name="gear" size={14} color="#22d3ee" />
+            {language === 'nl' ? 'INSTELLINGEN' : 'SETTINGS'}
           </div>
           <button
             onClick={onClose}
@@ -45,12 +47,12 @@ export default function SettingsModal({
           {/* Language */}
           <div>
             <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
-              🌐 {language === 'nl' ? 'TAAL' : 'LANGUAGE'}
+              {language === 'nl' ? 'TAAL' : 'LANGUAGE'}
             </div>
             <div className="flex gap-2">
               {[
-                { code: 'en', label: '🇬🇧  English' },
-                { code: 'nl', label: '🇳🇱  Nederlands' },
+                { code: 'en', label: 'EN — English' },
+                { code: 'nl', label: 'NL — Nederlands' },
               ].map(lang => (
                 <button
                   key={lang.code}
@@ -75,7 +77,7 @@ export default function SettingsModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="neon-text" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
-                ⏱️ {language === 'nl' ? 'RUSTTIMER' : 'REST TIMER'}
+                {language === 'nl' ? 'RUSTTIMER' : 'REST TIMER'}
               </div>
               <div className="neon-text" style={{ color: '#22d3ee', fontSize: '10px', textShadow: '0 0 8px #22d3ee' }}>
                 {Math.floor(timerTotal / 60)}m {timerTotal % 60 > 0 ? `${timerTotal % 60}s` : ''}
@@ -100,14 +102,14 @@ export default function SettingsModal({
               ))}
             </div>
             <div className="neon-text mt-2 text-center" style={{ color: '#1e2d3d', fontSize: '7px' }}>
-              {language === 'nl' ? '💡 Timer start na elk oefening' : '💡 Timer starts after each exercise'}
+              {language === 'nl' ? 'Timer start na elk oefening' : 'Timer starts after each exercise'}
             </div>
           </div>
 
           {/* Account */}
           <div>
             <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
-              👤 {language === 'nl' ? 'ACCOUNT' : 'ACCOUNT'}
+              {language === 'nl' ? 'ACCOUNT' : 'ACCOUNT'}
             </div>
             <div
               className="flex items-center justify-between p-3 rounded-sm"

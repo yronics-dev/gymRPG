@@ -3,6 +3,7 @@ import { getPlayerBattleStats, runBattleTurn } from '../utils/gameLogic';
 import { ELEMENT_THEMES, BOSS_DIALOGUES } from '../constants';
 import CharacterSprite from './CharacterSprite';
 import BossSprite from './BossSprite';
+import GameIcon from './GameIcon';
 
 // ─── Animated HP Bar ─────────────────────────────────────────────────────────
 function HpBar({ current, max, color, label, side = 'left' }) {
@@ -119,7 +120,7 @@ function FloatDmg({ val, type, id, onDone }) {
         fontSize: isCrit ? '22px' : isNeg ? '16px' : '14px',
       }}
     >
-      {isNeg ? `-${val}` : isCrit ? `💥${val}!` : `+${val}`}
+      {isNeg ? `-${val}` : isCrit ? `${val}!!` : `+${val}`}
     </div>
   );
 }
@@ -150,11 +151,11 @@ function ArenaParticles({ color, count = 6 }) {
 // ─── Hype Meter ───────────────────────────────────────────────────────────────
 function HypeMeter({ hype }) {
   const label =
-    hype >= 90 ? 'ON FIRE 🔥' :
-    hype >= 70 ? 'HYPE! ⚡' :
-    hype >= 50 ? 'LOCKED IN 💪' :
-    hype >= 30 ? 'FOCUSED 👀' :
-    'LOW... 😰';
+    hype >= 90 ? 'ON FIRE' :
+    hype >= 70 ? 'HYPE!' :
+    hype >= 50 ? 'LOCKED IN' :
+    hype >= 30 ? 'FOCUSED' :
+    'LOW...';
 
   return (
     <div style={{ width: '100%' }}>
@@ -187,19 +188,19 @@ function BossDialogue({ text }) {
 
 // ─── Event Colors / Labels ────────────────────────────────────────────────────
 const EVENT_STYLES = {
-  player:   { color: '#22d3ee',  prefix: '⚔️' },
-  crit:     { color: '#facc15',  prefix: '💥' },
-  adrenaline:{ color: '#f87171', prefix: '🔥' },
-  stamina:  { color: '#c084fc',  prefix: '⚡' },
-  boss:     { color: '#f87171',  prefix: '👊' },
-  boss_rage:{ color: '#ef4444',  prefix: '😡' },
-  dodge:    { color: '#4ade80',  prefix: '💨' },
-  block:    { color: '#60a5fa',  prefix: '🛡️' },
-  weakness: { color: '#fde047',  prefix: '⚡' },
-  selfhit:  { color: '#fb923c',  prefix: '😵' },
-  injury:   { color: '#f87171',  prefix: '🩸' },
-  lockedin: { color: '#facc15',  prefix: '🔒' },
-  info:     { color: '#475569',  prefix: '•' },
+  player:    { color: '#22d3ee',  prefix: '>' },
+  crit:      { color: '#facc15',  prefix: '!!' },
+  adrenaline:{ color: '#f87171', prefix: '>>' },
+  stamina:   { color: '#c084fc',  prefix: '+' },
+  boss:      { color: '#f87171',  prefix: '<' },
+  boss_rage: { color: '#ef4444',  prefix: '<<' },
+  dodge:     { color: '#4ade80',  prefix: '~' },
+  block:     { color: '#60a5fa',  prefix: '|' },
+  weakness:  { color: '#fde047',  prefix: '*' },
+  selfhit:   { color: '#fb923c',  prefix: 'x' },
+  injury:    { color: '#f87171',  prefix: 'x' },
+  lockedin:  { color: '#facc15',  prefix: '#' },
+  info:      { color: '#475569',  prefix: '.' },
 };
 
 // ─── Pick random dialogue ─────────────────────────────────────────────────────
@@ -386,9 +387,9 @@ export default function BattleArena({
   }, [phase, onDefeat]);
 
   function startFight() {
-    const startLog = [{ type: 'info', text: `⚔️ Battle vs ${boss.name} begins!` }];
+    const startLog = [{ type: 'info', text: `Battle vs ${boss.name} begins!` }];
     if (hasWeaknessBonus) {
-      startLog.push({ type: 'weakness', text: `💪 ${boss.weakness} weakness bonus active!` });
+      startLog.push({ type: 'weakness', text: `${boss.weakness} weakness bonus active!` });
     }
     setLog(startLog);
     setPhase('fighting');
@@ -460,7 +461,7 @@ export default function BattleArena({
               className="neon-text mt-2"
               style={{ color: theme.color, fontSize: '8px', opacity: 0.8 }}
             >
-              {theme.emoji} {boss.element} · Level {boss.level}
+              {boss.element} · Level {boss.level}
             </div>
             <div className="flex gap-6 mt-3 justify-center">
               <div className="text-center">
@@ -552,7 +553,7 @@ export default function BattleArena({
             {boss.name}
           </div>
           <div className="neon-text" style={{ color: theme.color, fontSize: '7px', opacity: 0.8 }}>
-            {theme.emoji} {boss.element} · Lv.{boss.level}
+            {boss.element} · Lv.{boss.level}
           </div>
         </div>
 
@@ -602,7 +603,7 @@ export default function BattleArena({
                 fontSize: '7px',
               }}
             >
-              ⚡ WEAKNESS BONUS ACTIVE!
+              WEAKNESS BONUS ACTIVE!
             </div>
           </div>
         )}
@@ -630,9 +631,9 @@ export default function BattleArena({
             {playerStatus && (
               <div className="flex justify-end mt-1">
                 <span className={`status-badge status-${playerStatus}`}>
-                  {playerStatus === 'adrenaline' ? '🔥 ADRENALINE' :
-                   playerStatus === 'lockedin'   ? '🔒 LOCKED IN' :
-                   '🩸 INJURED'}
+                  {playerStatus === 'adrenaline' ? 'ADRENALINE' :
+                   playerStatus === 'lockedin'   ? 'LOCKED IN' :
+                   'INJURED'}
                 </span>
               </div>
             )}
@@ -675,14 +676,14 @@ export default function BattleArena({
             style={{ color: '#facc15' }}
           >
             <div className="neon-text neon-text-pulse" style={{ fontSize: '18px', color: '#facc15' }}>
-              🏆 VICTORY!
+              VICTORY!
             </div>
           </div>
         )}
         {phase === 'defeat' && (
           <div className="text-center py-3 animate-slide-up">
             <div className="neon-text" style={{ fontSize: '16px', color: '#f87171' }}>
-              💀 DEFEATED!
+              DEFEATED!
             </div>
           </div>
         )}
@@ -695,7 +696,7 @@ export default function BattleArena({
           style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}
         >
           <span className="neon-text" style={{ color: '#ef4444', fontSize: '7px' }}>
-            {bossRage ? '😡 BOSS RAGE MODE!' : '⚠️ BOSS IS DESPERATE!'}
+            {bossRage ? 'BOSS RAGE MODE!' : 'BOSS IS DESPERATE!'}
           </span>
         </div>
       )}
@@ -715,7 +716,7 @@ export default function BattleArena({
               letterSpacing: '3px',
             }}
           >
-            ⚔️ FIGHT!
+            FIGHT!
           </button>
         )}
 
@@ -734,23 +735,23 @@ export default function BattleArena({
           >
             {activeSide === 'player' && (
               <>
-                <span className="neon-text animate-pulse" style={{ color: '#22d3ee', fontSize: '11px' }}>⚔️</span>
+                <GameIcon name="sword" size={14} color="#22d3ee" />
                 <span className="neon-text" style={{ color: '#22d3ee', fontSize: '8px', letterSpacing: '3px' }}>YOUR TURN</span>
-                <span className="neon-text animate-pulse" style={{ color: '#22d3ee', fontSize: '11px', animationDelay: '0.3s' }}>⚔️</span>
+                <GameIcon name="sword" size={14} color="#22d3ee" />
               </>
             )}
             {activeSide === 'boss' && (
               <>
-                <span className="neon-text animate-pulse" style={{ color: theme.color, fontSize: '11px' }}>💀</span>
+                <GameIcon name="skull" size={14} color={theme.color} />
                 <span className="neon-text" style={{ color: theme.color, fontSize: '8px', letterSpacing: '3px' }}>BOSS TURN</span>
-                <span className="neon-text animate-pulse" style={{ color: theme.color, fontSize: '11px', animationDelay: '0.3s' }}>💀</span>
+                <GameIcon name="skull" size={14} color={theme.color} />
               </>
             )}
             {!activeSide && (
               <>
-                <span className="neon-text animate-pulse" style={{ color: '#334155', fontSize: '9px' }}>⚔️</span>
+                <GameIcon name="sword" size={11} color="#334155" />
                 <span className="neon-text" style={{ color: '#475569', fontSize: '8px' }}>BATTLING...</span>
-                <span className="neon-text animate-pulse" style={{ color: '#334155', fontSize: '9px', animationDelay: '0.5s' }}>⚔️</span>
+                <GameIcon name="sword" size={11} color="#334155" />
               </>
             )}
           </div>
@@ -771,7 +772,7 @@ export default function BattleArena({
               letterSpacing: '3px',
             }}
           >
-            {isTraining ? '🥊 NEXT CHALLENGER' : '🏆 CLAIM REWARD'}
+            {isTraining ? 'NEXT CHALLENGER' : 'CLAIM REWARD'}
           </button>
         )}
 
@@ -788,7 +789,7 @@ export default function BattleArena({
                 letterSpacing: '2px',
               }}
             >
-              🔄 RETRY
+              RETRY
             </button>
             {isTraining && (
               <button
@@ -802,7 +803,7 @@ export default function BattleArena({
                   letterSpacing: '2px',
                 }}
               >
-                🥊 NEXT
+                NEXT
               </button>
             )}
           </>

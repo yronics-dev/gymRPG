@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import GameIcon from './GameIcon';
 
-function StatLine({ icon, label, val, color }) {
+function StatLine({ iconName, label, val, color }) {
   if (!val) return null;
   return (
     <div className="flex items-center gap-1.5">
-      <span style={{ fontSize: '10px' }}>{icon}</span>
+      <GameIcon name={iconName} size={10} color={color} />
       <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>{label}</span>
       <span className="neon-text" style={{ color, fontSize: '8px', textShadow: `0 0 6px ${color}` }}>+{val}</span>
     </div>
@@ -30,11 +31,10 @@ function ItemCard({ item, onEquip, onSkip, showButtons = true, alreadyEquipped =
             width: 56, height: 56,
             background: `linear-gradient(135deg, ${item.rarityGlow}, rgba(0,0,0,0.6))`,
             border: `2px solid ${rc}55`,
-            fontSize: '28px',
             boxShadow: `0 0 16px ${item.rarityGlow}`,
           }}
         >
-          {item.icon}
+          <GameIcon name={item.icon || 'star'} size={28} color={rc} />
         </div>
         <div className="flex-1">
           <div
@@ -59,11 +59,11 @@ function ItemCard({ item, onEquip, onSkip, showButtons = true, alreadyEquipped =
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-1.5 px-1">
-        <StatLine icon="⚔️" label="ATK"   val={item.atk}   color="#f87171" />
-        <StatLine icon="🛡️" label="DEF"   val={item.def}   color="#60a5fa" />
-        <StatLine icon="❤️" label="HP"    val={item.hp}    color="#4ade80" />
-        <StatLine icon="💥" label="CRIT"  val={item.crit ? `${item.crit}%` : null} color="#facc15" />
-        <StatLine icon="💨" label="DODGE" val={item.dodge ? `${item.dodge}%` : null} color="#a78bfa" />
+        <StatLine iconName="sword"     label="ATK"   val={item.atk}   color="#f87171" />
+        <StatLine iconName="shield"    label="DEF"   val={item.def}   color="#60a5fa" />
+        <StatLine iconName="heart"     label="HP"    val={item.hp}    color="#4ade80" />
+        <StatLine iconName="lightning" label="CRIT"  val={item.crit ? `${item.crit}%` : null} color="#facc15" />
+        <StatLine iconName="wing"      label="DODGE" val={item.dodge ? `${item.dodge}%` : null} color="#a78bfa" />
       </div>
 
       {showButtons && (
@@ -144,12 +144,12 @@ export default function LootChest({ items, equippedItems = {}, onEquip, onDone }
         {/* Header */}
         <div className="text-center">
           <div
-            className="neon-text"
+            className="neon-text flex items-center gap-2 justify-center"
             style={{ color: '#facc15', fontSize: '12px', letterSpacing: '4px', textShadow: '0 0 20px #facc15' }}
           >
-            {phase === 'closed' ? '📦 A CHEST!' :
-             phase === 'opening' ? '✨ OPENING...' :
-             '🏆 LOOT FOUND!'}
+            {phase === 'closed'  && <><GameIcon name="chest"  size={14} color="#facc15" /> A CHEST!</>}
+            {phase === 'opening' && <><GameIcon name="star"   size={14} color="#facc15" /> OPENING...</>}
+            {phase === 'open'    && <><GameIcon name="trophy" size={14} color="#facc15" /> LOOT FOUND!</>}
           </div>
           <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>
             {phase === 'open' ? 'DUNGEON CLEARED!' : 'DUNGEON REWARD'}
@@ -159,13 +159,16 @@ export default function LootChest({ items, equippedItems = {}, onEquip, onDone }
         {/* Chest icon */}
         <div
           style={{
-            fontSize: phase === 'opening' ? '80px' : phase === 'open' ? '56px' : '72px',
             transition: 'all 0.6s cubic-bezier(0.34,1.56,0.64,1)',
             filter: phase === 'open' ? 'drop-shadow(0 0 20px #facc15)' : 'none',
             animation: phase === 'opening' ? 'pixelBob 0.3s ease-in-out infinite' : 'none',
           }}
         >
-          {phase === 'open' ? '📭' : '📦'}
+          <GameIcon
+            name="chest"
+            size={phase === 'opening' ? 80 : phase === 'open' ? 56 : 72}
+            color={phase === 'open' ? '#facc15' : '#60a5fa'}
+          />
         </div>
 
         {/* Item cards */}

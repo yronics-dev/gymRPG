@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MUSCLE_COLORS } from '../constants';
 import { ArchiveScene } from './PixelScene';
+import GameIcon from './GameIcon';
 import { getVolumeByMuscle } from '../utils/gameLogic';
 import {
   getWeekKey,
@@ -143,7 +144,7 @@ export default function HistoryTab({ workouts }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-8 gap-4 text-center relative overflow-hidden">
         <ArchiveScene />
-        <div className="relative z-10 text-5xl">📜</div>
+        <div className="relative z-10"><GameIcon name="scroll" size={48} color="#facc15" /></div>
         <div className="relative z-10">
           <div className="neon-text neon-text-pulse" style={{ color: '#facc15', fontSize: '14px', letterSpacing: '2px' }}>NO RECORDS YET</div>
           <div className="neon-text mt-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '2px' }}>COMPLETE YOUR FIRST WORKOUT</div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   MUSCLE_GROUPS, EXERCISES_BY_MUSCLE, EXERCISE_ICONS, MUSCLE_COLORS,
 } from '../constants';
+import GameIcon from './GameIcon';
 import { getVolumeByMuscle, getTodayKey, isCardioExercise } from '../utils/gameLogic';
 import { GymScene } from './PixelScene';
 
@@ -73,7 +74,7 @@ function AddExerciseModal({ onAdd, onClose }) {
               color: mode === m ? '#22d3ee' : '#64748b',
             }}
           >
-            {m === 'search' ? '🔍 Built-in' : '✏️ Custom'}
+            {m === 'search' ? 'Built-in' : 'Custom'}
           </button>
         ))}
       </div>
@@ -133,7 +134,7 @@ function AddExerciseModal({ onAdd, onClose }) {
                         className="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-3"
                         style={{ background: 'rgba(8,13,28,0.82)', border: '1px solid rgba(255,255,255,0.07)', color: '#e2e8f0' }}
                       >
-                        <span className="text-lg">{EXERCISE_ICONS[e.name] || '🏋️'}</span>
+                        <GameIcon name={EXERCISE_ICONS[e.name] || 'dumbbell'} size={18} color={MUSCLE_COLORS[e.muscle]} />
                         <span>{e.name}</span>
                       </button>
                     ))}
@@ -238,7 +239,7 @@ function ExerciseDetailsModal({ exercise, onSave, onClose }) {
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">{EXERCISE_ICONS[exercise.name] || (isCardio ? '🏃' : '🏋️')}</span>
+              <GameIcon name={EXERCISE_ICONS[exercise.name] || (isCardio ? 'cardio' : 'dumbbell')} size={24} color={MUSCLE_COLORS[exercise.muscleGroup]} />
               <div>
                 <div className="text-white font-semibold text-lg">{exercise.name}</div>
                 <div className="text-slate-400 text-xs mt-0.5"><MuscleTag muscle={exercise.muscleGroup} /></div>
@@ -377,13 +378,13 @@ function ExerciseCard({ exercise, onOpen, onRemove, muscleVolumePRs }) {
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <span className="text-xl">{EXERCISE_ICONS[exercise.name] || (isCardio ? '🏃' : '🏋️')}</span>
+          <GameIcon name={EXERCISE_ICONS[exercise.name] || (isCardio ? 'cardio' : 'dumbbell')} size={20} color={MUSCLE_COLORS[exercise.muscleGroup]} />
           <div>
             <div className="font-semibold text-white text-sm">{exercise.name}</div>
             <div className="mt-1 flex items-center gap-2">
               <MuscleTag muscle={exercise.muscleGroup} />
               {isPR && (
-                <span style={{ fontSize: '9px', color: '#facc15', letterSpacing: '1px' }}>🏆 PR!</span>
+                <span style={{ fontSize: '9px', color: '#facc15', letterSpacing: '1px' }}>PR!</span>
               )}
             </div>
           </div>
@@ -409,8 +410,89 @@ function ExerciseCard({ exercise, onOpen, onRemove, muscleVolumePRs }) {
   );
 }
 
+function QuestPanel({ quests = [], streak = { count: 0 } }) {
+  if (!quests.length) return null;
+  const streakBonus = streak.count > 1 ? Math.min(streak.count - 1, 6) * 10 : 0;
+
+  return (
+    <div className="px-4 mb-3">
+      {/* Streak banner */}
+      {streak.count > 0 && (
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-sm mb-2"
+          style={{ background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)' }}
+        >
+          <GameIcon name="flame" size={16} color="#fb923c" />
+          <div className="flex-1">
+            <span className="neon-text" style={{ color: '#fb923c', fontSize: '8px', letterSpacing: '1px' }}>
+              {streak.count}-DAY STREAK
+            </span>
+            {streakBonus > 0 && (
+              <span className="neon-text ml-2" style={{ color: '#475569', fontSize: '7px' }}>
+                +{streakBonus}% XP
+              </span>
+            )}
+          </div>
+          <span>
+            {streak.count >= 7
+              ? <GameIcon name="trophy"    size={12} color="#facc15" />
+              : streak.count >= 3
+              ? <GameIcon name="lightning" size={12} color="#fb923c" />
+              : <span className="neon-text" style={{ color: '#4ade80', fontSize: '10px' }}>+</span>
+            }
+          </span>
+        </div>
+      )}
+
+      {/* Quest list */}
+      <div
+        className="rounded-sm overflow-hidden"
+        style={{ border: '1px solid rgba(250,204,21,0.15)', background: 'rgba(6,10,20,0.85)' }}
+      >
+        <div
+          className="px-3 py-2"
+          style={{ borderBottom: '1px solid rgba(250,204,21,0.1)', background: 'rgba(250,204,21,0.06)' }}
+        >
+          <span className="neon-text flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '7px', letterSpacing: '2px' }}>
+            <GameIcon name="scroll" size={10} color="#facc15" /> DAILY QUESTS
+          </span>
+        </div>
+        <div className="flex flex-col divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+          {quests.map(q => {
+            const pct = Math.min(100, (q.progress / q.target) * 100);
+            return (
+              <div key={q.id} className="px-3 py-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="neon-text" style={{ color: q.done ? '#4ade80' : '#94a3b8', fontSize: '7px' }}>
+                    {q.done ? '✓ ' : ''}{q.desc}
+                  </span>
+                  <span className="neon-text ml-2 flex-shrink-0" style={{ color: q.done ? '#facc15' : '#475569', fontSize: '7px' }}>
+                    {q.done ? q.rewardLabel : `${q.progress}/${q.target}`}
+                  </span>
+                </div>
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${pct}%`,
+                      background: q.done ? 'linear-gradient(90deg,#4ade80,#22d3ee)' : 'rgba(255,255,255,0.2)',
+                      boxShadow: q.done ? '0 0 6px #4ade80' : 'none',
+                      transition: 'width 0.6s ease',
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WorkoutTab({
-  workouts, onWorkoutUpdate, onRestTimerStart, onWorkoutComplete, onWorkoutReopen, muscleVolumePRs = {},
+  workouts, onWorkoutUpdate, onRestTimerStart, onWorkoutComplete, onWorkoutReopen,
+  muscleVolumePRs = {}, dailyQuests = [], streak = { count: 0 },
 }) {
   const todayKey = getTodayKey();
   const todayWorkout = workouts.find(w => w.date === todayKey);
@@ -481,16 +563,18 @@ export default function WorkoutTab({
     return (
       <div className="flex-1 relative overflow-hidden">
         <GymScene />
-        <div className="absolute inset-0 overflow-y-auto z-10 px-4 pt-4 pb-6">
-          <div className="neon-text mb-1" style={{ color: '#22d3ee', fontSize: '11px' }}>TODAY'S WORKOUT</div>
-          <div className="neon-text mb-4" style={{ color: '#334155', fontSize: '7px', letterSpacing: '2px' }}>
+        <div className="absolute inset-0 overflow-y-auto z-10 pt-4 pb-6">
+          <div className="neon-text mb-1 px-4" style={{ color: '#22d3ee', fontSize: '11px' }}>TODAY'S WORKOUT</div>
+          <div className="neon-text mb-3 px-4" style={{ color: '#334155', fontSize: '7px', letterSpacing: '2px' }}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase()}
           </div>
+
+          <QuestPanel quests={dailyQuests} streak={streak} />
           <div
-            className="rounded-sm p-4 mb-4 text-center"
+            className="rounded-sm p-4 mb-4 text-center mx-4"
             style={{ background: '#080e1a', border: '1px solid rgba(34,211,238,0.2)', boxShadow: '0 0 16px rgba(34,211,238,0.08)' }}
           >
-            <div style={{ fontSize: '36px', lineHeight: 1.2 }}>✅</div>
+            <div style={{ lineHeight: 1.2 }}><GameIcon name="trophy" size={36} color="#22d3ee" /></div>
             <div className="neon-text mt-2 neon-text-pulse" style={{ color: '#22d3ee', fontSize: '10px', letterSpacing: '2px' }}>
               WORKOUT COMPLETE!
             </div>
@@ -520,12 +604,12 @@ export default function WorkoutTab({
             const pr = muscleVolumePRs[muscle] || 0;
             const isNewPR = vol >= pr && vol > 0;
             return (
-              <div key={muscle} className="flex items-center justify-between py-2 border-b"
+              <div key={muscle} className="flex items-center justify-between py-2 border-b px-4"
                 style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ background: MUSCLE_COLORS[muscle] }} />
                   <span className="text-sm text-white">{muscle}</span>
-                  {isNewPR && <span style={{ fontSize: '9px', color: '#facc15' }}>🏆</span>}
+                  {isNewPR && <GameIcon name="trophy" size={9} color="#facc15" />}
                 </div>
                 <div>
                   <span className="text-sm font-bold" style={{ color: MUSCLE_COLORS[muscle] }}>
@@ -546,31 +630,43 @@ export default function WorkoutTab({
   // ─── No workout today ───────────────────────────────────────────────────────
   if (!todayWorkout) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-8 gap-6 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden">
         <GymScene />
-        <div style={{ fontSize: '64px', filter: 'drop-shadow(0 0 20px rgba(34,211,238,0.5))', animation: 'pixelBob 2s ease-in-out infinite' }}>🏋️</div>
-        <div className="text-center">
-          <div className="neon-text neon-text-pulse" style={{ color: '#22d3ee', fontSize: '14px', letterSpacing: '2px' }}>
-            READY TO TRAIN?
+        <div className="absolute inset-0 overflow-y-auto z-10 flex flex-col pt-8 pb-6">
+          {/* Hero section */}
+          <div className="flex-1 flex flex-col items-center justify-center px-8 gap-4">
+            <div style={{ filter: 'drop-shadow(0 0 20px rgba(34,211,238,0.5))', animation: 'pixelBob 2s ease-in-out infinite' }}>
+              <GameIcon name="dumbbell" size={64} color="#22d3ee" />
+            </div>
+            <div className="text-center">
+              <div className="neon-text neon-text-pulse" style={{ color: '#22d3ee', fontSize: '14px', letterSpacing: '2px' }}>
+                READY TO TRAIN?
+              </div>
+              <div className="neon-text mt-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '3px' }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()}
+              </div>
+            </div>
+            <button
+              onClick={startWorkout}
+              className="w-full py-4 rounded-sm pixel-btn"
+              style={{
+                background: 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.08))',
+                border: '2px solid #22d3ee',
+                color: '#22d3ee',
+                boxShadow: '0 0 28px rgba(34,211,238,0.3), inset 0 0 20px rgba(34,211,238,0.05)',
+                fontSize: '12px',
+                letterSpacing: '4px',
+              }}
+            >
+              START WORKOUT
+            </button>
           </div>
-          <div className="neon-text mt-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '3px' }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()}
+
+          {/* Quest panel below the start button */}
+          <div className="mt-4">
+            <QuestPanel quests={dailyQuests} streak={streak} />
           </div>
         </div>
-        <button
-          onClick={startWorkout}
-          className="w-full py-4 rounded-sm pixel-btn"
-          style={{
-            background: 'linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.08))',
-            border: '2px solid #22d3ee',
-            color: '#22d3ee',
-            boxShadow: '0 0 28px rgba(34,211,238,0.3), inset 0 0 20px rgba(34,211,238,0.05)',
-            fontSize: '12px',
-            letterSpacing: '4px',
-          }}
-        >
-          ⚔️ START WORKOUT
-        </button>
       </div>
     );
   }
@@ -642,7 +738,7 @@ export default function WorkoutTab({
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full" style={{ background: MUSCLE_COLORS[muscle] }} />
                         <span className="text-slate-300">{muscle}</span>
-                        {isPR && <span style={{ fontSize: '9px', color: '#facc15' }}>🏆 PR</span>}
+                        {isPR && <span className="flex items-center gap-1" style={{ fontSize: '9px', color: '#facc15' }}><GameIcon name="trophy" size={9} color="#facc15" /> PR</span>}
                       </div>
                       <span style={{ color: MUSCLE_COLORS[muscle] }}>
                         {vol.toFixed(0)}

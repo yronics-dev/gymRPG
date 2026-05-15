@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { playBeep } from '../utils/gameLogic';
+import GameIcon from './GameIcon';
 
 const R = 108;
 const CIRCUMFERENCE = 2 * Math.PI * R;
@@ -95,8 +96,8 @@ export default function RestTimerOverlay({ secondsLeft, totalDuration = 60, onCa
       </div>
 
       {done && (
-        <div className="neon-text neon-text-pulse" style={{ color: '#facc15', fontSize: '10px', letterSpacing: '2px' }}>
-          💪 BACK TO WORK!
+        <div className="neon-text neon-text-pulse flex items-center gap-2" style={{ color: '#facc15', fontSize: '10px', letterSpacing: '2px' }}>
+          <GameIcon name="dumbbell" size={16} color="#facc15" /> BACK TO WORK!
         </div>
       )}
 
@@ -136,7 +137,7 @@ export default function RestTimerOverlay({ secondsLeft, totalDuration = 60, onCa
                 letterSpacing: '1px',
               }}
             >
-              ⚙️
+              <GameIcon name="gear" size={14} color={showCustom ? '#facc15' : '#64748b'} />
             </button>
           </div>
           {showCustom && (

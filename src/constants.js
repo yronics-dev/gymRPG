@@ -3,13 +3,22 @@ export const MUSCLE_GROUPS = [
   'Back', 'Core', 'Legs', 'Glutes', 'Cardio',
 ];
 
-export const BOSS_EMOJIS = [
-  '🐉', '🦁', '🐺', '🦅', '🐍', '🦈', '🦂', '🦇', '🦉', '🦌',
-  '🐅', '🐆', '🦏', '🦛', '🦒', '🐘', '🦏', '🦘', '🦡', '🐾',
-  '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸',
-  '🐊', '🐢', '🐍', '🐲', '🐉', '🦎', '🐌', '🦋', '🐛', '🐜',
-  '🐝', '🐞', '🦗', '🕷️', '🦂', '🦟', '🦠', '🐙', '🦑', '🦞',
+// Boss archetype icons — used to pick a visual style for generated bosses.
+// Each entry maps to a GameIcon name (skull = undead, flame = fire, orb = magic, etc.)
+export const BOSS_ICONS = [
+  'skull', 'flame', 'orb', 'lightning', 'shield',
+  'sword', 'skull', 'wing', 'orb', 'flame',
+  'skull', 'lightning', 'shield', 'flame', 'orb',
+  'sword', 'skull', 'wing', 'flame', 'orb',
+  'skull', 'orb', 'flame', 'lightning', 'sword',
+  'shield', 'skull', 'flame', 'orb', 'wing',
+  'skull', 'lightning', 'orb', 'flame', 'shield',
+  'sword', 'skull', 'wing', 'flame', 'orb',
+  'skull', 'orb', 'flame', 'shield', 'lightning',
+  'sword', 'skull', 'flame', 'orb', 'wing',
 ];
+// Legacy alias so any old code that references BOSS_EMOJIS still compiles.
+export const BOSS_EMOJIS = BOSS_ICONS;
 
 export const EXERCISES_BY_MUSCLE = {
   Chest:     ['Bench Press', 'Incline Press', 'Chest Fly', 'Push-up'],
@@ -29,39 +38,40 @@ export const EXERCISE_TO_MUSCLE = Object.fromEntries(
   )
 );
 
+// Maps exercise names → icon name (used by GameIcon component)
 export const EXERCISE_ICONS = {
-  'Bench Press': '🏋️',
-  'Incline Press': '🏋️‍♂️',
-  'Chest Fly': '🦾',
-  'Push-up': '🤸',
-  'Barbell Curl': '💪',
-  'Hammer Curl': '🔨',
-  'Cable Curl': '🪢',
-  'Tricep Pushdown': '📉',
-  'Skull Crusher': '💀',
-  'Dips': '⬇️',
-  'Overhead Press': '🛡️',
-  'Lateral Raise': '🦅',
-  'Face Pull': '🎣',
-  'Pull-up': '📌',
-  'Barbell Row': '🚣',
-  'Lat Pulldown': '🔽',
-  'Deadlift': '⚰️',
-  'Plank': '🧱',
-  'Crunch': '🥨',
-  'Leg Raise': '🦵',
-  'Cable Crunch': '🪢',
-  'Squat': '🦵',
-  'Leg Press': '🚪',
-  'Leg Extension': '📏',
-  'Lunge': '👟',
-  'Hip Thrust': '🍑',
-  'Romanian Deadlift': '🪦',
-  'Glute Kickback': '👣',
-  'Running': '🏃',
-  'Cycling': '🚴',
-  'Jump Rope': '🪢',
-  'HIIT': '⚡',
+  'Bench Press':         'muscle-chest',
+  'Incline Press':       'muscle-chest',
+  'Chest Fly':           'muscle-chest',
+  'Push-up':             'muscle-chest',
+  'Barbell Curl':        'muscle-biceps',
+  'Hammer Curl':         'muscle-biceps',
+  'Cable Curl':          'muscle-biceps',
+  'Tricep Pushdown':     'muscle-triceps',
+  'Skull Crusher':       'muscle-triceps',
+  'Dips':                'muscle-triceps',
+  'Overhead Press':      'muscle-shoulders',
+  'Lateral Raise':       'muscle-shoulders',
+  'Face Pull':           'muscle-shoulders',
+  'Pull-up':             'muscle-back',
+  'Barbell Row':         'muscle-back',
+  'Lat Pulldown':        'muscle-back',
+  'Deadlift':            'muscle-back',
+  'Plank':               'muscle-core',
+  'Crunch':              'muscle-core',
+  'Leg Raise':           'muscle-core',
+  'Cable Crunch':        'muscle-core',
+  'Squat':               'muscle-legs',
+  'Leg Press':           'muscle-legs',
+  'Leg Extension':       'muscle-legs',
+  'Lunge':               'muscle-legs',
+  'Hip Thrust':          'muscle-glutes',
+  'Romanian Deadlift':   'muscle-glutes',
+  'Glute Kickback':      'muscle-glutes',
+  'Running':             'muscle-cardio',
+  'Cycling':             'muscle-cardio',
+  'Jump Rope':           'muscle-cardio',
+  'HIIT':                'muscle-cardio',
 };
 
 export const MUSCLE_TO_STAT = {
@@ -77,37 +87,37 @@ export const STAT_INFO = {
     color: '#f87171', label: 'ATK', fullLabel: 'Attack',
     desc: 'Damage dealt to bosses',
     muscles: ['Chest', 'Biceps', 'Triceps', 'Shoulders'],
-    icon: '⚔️',
+    icon: 'sword',
   },
   VIT: {
     color: '#4ade80', label: 'VIT', fullLabel: 'Vitality',
     desc: 'Maximum HP',
     muscles: ['Back'],
-    icon: '❤️',
+    icon: 'heart',
   },
   DEF: {
     color: '#60a5fa', label: 'DEF', fullLabel: 'Defense',
     desc: 'Damage reduction %',
     muscles: ['Core'],
-    icon: '🛡️',
+    icon: 'shield',
   },
   AGI: {
     color: '#facc15', label: 'AGI', fullLabel: 'Agility',
     desc: 'Dodge chance & turn order',
     muscles: ['Legs', 'Glutes'],
-    icon: '💨',
+    icon: 'wing',
   },
   STA: {
     color: '#c084fc', label: 'STA', fullLabel: 'Stamina',
     desc: 'Chance for a bonus attack',
     muscles: ['Cardio'],
-    icon: '⚡',
+    icon: 'flame',
   },
   LCK: {
     color: '#ffd700', label: 'LCK', fullLabel: 'Luck',
     desc: 'Crit chance, dodge, rare loot, status resist',
     muscles: [],
-    icon: '🍀',
+    icon: 'star',
     goldOnly: true,
   },
 };
@@ -130,18 +140,18 @@ export const ELEMENTS = [
 ];
 
 export const ELEMENT_THEMES = {
-  Fire:    { color: '#f87171', bg: '#7f1d1d', emoji: '🔥', glow: 'rgba(248,113,113,0.5)', particle: '#f87171' },
-  Ice:     { color: '#93c5fd', bg: '#1e3a5f', emoji: '❄️', glow: 'rgba(147,197,253,0.5)', particle: '#93c5fd' },
-  Shadow:  { color: '#c084fc', bg: '#2e1065', emoji: '🌑', glow: 'rgba(192,132,252,0.5)', particle: '#c084fc' },
-  Thunder: { color: '#fde047', bg: '#713f12', emoji: '⚡', glow: 'rgba(253,224,71,0.5)',  particle: '#fde047' },
-  Earth:   { color: '#86efac', bg: '#14532d', emoji: '🌍', glow: 'rgba(134,239,172,0.5)', particle: '#86efac' },
-  Wind:    { color: '#6ee7b7', bg: '#064e3b', emoji: '💨', glow: 'rgba(110,231,183,0.5)', particle: '#6ee7b7' },
-  Void:    { color: '#a78bfa', bg: '#1e1b4b', emoji: '🌀', glow: 'rgba(167,139,250,0.5)', particle: '#a78bfa' },
-  Storm:   { color: '#7dd3fc', bg: '#0c2840', emoji: '🌩️', glow: 'rgba(125,211,252,0.5)', particle: '#7dd3fc' },
-  Lava:    { color: '#fb923c', bg: '#431407', emoji: '🌋', glow: 'rgba(251,146,60,0.5)',  particle: '#fb923c' },
-  Crystal: { color: '#e0f2fe', bg: '#0f2744', emoji: '💎', glow: 'rgba(224,242,254,0.5)', particle: '#e0f2fe' },
-  Poison:  { color: '#a3e635', bg: '#1a2e05', emoji: '☠️', glow: 'rgba(163,230,53,0.5)',  particle: '#a3e635' },
-  Blood:   { color: '#fca5a5', bg: '#450a0a', emoji: '🩸', glow: 'rgba(252,165,165,0.5)', particle: '#fca5a5' },
+  Fire:    { color: '#f87171', bg: '#7f1d1d', icon: 'flame',    glow: 'rgba(248,113,113,0.5)', particle: '#f87171' },
+  Ice:     { color: '#93c5fd', bg: '#1e3a5f', icon: 'shield',   glow: 'rgba(147,197,253,0.5)', particle: '#93c5fd' },
+  Shadow:  { color: '#c084fc', bg: '#2e1065', icon: 'orb',      glow: 'rgba(192,132,252,0.5)', particle: '#c084fc' },
+  Thunder: { color: '#fde047', bg: '#713f12', icon: 'lightning', glow: 'rgba(253,224,71,0.5)',  particle: '#fde047' },
+  Earth:   { color: '#86efac', bg: '#14532d', icon: 'shield',   glow: 'rgba(134,239,172,0.5)', particle: '#86efac' },
+  Wind:    { color: '#6ee7b7', bg: '#064e3b', icon: 'wing',     glow: 'rgba(110,231,183,0.5)', particle: '#6ee7b7' },
+  Void:    { color: '#a78bfa', bg: '#1e1b4b', icon: 'orb',      glow: 'rgba(167,139,250,0.5)', particle: '#a78bfa' },
+  Storm:   { color: '#7dd3fc', bg: '#0c2840', icon: 'lightning', glow: 'rgba(125,211,252,0.5)', particle: '#7dd3fc' },
+  Lava:    { color: '#fb923c', bg: '#431407', icon: 'flame',    glow: 'rgba(251,146,60,0.5)',  particle: '#fb923c' },
+  Crystal: { color: '#e0f2fe', bg: '#0f2744', icon: 'star',     glow: 'rgba(224,242,254,0.5)', particle: '#e0f2fe' },
+  Poison:  { color: '#a3e635', bg: '#1a2e05', icon: 'skull',    glow: 'rgba(163,230,53,0.5)',  particle: '#a3e635' },
+  Blood:   { color: '#fca5a5', bg: '#450a0a', icon: 'heart',    glow: 'rgba(252,165,165,0.5)', particle: '#fca5a5' },
 };
 
 export const BOSS_PREFIXES = [
@@ -220,41 +230,41 @@ export const BOSS_DIALOGUES = {
 ═══════════════════════════════════════════ */
 export const GOLD_SHOP = {
   stats: [
-    { id: 'ATK',  label: '+1 ATK',  desc: '+3 attack power',       cost: 1, stat: 'ATK',  max: 20, icon: '⚔️',  color: '#f87171' },
-    { id: 'DEF',  label: '+1 DEF',  desc: '+2% damage reduction',  cost: 1, stat: 'DEF',  max: 20, icon: '🛡️',  color: '#60a5fa' },
-    { id: 'HP',   label: '+15 HP',  desc: '+15 max HP',            cost: 1, stat: 'HP',   max: 20, icon: '❤️',  color: '#4ade80' },
-    { id: 'LCK',  label: '+1 LCK',  desc: '+2% crit/dodge chance', cost: 2, stat: 'LCK',  max: 10, icon: '🍀',  color: '#ffd700' },
+    { id: 'ATK',  label: '+1 ATK',  desc: '+3 attack power',       cost: 1, stat: 'ATK',  max: 20, icon: 'sword',   color: '#f87171' },
+    { id: 'DEF',  label: '+1 DEF',  desc: '+2% damage reduction',  cost: 1, stat: 'DEF',  max: 20, icon: 'shield',  color: '#60a5fa' },
+    { id: 'HP',   label: '+15 HP',  desc: '+15 max HP',            cost: 1, stat: 'HP',   max: 20, icon: 'heart',   color: '#4ade80' },
+    { id: 'LCK',  label: '+1 LCK',  desc: '+2% crit/dodge chance', cost: 2, stat: 'LCK',  max: 10, icon: 'star',    color: '#ffd700' },
   ],
   clothing: {
     hat: [
-      { id: 'hat_none',   label: 'None',          cost: 0,  color: null,      icon: '🚫' },
-      { id: 'hat_cap',    label: 'Baseball Cap',  cost: 2,  color: '#1d4ed8', icon: '🧢' },
-      { id: 'hat_tophat', label: 'Top Hat',       cost: 4,  color: '#111827', icon: '🎩' },
-      { id: 'hat_helmet', label: 'Combat Helmet', cost: 5,  color: '#64748b', icon: '⛑️' },
-      { id: 'hat_beanie', label: 'Beanie',        cost: 3,  color: '#7c3aed', icon: '🎓' },
-      { id: 'hat_crown',  label: 'Golden Crown',  cost: 10, color: '#ca8a04', icon: '👑' },
+      { id: 'hat_none',   label: 'None',          cost: 0,  color: null,      icon: 'lock'    },
+      { id: 'hat_cap',    label: 'Baseball Cap',  cost: 2,  color: '#1d4ed8', icon: 'helmet'  },
+      { id: 'hat_tophat', label: 'Top Hat',       cost: 4,  color: '#111827', icon: 'helmet'  },
+      { id: 'hat_helmet', label: 'Combat Helmet', cost: 5,  color: '#64748b', icon: 'helmet'  },
+      { id: 'hat_beanie', label: 'Beanie',        cost: 3,  color: '#7c3aed', icon: 'helmet'  },
+      { id: 'hat_crown',  label: 'Golden Crown',  cost: 10, color: '#ca8a04', icon: 'star'    },
     ],
     pants: [
-      { id: 'pants_default', label: 'Default',    cost: 0, color: null,      icon: '👖' },
-      { id: 'pants_shorts',  label: 'Shorts',     cost: 2, color: '#334155', icon: '🩳' },
-      { id: 'pants_camo',    label: 'Camo',       cost: 4, color: '#365314', icon: '🎽' },
-      { id: 'pants_gold',    label: 'Gold Pants', cost: 6, color: '#ca8a04', icon: '✨' },
-      { id: 'pants_red',     label: 'Red Pants',  cost: 3, color: '#991b1b', icon: '🔴' },
+      { id: 'pants_default', label: 'Default',    cost: 0, color: null,      icon: 'lock'   },
+      { id: 'pants_shorts',  label: 'Shorts',     cost: 2, color: '#334155', icon: 'boots'  },
+      { id: 'pants_camo',    label: 'Camo',       cost: 4, color: '#365314', icon: 'boots'  },
+      { id: 'pants_gold',    label: 'Gold Pants', cost: 6, color: '#ca8a04', icon: 'star'   },
+      { id: 'pants_red',     label: 'Red Pants',  cost: 3, color: '#991b1b', icon: 'boots'  },
     ],
     shoes: [
-      { id: 'shoes_default', label: 'Default',    cost: 0, color: null,      icon: '👟' },
-      { id: 'shoes_white',   label: 'White Kicks',cost: 2, color: '#e2e8f0', icon: '👟' },
-      { id: 'shoes_boots',   label: 'Brown Boots',cost: 3, color: '#92400e', icon: '🥾' },
-      { id: 'shoes_gold',    label: 'Gold Boots', cost: 6, color: '#ca8a04', icon: '✨' },
-      { id: 'shoes_red',     label: 'Red Kicks',  cost: 3, color: '#dc2626', icon: '❤️' },
+      { id: 'shoes_default', label: 'Default',    cost: 0, color: null,      icon: 'lock'    },
+      { id: 'shoes_white',   label: 'White Kicks',cost: 2, color: '#e2e8f0', icon: 'boots'   },
+      { id: 'shoes_boots',   label: 'Brown Boots',cost: 3, color: '#92400e', icon: 'boots'   },
+      { id: 'shoes_gold',    label: 'Gold Boots', cost: 6, color: '#ca8a04', icon: 'boots'   },
+      { id: 'shoes_red',     label: 'Red Kicks',  cost: 3, color: '#dc2626', icon: 'boots'   },
     ],
     accessory: [
-      { id: 'acc_none',       label: 'None',        cost: 0, icon: '🚫' },
-      { id: 'acc_beer',       label: 'Beer',        cost: 2, icon: '🍺' },
-      { id: 'acc_cigarette',  label: 'Cigarette',   cost: 2, icon: '🚬' },
-      { id: 'acc_coffee',     label: 'Coffee',      cost: 1, icon: '☕' },
-      { id: 'acc_wristbands', label: 'Wristbands',  cost: 3, icon: '💪' },
-      { id: 'acc_sunglasses', label: 'Sunglasses',  cost: 4, icon: '🕶️' },
+      { id: 'acc_none',       label: 'None',        cost: 0, icon: 'lock'    },
+      { id: 'acc_beer',       label: 'Beer',        cost: 2, icon: 'potion'  },
+      { id: 'acc_cigarette',  label: 'Cigarette',   cost: 2, icon: 'flame'   },
+      { id: 'acc_coffee',     label: 'Coffee',      cost: 1, icon: 'potion'  },
+      { id: 'acc_wristbands', label: 'Wristbands',  cost: 3, icon: 'dumbbell'},
+      { id: 'acc_sunglasses', label: 'Sunglasses',  cost: 4, icon: 'orb'     },
     ],
   },
   auras: [
@@ -267,6 +277,109 @@ export const GOLD_SHOP = {
     { id: 'aura_rainbow', label: 'Mythic Aura',   cost: 10, color: 'rainbow' },
   ],
 };
+
+/* ═══════════════════════════════════════════
+   PLAYER CLASSES
+═══════════════════════════════════════════ */
+export const PLAYER_CLASSES = [
+  {
+    id: 'LEGEND', name: 'Legend', icon: 'star', color: '#facc15',
+    desc: 'Transcends all classes', levelReq: 100,
+    bonus: { label: '+15 ATK, +50 HP' },
+  },
+  {
+    id: 'BERSERKER', name: 'Berserker', icon: 'flame', color: '#fb923c',
+    desc: 'Raw power and relentless aggression', atkReq: 50, agiReq: 20,
+    bonus: { label: '+10 ATK, +5% CRIT' },
+  },
+  {
+    id: 'WARRIOR', name: 'Warrior', icon: 'sword', color: '#f87171',
+    desc: 'Master of brute strength', atkReq: 25,
+    bonus: { label: '+6 ATK' },
+  },
+  {
+    id: 'TANK', name: 'Tank', icon: 'shield', color: '#60a5fa',
+    desc: 'Immovable wall of muscle', defReq: 15, vitReq: 15,
+    bonus: { label: '+30 HP, +3% DEF' },
+  },
+  {
+    id: 'ROGUE', name: 'Rogue', icon: 'wing', color: '#4ade80',
+    desc: 'Fast, agile, elusive', agiReq: 20,
+    bonus: { label: '+5% DODGE' },
+  },
+  {
+    id: 'NOVICE', name: 'Novice', icon: 'dumbbell', color: '#475569',
+    desc: 'Just getting started', bonus: { label: '' },
+  },
+];
+
+/* ═══════════════════════════════════════════
+   LEVEL TITLES
+═══════════════════════════════════════════ */
+export const LEVEL_TITLES = [
+  { level: 0,   title: 'Rookie',       color: '#6b7280' },
+  { level: 5,   title: 'Trainee',      color: '#64748b' },
+  { level: 10,  title: 'Fighter',      color: '#3b82f6' },
+  { level: 15,  title: 'Brawler',      color: '#3b82f6' },
+  { level: 20,  title: 'Iron Fist',    color: '#f59e0b' },
+  { level: 25,  title: 'Iron Knight',  color: '#f59e0b' },
+  { level: 35,  title: 'Battle Mage',  color: '#ef4444' },
+  { level: 50,  title: 'Warlord',      color: '#8b5cf6' },
+  { level: 75,  title: 'Champion',     color: '#8b5cf6' },
+  { level: 100, title: 'Legend',       color: '#facc15' },
+  { level: 150, title: 'Mythic',       color: '#facc15' },
+  { level: 200, title: 'Immortal',     color: '#22d3ee' },
+];
+
+/* ═══════════════════════════════════════════
+   SKILL TREE
+═══════════════════════════════════════════ */
+export const SKILLS = [
+  { id: 'xp_boost',      name: 'XP Boost',        icon: 'lightning', color: '#facc15', cost: 2, desc: '+10% XP from all workouts',            effect: 'xpMult',  val: 0.10 },
+  { id: 'resilience',    name: 'Resilience',       icon: 'heart',     color: '#f87171', cost: 2, desc: '+25 base HP',                          effect: 'hp',      val: 25   },
+  { id: 'lucky_strike',  name: 'Lucky Strike',     icon: 'star',      color: '#4ade80', cost: 3, desc: '+5% critical hit chance',              effect: 'crit',    val: 5    },
+  { id: 'iron_skin',     name: 'Iron Skin',        icon: 'shield',    color: '#60a5fa', cost: 3, desc: '+3% damage reduction',                 effect: 'def',     val: 3    },
+  { id: 'quick_hands',   name: 'Quick Hands',      icon: 'wing',      color: '#a78bfa', cost: 3, desc: '+4% dodge chance',                     effect: 'dodge',   val: 4    },
+  { id: 'treasure_hunt', name: 'Treasure Hunter',  icon: 'chest',     color: '#fb923c', cost: 5, desc: 'Dungeon chests always drop 2 items',   effect: 'loot2',   val: 1    },
+  { id: 'berserker_rush',name: 'Berserker Rush',   icon: 'flame',     color: '#ef4444', cost: 4, desc: '+6 ATK when HP < 30%',                 effect: 'berserk', val: 6    },
+  { id: 'xp_surge',      name: 'XP Surge',         icon: 'lightning', color: '#22d3ee', cost: 5, desc: '+25% XP when you set a PR',            effect: 'prBoost', val: 0.25 },
+  { id: 'gold_greed',    name: 'Gold Greed',       icon: 'coin',      color: '#facc15', cost: 4, desc: 'Earn gold every 3 boss kills',         effect: 'goldFreq',val: 3    },
+];
+
+/* ═══════════════════════════════════════════
+   POST-WORKOUT EVENTS
+═══════════════════════════════════════════ */
+export const WORKOUT_EVENTS = [
+  { id: 'crit',      weight: 12, type: 'bonus',  icon: 'lightning', title: 'CRITICAL WORKOUT!',  desc: 'Your body responded perfectly. +50% XP!', color: '#facc15', xpMult: 1.50 },
+  { id: 'focused',   weight: 20, type: 'bonus',  icon: 'lock',      title: 'IN THE ZONE!',        desc: 'Pure focus. +25% XP this session.',        color: '#4ade80', xpMult: 1.25 },
+  { id: 'rested',    weight: 15, type: 'bonus',  icon: 'heart',     title: 'WELL RESTED',         desc: 'Recovery paid off. +15% XP.',              color: '#22d3ee', xpMult: 1.15 },
+  { id: 'fatigue',   weight: 10, type: 'malus',  icon: 'flame',     title: 'FATIGUED',            desc: 'Body needs rest. XP -25% today.',          color: '#f87171', xpMult: 0.75 },
+  { id: 'solid',     weight: 43, type: 'normal', icon: 'star',      title: 'SOLID SESSION',       desc: 'Good work. Keep grinding.',                color: '#475569', xpMult: 1.00 },
+];
+
+/* ═══════════════════════════════════════════
+   DAILY QUEST TEMPLATES
+═══════════════════════════════════════════ */
+export const QUEST_TEMPLATES = [
+  { id: 'complete_workout', desc: 'Complete today\'s workout',        type: 'workout',  target: 1,   reward: { gold: 1 },   rewardLabel: '+1 Gold'  },
+  { id: 'train_2_muscles',  desc: 'Train 2 different muscle groups',  type: 'muscles',  target: 2,   reward: { gold: 1 },   rewardLabel: '+1 Gold'  },
+  { id: 'train_3_muscles',  desc: 'Train 3 different muscle groups',  type: 'muscles',  target: 3,   reward: { gold: 2 },   rewardLabel: '+2 Gold'  },
+  { id: 'log_5_sets',       desc: 'Log 5 sets',                       type: 'sets',     target: 5,   reward: { xp: 50 },    rewardLabel: '+50 XP'   },
+  { id: 'log_10_sets',      desc: 'Log 10 sets',                      type: 'sets',     target: 10,  reward: { gold: 1 },   rewardLabel: '+1 Gold'  },
+  { id: 'earn_100xp',       desc: 'Earn 100 XP in one session',       type: 'xp',       target: 100, reward: { gold: 1 },   rewardLabel: '+1 Gold'  },
+  { id: 'earn_300xp',       desc: 'Earn 300 XP in one session',       type: 'xp',       target: 300, reward: { gold: 2 },   rewardLabel: '+2 Gold'  },
+  { id: 'set_pr',           desc: 'Set a new volume PR',              type: 'pr',       target: 1,   reward: { gold: 2 },   rewardLabel: '+2 Gold'  },
+  { id: 'hit_streak3',      desc: 'Reach a 3-day streak',             type: 'streak',   target: 3,   reward: { gold: 2 },   rewardLabel: '+2 Gold'  },
+];
+
+/* ═══════════════════════════════════════════
+   ONBOARDING GOALS
+═══════════════════════════════════════════ */
+export const PLAYER_GOALS = [
+  { id: 'bulk',  label: 'Build Muscle',  icon: 'muscle-biceps', desc: 'Focus on strength & size', color: '#f87171', focus: ['Chest','Biceps','Triceps','Shoulders','Back'] },
+  { id: 'fit',   label: 'Get Fit',       icon: 'lightning',     desc: 'Balanced training & cardio', color: '#4ade80', focus: ['Cardio','Legs','Core','Back'] },
+  { id: 'cut',   label: 'Lose Fat',      icon: 'flame',         desc: 'Cardio & full body', color: '#22d3ee', focus: ['Cardio','Core','Legs','Glutes'] },
+];
 
 /* ═══════════════════════════════════════════
    MUSCLE RANKS (XP-based progression)
@@ -287,16 +400,16 @@ export const MUSCLE_RANKS = [
 // hpMult × boss.maxHP = mob HP,  atkMult × boss.atk = mob ATK
 // Wave scaling adds +15% per wave, so later waves naturally hit harder.
 export const MOB_TYPES = [
-  { id: 'zombie',   name: 'Zombie',   emoji: '🧟', hpMult: 0.38, atkMult: 0.50, speed: 5  },
-  { id: 'skeleton', name: 'Skeleton', emoji: '💀', hpMult: 0.28, atkMult: 0.60, speed: 10 },
-  { id: 'bat',      name: 'Bat',      emoji: '🦇', hpMult: 0.22, atkMult: 0.46, speed: 14 },
-  { id: 'vampire',  name: 'Vampire',  emoji: '🧛', hpMult: 0.46, atkMult: 0.70, speed: 12 },
-  { id: 'werewolf', name: 'Werewolf', emoji: '🐺', hpMult: 0.55, atkMult: 0.80, speed: 11 },
-  { id: 'goblin',   name: 'Goblin',   emoji: '👺', hpMult: 0.32, atkMult: 0.55, speed: 13 },
-  { id: 'ghost',    name: 'Ghost',    emoji: '👻', hpMult: 0.25, atkMult: 0.48, speed: 15 },
-  { id: 'spider',   name: 'Spider',   emoji: '🕷️', hpMult: 0.35, atkMult: 0.56, speed: 12 },
-  { id: 'demon',    name: 'Demon',    emoji: '😈', hpMult: 0.65, atkMult: 0.90, speed: 9  },
-  { id: 'slime',    name: 'Slime',    emoji: '🟩', hpMult: 0.50, atkMult: 0.38, speed: 6  },
+  { id: 'zombie',   name: 'Zombie',   icon: 'skull',    hpMult: 0.38, atkMult: 0.50, speed: 5  },
+  { id: 'skeleton', name: 'Skeleton', icon: 'skull',    hpMult: 0.28, atkMult: 0.60, speed: 10 },
+  { id: 'bat',      name: 'Bat',      icon: 'wing',     hpMult: 0.22, atkMult: 0.46, speed: 14 },
+  { id: 'vampire',  name: 'Vampire',  icon: 'heart',    hpMult: 0.46, atkMult: 0.70, speed: 12 },
+  { id: 'werewolf', name: 'Werewolf', icon: 'sword',    hpMult: 0.55, atkMult: 0.80, speed: 11 },
+  { id: 'goblin',   name: 'Goblin',   icon: 'sword',    hpMult: 0.32, atkMult: 0.55, speed: 13 },
+  { id: 'ghost',    name: 'Ghost',    icon: 'orb',      hpMult: 0.25, atkMult: 0.48, speed: 15 },
+  { id: 'spider',   name: 'Spider',   icon: 'shield',   hpMult: 0.35, atkMult: 0.56, speed: 12 },
+  { id: 'demon',    name: 'Demon',    icon: 'flame',    hpMult: 0.65, atkMult: 0.90, speed: 9  },
+  { id: 'slime',    name: 'Slime',    icon: 'potion',   hpMult: 0.50, atkMult: 0.38, speed: 6  },
 ];
 
 /* ═══════════════════════════════════════════
@@ -314,41 +427,41 @@ export const LOOT_RARITIES = [
 // Legendary full set would be roughly ×4 those values — very powerful, earned through dedication.
 export const LOOT_BASE = {
   helmet: [
-    { name: 'Iron Helm',    icon: '⛑️',  atk: 0, def: 3, hp: 15 },
-    { name: 'Shadow Hood',  icon: '🪖',  atk: 2, def: 1, hp: 8  },
-    { name: 'Spiked Crown', icon: '👑',  atk: 3, def: 0, hp: 10 },
-    { name: 'Bone Mask',    icon: '💀',  atk: 1, def: 3, hp: 8  },
+    { name: 'Iron Helm',    icon: 'helmet', atk: 0, def: 3, hp: 15 },
+    { name: 'Shadow Hood',  icon: 'helmet', atk: 2, def: 1, hp: 8  },
+    { name: 'Spiked Crown', icon: 'helmet', atk: 3, def: 0, hp: 10 },
+    { name: 'Bone Mask',    icon: 'skull',  atk: 1, def: 3, hp: 8  },
   ],
   chest: [
-    { name: 'Chain Mail',   icon: '🔗', atk: 0, def: 5, hp: 25 },
-    { name: 'Leather Vest', icon: '🦺', atk: 2, def: 3, hp: 20 },
-    { name: 'Battle Plate', icon: '🛡️', atk: 0, def: 7, hp: 30 },
-    { name: 'Runed Robe',   icon: '🎽', atk: 3, def: 1, hp: 15 },
+    { name: 'Chain Mail',   icon: 'chest-armor', atk: 0, def: 5, hp: 25 },
+    { name: 'Leather Vest', icon: 'chest-armor', atk: 2, def: 3, hp: 20 },
+    { name: 'Battle Plate', icon: 'chest-armor', atk: 0, def: 7, hp: 30 },
+    { name: 'Runed Robe',   icon: 'chest-armor', atk: 3, def: 1, hp: 15 },
   ],
   boots: [
-    { name: 'Speed Boots',  icon: '👟', atk: 0, def: 0, hp: 8,  dodge: 4 },
-    { name: 'Iron Treads',  icon: '🥾', atk: 0, def: 3, hp: 12, dodge: 0 },
-    { name: 'Ninja Wraps',  icon: '🩴', atk: 1, def: 0, hp: 8,  dodge: 5 },
-    { name: 'Cursed Shoes', icon: '👠', atk: 3, def: 0, hp: 0,  dodge: 3 },
+    { name: 'Speed Boots',  icon: 'boots', atk: 0, def: 0, hp: 8,  dodge: 4 },
+    { name: 'Iron Treads',  icon: 'boots', atk: 0, def: 3, hp: 12, dodge: 0 },
+    { name: 'Ninja Wraps',  icon: 'boots', atk: 1, def: 0, hp: 8,  dodge: 5 },
+    { name: 'Cursed Shoes', icon: 'boots', atk: 3, def: 0, hp: 0,  dodge: 3 },
   ],
   weapon: [
-    { name: 'Iron Sword',   icon: '⚔️', atk: 5, def: 0, hp: 0  },
-    { name: 'Battle Axe',   icon: '🪓', atk: 8, def: 0, hp: 0  },
-    { name: 'Magic Staff',  icon: '🪄', atk: 6, def: 0, hp: 8  },
-    { name: 'Shadow Blade', icon: '🗡️', atk: 4, def: 0, hp: 0, crit: 6 },
-    { name: 'Holy Mace',    icon: '🏑', atk: 5, def: 1, hp: 8  },
+    { name: 'Iron Sword',   icon: 'sword', atk: 5, def: 0, hp: 0  },
+    { name: 'Battle Axe',   icon: 'sword', atk: 8, def: 0, hp: 0  },
+    { name: 'Magic Staff',  icon: 'orb',   atk: 6, def: 0, hp: 8  },
+    { name: 'Shadow Blade', icon: 'sword', atk: 4, def: 0, hp: 0, crit: 6 },
+    { name: 'Holy Mace',    icon: 'sword', atk: 5, def: 1, hp: 8  },
   ],
   ring: [
-    { name: 'Ring of War',   icon: '💍', atk: 3, def: 0, hp: 8  },
-    { name: 'Ring of Life',  icon: '💍', atk: 0, def: 0, hp: 25 },
-    { name: 'Shield Ring',   icon: '💍', atk: 0, def: 4, hp: 8  },
-    { name: 'Phantom Ring',  icon: '💍', atk: 1, def: 1, hp: 0, dodge: 4 },
+    { name: 'Ring of War',   icon: 'ring', atk: 3, def: 0, hp: 8  },
+    { name: 'Ring of Life',  icon: 'ring', atk: 0, def: 0, hp: 25 },
+    { name: 'Shield Ring',   icon: 'ring', atk: 0, def: 4, hp: 8  },
+    { name: 'Phantom Ring',  icon: 'ring', atk: 1, def: 1, hp: 0, dodge: 4 },
   ],
   special: [
-    { name: 'Amulet of Fury', icon: '📿', atk: 4, def: 0, hp: 8  },
-    { name: 'Dragon Scale',   icon: '🐉', atk: 0, def: 5, hp: 25 },
-    { name: 'Orb of Chaos',   icon: '🔮', atk: 6, def: 0, hp: 0, crit: 8 },
-    { name: 'Soul Crystal',   icon: '💠', atk: 3, def: 3, hp: 12 },
+    { name: 'Amulet of Fury', icon: 'orb',   atk: 4, def: 0, hp: 8  },
+    { name: 'Dragon Scale',   icon: 'shield', atk: 0, def: 5, hp: 25 },
+    { name: 'Orb of Chaos',   icon: 'orb',   atk: 6, def: 0, hp: 0, crit: 8 },
+    { name: 'Soul Crystal',   icon: 'star',  atk: 3, def: 3, hp: 12 },
   ],
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
 import { DungeonScene } from './PixelScene';
+import GameIcon from './GameIcon';
 import { generateDailyBoss, generateBossPool, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
 import { getLevel, getPlayerBattleStats, getTodayKey, getDateKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
@@ -46,8 +47,8 @@ function BossCard({ boss, isToday, cleared }) {
           <BossSprite boss={boss} size={80} />
         </div>
         <div className="flex-1">
-          <div className="neon-text mb-0.5" style={{ color: theme.color, fontSize: '7px', letterSpacing: '2px' }}>
-            {boss.emoji} {boss.element} BOSS
+          <div className="neon-text mb-0.5 flex items-center gap-1.5" style={{ color: theme.color, fontSize: '7px', letterSpacing: '2px' }}>
+            <GameIcon name={boss.emoji || theme.icon} size={12} color={theme.color} /> {boss.element} BOSS
           </div>
           <div className="font-black text-white text-xl leading-tight" style={{ fontFamily: 'Courier New', textShadow: `0 0 8px ${theme.color}66` }}>
             {boss.name}
@@ -119,7 +120,7 @@ function WeekCalendar({ bossHistory, playerLevel, currentDayKey }) {
               <div className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>
                 {d.toLocaleDateString('en-US', { weekday: 'narrow' })}
               </div>
-              <div style={{ fontSize: '14px' }}>{theme.emoji}</div>
+              <GameIcon name={theme.icon} size={14} color={theme.color} />
               <div style={{ fontSize: '10px' }}>
                 {cleared ? (
                   <span
@@ -168,7 +169,7 @@ function BossOutlook({ playerLevel }) {
               style={{ background: 'rgba(6,10,20,0.82)', border: `1px solid ${theme.color}44` }}
             >
               <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{labels[index]}</div>
-              <div style={{ fontSize: '14px' }}>{boss.emoji}</div>
+              <GameIcon name={boss.emoji || ELEMENT_THEMES[boss.element]?.icon || 'skull'} size={14} color={ELEMENT_THEMES[boss.element]?.color || '#475569'} />
               <div className="neon-text text-center" style={{ color: theme.color, fontSize: '5px', lineHeight: '1', minHeight: '10px' }}>
                 {boss.name.substring(0, 12)}
               </div>
@@ -185,7 +186,7 @@ export default function BossTab({
   muscleXP, workouts, bossHistory, coins, statUpgrades = {}, equippedAura,
   equippedClothing = {}, equippedItems = {},
   onBossCleared, onBossDefeat, todayKey, leagueKills = 0, onLeagueBossDefeated,
-  onLootEarned,
+  onLootEarned, purchasedSkills = [], classBonuses = {},
 }) {
   const currentDayKey = todayKey || getTodayKey();
   const playerLevel   = Math.max(1, getLevel(muscleXP));
@@ -208,7 +209,7 @@ export default function BossTab({
 
   const leagueBoss = generateLeagueBoss(playerLevel, leagueKills);
 
-  const pStats      = getPlayerBattleStats(muscleXP, statUpgrades);
+  const pStats      = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses);
   const bossGallery = generateBossPool();
   const theme       = ELEMENT_THEMES[boss.element];
 
@@ -330,8 +331,8 @@ export default function BossTab({
       >
         <div>
           <div className="neon-text" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>GOLD</div>
-          <div className="neon-text mt-0.5" style={{ color: '#facc15', fontSize: '16px', textShadow: '0 0 10px #facc15' }}>
-            {coins ?? 0} 🪙
+          <div className="neon-text mt-0.5 flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '16px', textShadow: '0 0 10px #facc15' }}>
+            {coins ?? 0} <GameIcon name="coin" size={14} color="#facc15" />
           </div>
         </div>
         <div className="neon-text text-right" style={{ color: '#334155', fontSize: '7px' }}>
@@ -348,7 +349,7 @@ export default function BossTab({
             className="rounded-sm p-4 text-center"
             style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}
           >
-            <div style={{ fontSize: '32px', lineHeight: 1.2 }}>🏆</div>
+            <div style={{ lineHeight: 1.2 }}><GameIcon name="trophy" size={32} color="#facc15" /></div>
             <div className="neon-text mt-2" style={{ color: '#facc15', fontSize: '10px', textShadow: '0 0 10px #facc15' }}>
               BOSS CLEARED!
             </div>
@@ -361,7 +362,7 @@ export default function BossTab({
             className="rounded-sm p-5 text-center"
             style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)' }}
           >
-            <div style={{ fontSize: '28px', marginBottom: '8px' }}>🏋️</div>
+            <div style={{ marginBottom: '8px' }}><GameIcon name="dumbbell" size={28} color="#334155" /></div>
             <div className="neon-text" style={{ color: '#334155', fontSize: '8px' }}>
               COMPLETE A WORKOUT FIRST<br />TO UNLOCK BATTLE
             </div>
@@ -394,7 +395,7 @@ export default function BossTab({
                 className="neon-text text-center py-2 px-3 rounded-sm"
                 style={{ background: 'rgba(250,204,21,0.08)', color: '#facc15', border: '1px solid rgba(250,204,21,0.25)', fontSize: '7px', letterSpacing: '1px' }}
               >
-                ⚡ {boss.weakness.toUpperCase()} WEAKNESS BONUS ACTIVE!
+                + {boss.weakness.toUpperCase()} WEAKNESS BONUS ACTIVE!
               </div>
             )}
 
@@ -410,7 +411,7 @@ export default function BossTab({
                 letterSpacing: '4px',
               }}
             >
-              ⚔️ BATTLE!
+              BATTLE!
             </button>
           </div>
         )}
@@ -427,19 +428,21 @@ export default function BossTab({
             fontSize: '9px', letterSpacing: '2px',
           }}
         >
-          {dungeonResult === 'win' ? '🏆 DUNGEON CLEARED! LOOT ACQUIRED!' : '💀 DUNGEON FAILED — TRAIN HARDER!'}
+          {dungeonResult === 'win' ? 'DUNGEON CLEARED! LOOT ACQUIRED!' : 'DUNGEON FAILED — TRAIN HARDER!'}
         </div>
       )}
 
       {/* Dungeon Run */}
       <div className="mt-6">
-        <div className="neon-text mb-2" style={{ color: '#c084fc', fontSize: '7px', letterSpacing: '3px' }}>⚔️ DUNGEON RUN</div>
+        <div className="neon-text mb-2 flex items-center gap-1.5" style={{ color: '#c084fc', fontSize: '7px', letterSpacing: '3px' }}>
+          <GameIcon name="skull" size={10} color="#c084fc" /> DUNGEON RUN
+        </div>
         <div
           className="rounded-sm p-4"
           style={{ background: 'rgba(6,10,20,0.85)', border: '1px solid rgba(192,132,252,0.3)', boxShadow: '0 0 16px rgba(192,132,252,0.06)' }}
         >
           <div className="flex items-center gap-3 mb-3">
-            <span style={{ fontSize: '28px', filter: 'drop-shadow(0 0 10px #c084fc)' }}>🏰</span>
+            <span style={{ filter: 'drop-shadow(0 0 10px #c084fc)' }}><GameIcon name="chest" size={28} color="#c084fc" /></span>
             <div>
               <div className="neon-text" style={{ color: '#c084fc', fontSize: '9px', letterSpacing: '1px' }}>DUNGEON RUN</div>
               <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>
@@ -449,13 +452,13 @@ export default function BossTab({
           </div>
           <div className="flex gap-3 mb-3 text-center">
             {[
-              { icon: '🧟', label: '3 WAVES' },
-              { icon: '👾', label: '5 MOBS' },
-              { icon: '💀', label: '1 BOSS' },
-              { icon: '📦', label: 'LOOT' },
+              { icon: 'impact',    label: '3 WAVES' },
+              { icon: 'skull',     label: '5 MOBS'  },
+              { icon: 'boss',      label: '1 BOSS'  },
+              { icon: 'chest',     label: 'LOOT'    },
             ].map(s => (
-              <div key={s.label} className="flex-1">
-                <div style={{ fontSize: '18px' }}>{s.icon}</div>
+              <div key={s.label} className="flex-1 flex flex-col items-center">
+                <GameIcon name={s.icon} size={18} color="#c084fc" />
                 <div className="neon-text" style={{ color: '#334155', fontSize: '6px', marginTop: '2px' }}>{s.label}</div>
               </div>
             ))}
@@ -475,20 +478,22 @@ export default function BossTab({
               letterSpacing: '3px',
             }}
           >
-            🏰 ENTER DUNGEON
+            ENTER DUNGEON
           </button>
         </div>
       </div>
 
       {/* Training Ground */}
       <div className="mt-6">
-        <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>⚔️ TRAINING GROUND</div>
+        <div className="neon-text mb-2 flex items-center gap-1.5" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
+          <GameIcon name="sword" size={10} color="#475569" /> TRAINING GROUND
+        </div>
         <div
           className="rounded-sm p-4"
           style={{ background: 'rgba(6,10,20,0.82)', border: '1px solid rgba(168,85,247,0.25)' }}
         >
           <div className="flex items-center gap-3 mb-3">
-            <span style={{ fontSize: '28px', filter: 'drop-shadow(0 0 8px #a855f7)' }}>🥊</span>
+            <span style={{ filter: 'drop-shadow(0 0 8px #a855f7)' }}><GameIcon name="impact" size={28} color="#a855f7" /></span>
             <div>
               <div className="neon-text" style={{ color: '#a855f7', fontSize: '9px', letterSpacing: '1px' }}>TRAINING GROUND</div>
               <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>Fight random bosses anytime, no daily limit</div>
@@ -508,21 +513,23 @@ export default function BossTab({
               fontSize: '10px', letterSpacing: '3px',
             }}
           >
-            🥊 ENTER TRAINING
+            ENTER TRAINING
           </button>
         </div>
       </div>
 
       {/* League Mode */}
       <div className="mt-6">
-        <div className="neon-text mb-2" style={{ color: '#facc15', fontSize: '7px', letterSpacing: '3px' }}>🏆 LEAGUE MODE</div>
+        <div className="neon-text mb-2 flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '7px', letterSpacing: '3px' }}>
+          <GameIcon name="trophy" size={10} color="#facc15" /> LEAGUE MODE
+        </div>
 
         {leagueGoldFlash && (
           <div
             className="neon-text text-center py-2 px-3 rounded-sm mb-3"
             style={{ background: 'rgba(250,204,21,0.15)', color: '#facc15', border: '1px solid rgba(250,204,21,0.5)', fontSize: '9px', letterSpacing: '2px', boxShadow: '0 0 20px rgba(250,204,21,0.3)' }}
           >
-            ✨ +1 GOLD EARNED! ✨
+            +1 GOLD EARNED!
           </div>
         )}
 
@@ -540,7 +547,7 @@ export default function BossTab({
             <div className="text-right">
               <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>NEXT GOLD</div>
               <div className="neon-text" style={{ color: '#facc15', fontSize: '13px', textShadow: '0 0 8px #facc15' }}>
-                {leagueKills % 5}/5 🪙
+                <span className="flex items-center gap-1">{leagueKills % 5}/5 <GameIcon name="coin" size={12} color="#facc15" /></span>
               </div>
             </div>
           </div>
@@ -565,8 +572,9 @@ export default function BossTab({
               <BossSprite boss={leagueBoss} size={52} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="neon-text" style={{ color: ELEMENT_THEMES[leagueBoss.element].color, fontSize: '7px', letterSpacing: '1px' }}>
-                {leagueBoss.emoji} {leagueBoss.element} · {leagueBoss.diffLabel}
+              <div className="neon-text flex items-center gap-1" style={{ color: ELEMENT_THEMES[leagueBoss.element].color, fontSize: '7px', letterSpacing: '1px' }}>
+                <GameIcon name={leagueBoss.emoji || ELEMENT_THEMES[leagueBoss.element].icon} size={10} color={ELEMENT_THEMES[leagueBoss.element].color} />
+                {leagueBoss.element} · {leagueBoss.diffLabel}
               </div>
               <div className="neon-text" style={{ color: '#e2e8f0', fontSize: '9px', marginTop: '2px' }}>{leagueBoss.name}</div>
               <div className="flex gap-3 mt-1.5">
@@ -578,7 +586,7 @@ export default function BossTab({
           </div>
 
           <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', lineHeight: '1.6' }}>
-            • Bosses get harder each run &nbsp;• 1 🪙 every 5 slain &nbsp;• No workout required
+            • Bosses get harder each run &nbsp;• 1 coin every 5 slain &nbsp;• No workout required
           </div>
 
           <button
@@ -593,7 +601,7 @@ export default function BossTab({
               letterSpacing: '3px',
             }}
           >
-            🏆 ENTER LEAGUE
+            ENTER LEAGUE
           </button>
         </div>
       </div>

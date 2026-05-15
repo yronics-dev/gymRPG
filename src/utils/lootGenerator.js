@@ -97,12 +97,19 @@ export function generateLootItem(seed) {
 }
 
 // ─── Generate chest loot (1-2 items) ─────────────────────────────────────────
-export function generateChestLoot(dungeonSeed, isLegendary = false) {
+export function generateChestLoot(dungeonSeed, doubleLoot = false) {
   const item1 = generateLootItem(dungeonSeed);
-  // Legendary boss always drops 2 items
-  if (isLegendary || item1.rarity === 'Legendary' || item1.rarity === 'Epic') {
+  if (doubleLoot || item1.rarity === 'Legendary' || item1.rarity === 'Epic') {
     const item2 = generateLootItem(dungeonSeed + 88888);
     return [item1, item2];
   }
   return [item1];
+}
+
+// ─── Post-workout loot roll ────────────────────────────────────────────────────
+// ~25% chance of dropping an item after a workout
+export function rollWorkoutLoot(seed) {
+  const rng = seededRng(seed ^ 0xabcdef);
+  if (rng() > 0.25) return null;
+  return generateLootItem(seed + 11111);
 }

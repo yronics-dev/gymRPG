@@ -3,6 +3,7 @@ import BattleArena from './BattleArena';
 import LootChest from './LootChest';
 import { generateDungeonEnemies, generateChestLoot } from '../utils/lootGenerator';
 import { ELEMENT_THEMES } from '../constants';
+import GameIcon from './GameIcon';
 
 // ─── Wave-complete banner (auto-advances) ────────────────────────────────────
 function WaveBanner({ waveLabel, nextLabel, onContinue }) {
@@ -70,8 +71,8 @@ function DungeonLobby({ enemies, onStart, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between pt-10 pb-4">
           <div>
-            <div className="neon-text" style={{ color: '#c084fc', fontSize: '12px', letterSpacing: '4px', textShadow: '0 0 16px #c084fc' }}>
-              ⚔️ DUNGEON RUN
+            <div className="neon-text flex items-center gap-2" style={{ color: '#c084fc', fontSize: '12px', letterSpacing: '4px', textShadow: '0 0 16px #c084fc' }}>
+              <GameIcon name="skull" size={14} color="#c084fc" /> DUNGEON RUN
             </div>
             <div className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>
               5 ENEMIES · 3 WAVES · 1 BOSS
@@ -108,10 +109,10 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                           width: 36, height: 36,
                           background: `${ELEMENT_THEMES[mob.element].bg}cc`,
                           border: `1px solid ${ELEMENT_THEMES[mob.element].color}55`,
-                          fontSize: '18px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
                       >
-                        {mob.emoji}
+                        <GameIcon name={mob.emoji || ELEMENT_THEMES[mob.element]?.icon || 'skull'} size={18} color={ELEMENT_THEMES[mob.element].color} />
                       </div>
                     ))}
                   </div>
@@ -134,12 +135,12 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                   width: 44, height: 44,
                   background: `${theme.bg}cc`,
                   border: `2px solid ${theme.color}88`,
-                  fontSize: '24px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: `0 0 12px ${theme.glow}`,
                   animation: 'pixelBob 2s ease-in-out infinite',
                 }}
               >
-                {boss.emoji}
+                <GameIcon name={boss.emoji || theme.icon || 'skull'} size={24} color={theme.color} />
               </div>
               <div className="neon-text text-center" style={{ color: theme.color, fontSize: '6px' }}>
                 {boss.name.split(' ').slice(-1)[0]}
@@ -150,7 +151,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
             <div className="neon-text" style={{ color: '#334155', fontSize: '10px' }}>→</div>
             <div className="flex flex-col items-center gap-1">
               <div className="neon-text" style={{ color: '#facc15', fontSize: '6px' }}>LOOT</div>
-              <div style={{ fontSize: '28px', filter: 'drop-shadow(0 0 8px #facc15)' }}>📦</div>
+              <div style={{ filter: 'drop-shadow(0 0 8px #facc15)' }}><GameIcon name="chest" size={28} color="#facc15" /></div>
             </div>
           </div>
         </div>
@@ -168,7 +169,9 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                   border: `1px solid ${t.color}33`,
                 }}
               >
-                <span style={{ fontSize: '22px', flexShrink: 0 }}>{enemy.emoji}</span>
+                <span style={{ flexShrink: 0 }}>
+                  <GameIcon name={enemy.emoji || ELEMENT_THEMES[enemy.element]?.icon || 'skull'} size={22} color={(ELEMENT_THEMES[enemy.element] || ELEMENT_THEMES.Fire).color} />
+                </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <div className="neon-text" style={{ color: t.color, fontSize: '8px' }}>
@@ -184,7 +187,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                     )}
                   </div>
                   <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>
-                    {t.emoji} {enemy.element} · WEAK: {enemy.weakness}
+                    {enemy.element} · WEAK: {enemy.weakness}
                   </div>
                 </div>
                 <div className="text-right">
@@ -201,8 +204,8 @@ function DungeonLobby({ enemies, onStart, onClose }) {
           className="rounded-sm p-3 mb-5 text-center"
           style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}
         >
-          <div className="neon-text" style={{ color: '#facc15', fontSize: '8px', letterSpacing: '2px' }}>
-            📦 CLEAR DUNGEON → OPEN CHEST → GET LOOT
+          <div className="neon-text flex items-center gap-1.5 justify-center" style={{ color: '#facc15', fontSize: '8px', letterSpacing: '2px' }}>
+            <GameIcon name="chest" size={12} color="#facc15" /> CLEAR DUNGEON → OPEN CHEST → GET LOOT
           </div>
           <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '6px' }}>
             Equippable gear that boosts your battle stats
@@ -221,7 +224,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
             letterSpacing: '4px',
           }}
         >
-          ⚔️ ENTER DUNGEON
+          ENTER DUNGEON
         </button>
       </div>
     </div>

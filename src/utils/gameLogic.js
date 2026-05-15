@@ -1,4 +1,4 @@
-import { MUSCLE_TO_STAT, MUSCLE_GROUPS, WEAKNESS_BONUS_MULTIPLIER, MUSCLE_RANKS } from '../constants';
+import { MUSCLE_TO_STAT, MUSCLE_GROUPS, WEAKNESS_BONUS_MULTIPLIER, MUSCLE_RANKS, SKILLS } from '../constants';
 
 export const INITIAL_MUSCLE_XP = Object.fromEntries(MUSCLE_GROUPS.map(m => [m, 0]));
 
@@ -131,7 +131,7 @@ export function getMuscleRankProgress(xp) {
   return (xp - current.min) / (next.min - current.min);
 }
 
-export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems = {}) {
+export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems = {}, purchasedSkills = [], classBonuses = {}) {
   const stats   = getStats(muscleXP);
   const atkUp   = statUpgrades.ATK   || 0;
   const defUp   = statUpgrades.DEF   || 0;
@@ -147,22 +147,31 @@ export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems 
   const lootCrit  = items.reduce((s, it) => s + (it.crit  || 0), 0);
   const lootDodge = items.reduce((s, it) => s + (it.dodge || 0), 0);
 
+  // Skill tree bonuses
+  const skillDefs = SKILLS.filter(s => purchasedSkills.includes(s.id));
+  const skillHP    = skillDefs.filter(s => s.effect === 'hp').reduce((a, s) => a + s.val, 0);
+  const skillATK   = (classBonuses.atk || 0);
+  const skillDEF   = skillDefs.filter(s => s.effect === 'def').reduce((a, s) => a + s.val, 0) + (classBonuses.def || 0);
+  const skillCrit  = skillDefs.filter(s => s.effect === 'crit').reduce((a, s) => a + s.val, 0) + (classBonuses.crit || 0);
+  const skillDodge = skillDefs.filter(s => s.effect === 'dodge').reduce((a, s) => a + s.val, 0) + (classBonuses.dodge || 0);
+  const classHP    = classBonuses.hp || 0;
+
   return {
-    // Base HP 85 (up from 70) so new players survive longer; VIT worth 6 HP/point (up from 5)
-    maxHP:    Math.max(100, 85 + stats.VIT * 6 + hpUp * 15 + lootHP),
-    // Base ATK 8 (up from 5) + ATK stat scales at 1.0x (up from 0.8x) = more rewarding training
-    atk:      Math.floor(8 + stats.ATK * 1.0) + atkUp * 3 + lootATK,
-    // DEF scales at 0.7% per point (up from 0.6), cap raised to 60% (from 55%)
-    defPct:   Math.min(60, stats.DEF * 0.7 + defUp * 2 + lootDEF),
-    // DODGE scales at 0.5% per point (up from 0.4), cap raised to 40% (from 35%)
-    dodgePct: Math.min(40, stats.AGI * 0.5 + dodgeUp + lootDodge),
-    // Stamina bonus chance raised cap to 30% (from 25%)
+    maxHP:    Math.max(100, 85 + stats.VIT * 6 + hpUp * 15 + lootHP + skillHP + classHP),
+    atk:      Math.floor(8 + stats.ATK * 1.0) + atkUp * 3 + lootATK + skillATK,
+    defPct:   Math.min(60, stats.DEF * 0.7 + defUp * 2 + lootDEF + skillDEF),
+    dodgePct: Math.min(40, stats.AGI * 0.5 + dodgeUp + lootDodge + skillDodge),
     staPct:   Math.min(30, stats.STA * 0.5),
     speed:    stats.AGI,
-    // Crit capped at 50% to prevent absurd values from stacking loot
-    critPct:  Math.min(50, 10 + lckUp * 2 + lootCrit),
+    critPct:  Math.min(50, 10 + lckUp * 2 + lootCrit + skillCrit),
     luckPct:  lckUp * 2,
   };
+}
+
+// Total XP multiplier from skills (stacks additively)
+export function getSkillXPMultiplier(purchasedSkills = []) {
+  const skillDefs = SKILLS.filter(s => purchasedSkills.includes(s.id) && s.effect === 'xpMult');
+  return 1 + skillDefs.reduce((a, s) => a + s.val, 0);
 }
 
 /*
@@ -192,29 +201,29 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
 
     if (hasWeaknessBonus) {
       dmg = Math.floor(dmg * WEAKNESS_BONUS_MULTIPLIER);
-      events.push({ type: 'weakness', text: '⚡ WEAKNESS BONUS! +25%!', effect: 'weakness' });
+      events.push({ type: 'weakness', text: 'WEAKNESS BONUS! +25%!', effect: 'weakness' });
     }
 
     if (Math.random() < 0.04) {
       const selfDmg = Math.max(1, Math.floor(pATK * 0.25));
       ph = Math.max(0, ph - selfDmg);
-      events.push({ type: 'selfhit', text: `😵 CONFUSED! Hit yourself for ${selfDmg}!`, val: selfDmg, effect: 'selfhit' });
+      events.push({ type: 'selfhit', text: `CONFUSED! Hit yourself for ${selfDmg}!`, val: selfDmg, effect: 'selfhit' });
       return;
     }
 
     bh = Math.max(0, bh - dmg);
 
     if (eventEffect === 'crit')
-      events.push({ type: 'crit',       text: `💥 CRITICAL HIT! ${dmg} damage!`,       val: dmg, effect: 'crit' });
+      events.push({ type: 'crit',       text: `CRITICAL HIT! ${dmg} damage!`,       val: dmg, effect: 'crit' });
     else if (eventEffect === 'adrenaline')
-      events.push({ type: 'adrenaline', text: `🔥 ADRENALINE RUSH! ${dmg} damage!`,    val: dmg, effect: 'adrenaline' });
+      events.push({ type: 'adrenaline', text: `ADRENALINE RUSH! ${dmg} damage!`,    val: dmg, effect: 'adrenaline' });
     else
       events.push({ type: 'player',     text: `You strike for ${dmg} damage!`,          val: dmg, effect: 'hit' });
 
     if (Math.random() * 100 < staPct) {
       const bonus = Math.floor(pATK * 0.55 * (0.85 + Math.random() * 0.30));
       bh = Math.max(0, bh - bonus);
-      events.push({ type: 'stamina', text: `⚡ Stamina surge! +${bonus}!`, val: bonus, effect: 'stamina' });
+      events.push({ type: 'stamina', text: `Stamina surge! +${bonus}!`, val: bonus, effect: 'stamina' });
     }
   }
 
@@ -223,7 +232,7 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
     const totalDodge = dodgePct + luckPct * 0.5;
 
     if (Math.random() * 100 < totalDodge) {
-      events.push({ type: 'dodge', text: '💨 DODGED! Nimble as lightning!', effect: 'dodge' });
+      events.push({ type: 'dodge', text: 'DODGED! Nimble as lightning!', effect: 'dodge' });
       return;
     }
 
@@ -231,7 +240,7 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
     if (Math.random() * 100 < blockChance) {
       const blockDmg = Math.max(1, Math.floor(rawDmg * 0.25));
       ph = Math.max(0, ph - blockDmg);
-      events.push({ type: 'block', text: `🛡️ BLOCKED! Only ${blockDmg} chip damage!`, val: blockDmg, effect: 'block' });
+      events.push({ type: 'block', text: `BLOCKED! Only ${blockDmg} chip damage!`, val: blockDmg, effect: 'block' });
       return;
     }
 
@@ -239,12 +248,12 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
     ph = Math.max(0, ph - dmg);
 
     if (bossRageActive)
-      events.push({ type: 'boss_rage', text: `😡 RAGE! ${boss.name} slams for ${dmg}!`, val: dmg, effect: 'rage' });
+      events.push({ type: 'boss_rage', text: `RAGE! ${boss.name} slams for ${dmg}!`, val: dmg, effect: 'rage' });
     else
       events.push({ type: 'boss',      text: `${boss.name} hits for ${dmg}!`,            val: dmg, effect: 'hit' });
 
     if (dmg > maxHP * 0.25)
-      events.push({ type: 'injury', text: '🩸 INJURED! Took a massive hit!', effect: 'injury' });
+      events.push({ type: 'injury', text: 'INJURED! Took a massive hit!', effect: 'injury' });
   }
 
   let phase1PlayerHP, phase1BossHP;
@@ -256,7 +265,7 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
     if (bh > 0) bossAttack();
     const tookBossDmg = events.slice(splitAt).some(ev => ev.type === 'boss' || ev.type === 'boss_rage');
     if (!tookBossDmg && Math.random() * 100 < lockedInChance)
-      events.push({ type: 'lockedin', text: '🔒 LOCKED IN! Momentum rising!', effect: 'lockedin' });
+      events.push({ type: 'lockedin', text: 'LOCKED IN! Momentum rising!', effect: 'lockedin' });
     const status = bh <= 0 ? 'victory' : ph <= 0 ? 'defeat' : 'ongoing';
     return { playerHP: ph, bossHP: bh, events, status, bossRageActive,
       phase1Events: events.slice(0, splitAt), phase2Events: events.slice(splitAt),
@@ -268,7 +277,7 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
     if (ph > 0) playerAttack();
     const tookBossDmg = events.slice(0, splitAt).some(ev => ev.type === 'boss' || ev.type === 'boss_rage');
     if (!tookBossDmg && Math.random() * 100 < lockedInChance)
-      events.push({ type: 'lockedin', text: '🔒 LOCKED IN! Momentum rising!', effect: 'lockedin' });
+      events.push({ type: 'lockedin', text: 'LOCKED IN! Momentum rising!', effect: 'lockedin' });
     const status = bh <= 0 ? 'victory' : ph <= 0 ? 'defeat' : 'ongoing';
     return { playerHP: ph, bossHP: bh, events, status, bossRageActive,
       phase1Events: events.slice(0, splitAt), phase2Events: events.slice(splitAt),

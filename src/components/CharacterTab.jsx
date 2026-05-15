@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import {
   STAT_INFO, MUSCLE_COLORS, MUSCLE_GROUPS, MUSCLE_TO_STAT, GOLD_SHOP,
 } from '../constants';
+import GameIcon from './GameIcon';
+import { SLOT_ICON_MAP } from './GameIcon';
 import { SanctumScene } from './PixelScene';
 import {
   getStats, getStatXP, getTotalXP, getLevel, getWeaknessWarnings,
   getMuscleRank, getMuscleRankProgress, xpForLevel, getXPInCurrentLevel,
   getPlayerBattleStats,
 } from '../utils/gameLogic';
+import { getClassBonuses } from '../utils/classSystem';
 import CharacterSprite from './CharacterSprite';
 import SettingsModal from './SettingsModal';
 
@@ -34,12 +37,12 @@ function t(key, lang) {
 }
 
 const EQUIP_SLOTS = [
-  { key: 'helmet',  icon: '🪖', color: '#f87171' },
-  { key: 'chest',   icon: '🛡️', color: '#60a5fa' },
-  { key: 'boots',   icon: '👟', color: '#f87171' },
-  { key: 'weapon',  icon: '⚔️', color: '#a78bfa' },
-  { key: 'ring',    icon: '💍', color: '#facc15' },
-  { key: 'special', icon: '✨', color: '#4ade80' },
+  { key: 'helmet',  icon: 'helmet',     color: '#f87171' },
+  { key: 'chest',   icon: 'chest-armor',color: '#60a5fa' },
+  { key: 'boots',   icon: 'boots',      color: '#f87171' },
+  { key: 'weapon',  icon: 'sword',      color: '#a78bfa' },
+  { key: 'ring',    icon: 'ring',       color: '#facc15' },
+  { key: 'special', icon: 'orb',        color: '#4ade80' },
 ];
 
 function EquipSlot({ slot, aura, language, item, onUnequip }) {
@@ -70,14 +73,20 @@ function EquipSlot({ slot, aura, language, item, onUnequip }) {
       <div style={{ position:'absolute', top:-1, left:-1, width:6, height:6, background: accentColor, borderRadius:1, opacity: item ? 0.9 : 0.5 }} />
       <div style={{ position:'absolute', bottom:-1, right:-1, width:6, height:6, background: accentColor, borderRadius:1, opacity: item ? 0.9 : 0.5 }} />
 
-      <span style={{ fontSize: item ? '22px' : '18px', opacity: item ? 1 : 0.35, filter: `drop-shadow(0 0 ${item ? 6 : 2}px rgba(0,0,0,0.8))` }}>
-        {item ? item.icon : slot.icon}
+      <span style={{ opacity: item ? 1 : 0.35, filter: `drop-shadow(0 0 ${item ? 6 : 2}px rgba(0,0,0,0.8))` }}>
+        <GameIcon
+          name={item ? (item.icon || slot.icon) : slot.icon}
+          size={item ? 22 : 18}
+          color={item ? item.rarityColor : slot.color}
+        />
       </span>
       <div className="neon-text" style={{ color: labelColor, fontSize: '5px', letterSpacing: '0.5px', marginTop: 2, opacity: item ? 1 : 0.5 }}>
         {item ? item.rarity.slice(0,3).toUpperCase() : t(slot.key, language).slice(0, 6).toUpperCase()}
       </div>
       {!item && (
-        <div style={{ position:'absolute', top:2, right:3, fontSize:7, opacity:0.25 }}>🔒</div>
+        <div style={{ position:'absolute', top:2, right:2, opacity:0.25 }}>
+          <GameIcon name="lock" size={7} color="#475569" />
+        </div>
       )}
 
       {/* Tooltip on tap */}
@@ -98,11 +107,11 @@ function EquipSlot({ slot, aura, language, item, onUnequip }) {
           onClick={e => e.stopPropagation()}
         >
           <div className="neon-text" style={{ color: item.rarityColor, fontSize: '7px', letterSpacing: '1px' }}>{item.name}</div>
-          {item.atk   > 0 && <div className="neon-text" style={{ color: '#f87171', fontSize: '6px' }}>⚔️ +{item.atk} ATK</div>}
-          {item.def   > 0 && <div className="neon-text" style={{ color: '#60a5fa', fontSize: '6px' }}>🛡️ +{item.def} DEF</div>}
-          {item.hp    > 0 && <div className="neon-text" style={{ color: '#4ade80', fontSize: '6px' }}>❤️ +{item.hp} HP</div>}
-          {item.crit  > 0 && <div className="neon-text" style={{ color: '#facc15', fontSize: '6px' }}>💥 +{item.crit}% CRIT</div>}
-          {item.dodge > 0 && <div className="neon-text" style={{ color: '#a78bfa', fontSize: '6px' }}>💨 +{item.dodge}% DODGE</div>}
+          {item.atk   > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#f87171', fontSize: '6px' }}><GameIcon name="sword"     size={8} color="#f87171" /> +{item.atk} ATK</div>}
+          {item.def   > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#60a5fa', fontSize: '6px' }}><GameIcon name="shield"    size={8} color="#60a5fa" /> +{item.def} DEF</div>}
+          {item.hp    > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#4ade80', fontSize: '6px' }}><GameIcon name="heart"     size={8} color="#4ade80" /> +{item.hp} HP</div>}
+          {item.crit  > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#facc15', fontSize: '6px' }}><GameIcon name="lightning" size={8} color="#facc15" /> +{item.crit}% CRIT</div>}
+          {item.dodge > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#a78bfa', fontSize: '6px' }}><GameIcon name="wing"      size={8} color="#a78bfa" /> +{item.dodge}% DODGE</div>}
           <button
             className="neon-text mt-1 py-0.5 rounded-sm text-center"
             style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', fontSize: '6px' }}
@@ -131,7 +140,7 @@ function StatBar({ statKey, xp, stat, upgradeCount = 0 }) {
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >
-          <span style={{ fontSize: '14px' }}>{info.icon}</span>
+          <GameIcon name={info.icon} size={14} color={info.color} />
           <span className="neon-text" style={{ color: info.color, fontSize: '8px', letterSpacing: '1px' }}>{info.label}</span>
           <span className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>{info.fullLabel}</span>
         </div>
@@ -166,7 +175,9 @@ function StatBar({ statKey, xp, stat, upgradeCount = 0 }) {
           <div className="neon-text mb-1" style={{ color: info.color, fontSize: '8px' }}>{info.fullLabel}</div>
           <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>{info.desc}</div>
           {info.goldOnly && (
-            <div className="neon-text mt-1" style={{ color: '#facc15', fontSize: '7px' }}>💰 Upgrade with Gold</div>
+            <div className="neon-text mt-1 flex items-center gap-1" style={{ color: '#facc15', fontSize: '7px' }}>
+              <GameIcon name="coin" size={8} color="#facc15" /> Upgrade with Gold
+            </div>
           )}
         </div>
       )}
@@ -214,7 +225,7 @@ function MuscleRankRow({ muscle, xp, isFocus }) {
 
 function WardrobeShop({ coins, ownedClothing, equippedClothing, onBuyClothing, onEquipClothing }) {
   const SLOTS = ['hat', 'pants', 'shoes', 'accessory'];
-  const SLOT_LABELS = { hat: '🎩 Hats', pants: '👖 Pants', shoes: '👟 Shoes', accessory: '✨ Accessories' };
+  const SLOT_LABELS = { hat: 'Hats', pants: 'Pants', shoes: 'Shoes', accessory: 'Accessories' };
   const [activeSlot, setActiveSlot] = useState('hat');
   const items = GOLD_SHOP.clothing[activeSlot] || [];
 
@@ -256,7 +267,7 @@ function WardrobeShop({ coins, ownedClothing, equippedClothing, onBuyClothing, o
               }}
             >
               <div className="flex items-center gap-2">
-                <span style={{ fontSize: '18px' }}>{item.icon}</span>
+                <GameIcon name={item.icon || 'star'} size={18} color={item.color || '#475569'} />
                 <div className="neon-text" style={{ color: '#e2e8f0', fontSize: '7px' }}>{item.label}</div>
               </div>
               {owned ? (
@@ -293,7 +304,7 @@ function WardrobeShop({ coins, ownedClothing, equippedClothing, onBuyClothing, o
                     opacity: canAfford ? 1 : 0.5,
                   }}
                 >
-                  {item.cost} 🪙
+                  {item.cost} <GameIcon name="coin" size={10} color={canAfford ? '#facc15' : '#334155'} />
                 </button>
               )}
             </div>
@@ -320,19 +331,19 @@ function GoldShop({
         className="px-4 py-3 flex items-center justify-between"
         style={{ background: 'linear-gradient(90deg, rgba(250,204,21,0.1), transparent)', borderBottom: '1px solid rgba(250,204,21,0.15)' }}
       >
-        <div className="neon-text" style={{ color: '#facc15', fontSize: '9px', letterSpacing: '2px' }}>
-          🏪 GOLD SHOP
+        <div className="neon-text flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '9px', letterSpacing: '2px' }}>
+          <GameIcon name="coin" size={12} color="#facc15" /> GOLD SHOP
         </div>
-        <div className="neon-text" style={{ color: '#facc15', fontSize: '11px', textShadow: '0 0 10px #facc15' }}>
-          {coins} 🪙
+        <div className="neon-text flex items-center gap-1" style={{ color: '#facc15', fontSize: '11px', textShadow: '0 0 10px #facc15' }}>
+          {coins} <GameIcon name="coin" size={12} color="#facc15" />
         </div>
       </div>
 
       <div className="flex border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         {[
-          { id: 'stats',    label: '⚔️ Stats'   },
-          { id: 'wardrobe', label: '👔 Wardrobe' },
-          { id: 'auras',    label: '✨ Auras'    },
+          { id: 'stats',    label: 'Stats'    },
+          { id: 'wardrobe', label: 'Wardrobe' },
+          { id: 'auras',    label: 'Auras'    },
         ].map(t => (
           <button
             key={t.id}
@@ -361,7 +372,7 @@ function GoldShop({
             return (
               <div key={item.id} className="shop-card rounded-sm p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span style={{ fontSize: '18px' }}>{item.icon}</span>
+                  <GameIcon name={item.icon || 'star'} size={18} color={item.color} />
                   <div>
                     <div className="neon-text" style={{ color: item.color, fontSize: '9px', letterSpacing: '1px' }}>{item.label}</div>
                     <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>{item.desc}</div>
@@ -381,7 +392,7 @@ function GoldShop({
                     opacity: maxed || !canAfford ? 0.5 : 1,
                   }}
                 >
-                  {maxed ? 'MAX' : `${item.cost} 🪙`}
+                  {maxed ? 'MAX' : <span className="flex items-center gap-1">{item.cost} <GameIcon name="coin" size={10} color={maxed || !canAfford ? '#334155' : '#facc15'} /></span>}
                 </button>
               </div>
             );
@@ -460,7 +471,7 @@ function GoldShop({
                         opacity: canAfford ? 1 : 0.5,
                       }}
                     >
-                      {aura.cost} 🪙
+                      <span className="flex items-center gap-1">{aura.cost} <GameIcon name="coin" size={10} color={canAfford ? '#facc15' : '#334155'} /></span>
                     </button>
                   )}
                 </div>
@@ -483,15 +494,23 @@ export default function CharacterTab({
   timerTotal = 60, onChangeTimerDuration,
   language = 'en', onChangeLanguage,
   inventory = [], equippedItems = {}, onEquipItem, onUnequipItem,
+  // New props
+  playerClass = null, playerTitle = null,
+  prestige = { count: 0, multiplier: 1 },
+  streak = { count: 0 },
+  purchasedSkills = [],
+  onPrestige,
 }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showInventory, setShowInventory] = useState(true);
+  const [showPrestigeConfirm, setShowPrestigeConfirm] = useState(false);
 
   const stats    = getStats(muscleXP);
   const statXP   = getStatXP(muscleXP);
   const level    = getLevel(muscleXP);
   const warnings = getWeaknessWarnings(muscleXP);
-  const pStats   = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems);
+  const classBonuses = getClassBonuses(playerClass);
+  const pStats   = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses);
 
   const xpInLevel = getXPInCurrentLevel(muscleXP);
   const xpNeeded  = xpForLevel(level);
@@ -508,10 +527,10 @@ export default function CharacterTab({
   const aura = equippedAuraColor !== 'rainbow' ? equippedAuraColor : '#facc15';
 
   const QUICK_STATS = [
-    { label: 'HP',    val: pStats.maxHP,                   color: '#4ade80', icon: '❤️' },
-    { label: 'ATK',   val: pStats.atk,                     color: '#f87171', icon: '⚔️' },
-    { label: 'DEF',   val: `${pStats.defPct.toFixed(0)}%`, color: '#60a5fa', icon: '🛡️' },
-    { label: 'DODGE', val: `${pStats.dodgePct.toFixed(0)}%`, color: '#facc15', icon: '💨' },
+    { label: 'HP',    val: pStats.maxHP,                     color: '#4ade80', icon: 'heart'   },
+    { label: 'ATK',   val: pStats.atk,                       color: '#f87171', icon: 'sword'   },
+    { label: 'DEF',   val: `${pStats.defPct.toFixed(0)}%`,   color: '#60a5fa', icon: 'shield'  },
+    { label: 'DODGE', val: `${pStats.dodgePct.toFixed(0)}%`, color: '#facc15', icon: 'wing'    },
   ];
 
   return (
@@ -527,17 +546,17 @@ export default function CharacterTab({
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="neon-text px-2 py-1 rounded-sm"
+            className="neon-text px-2 py-1 rounded-sm flex items-center gap-1"
             style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)', color: '#facc15', fontSize: '8px' }}
           >
-            🪙 {coins ?? 0}
+            <GameIcon name="coin" size={10} color="#facc15" /> {coins ?? 0}
           </span>
           <button
             onClick={() => setShowSettings(true)}
             className="flex items-center justify-center rounded-sm"
-            style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '14px' }}
+            style={{ width: 28, height: 28, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
-            ⚙️
+            <GameIcon name="gear" size={14} color="#475569" />
           </button>
         </div>
       </div>
@@ -599,10 +618,34 @@ export default function CharacterTab({
           </div>
 
           {/* Level badge — top-left overlay */}
-          <div style={{ position: 'absolute', top: 10, left: 74, zIndex: 6 }}>
+          <div style={{ position: 'absolute', top: 10, left: 74, zIndex: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div className="neon-text px-2 py-0.5 rounded-sm" style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${aura}88`, color: aura, fontSize: '8px', textShadow: `0 0 6px ${aura}` }}>
               {t('level', language)}.{level}
             </div>
+            {playerClass && playerClass.id !== 'NOVICE' && (
+              <div
+                className="neon-text px-2 py-0.5 rounded-sm flex items-center gap-1"
+                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerClass.color}88`, color: playerClass.color, fontSize: '7px', letterSpacing: '1px' }}
+              >
+                <GameIcon name={playerClass.icon} size={10} color={playerClass.color} /> {playerClass.name.toUpperCase()}
+              </div>
+            )}
+            {playerTitle && (
+              <div
+                className="neon-text px-2 py-0.5 rounded-sm"
+                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerTitle.color}55`, color: playerTitle.color, fontSize: '6px', letterSpacing: '1px' }}
+              >
+                {playerTitle.title.toUpperCase()}
+              </div>
+            )}
+            {prestige?.count > 0 && (
+              <div
+                className="neon-text px-2 py-0.5 rounded-sm"
+                style={{ background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.5)', color: '#facc15', fontSize: '6px', letterSpacing: '1px' }}
+              >
+                ★ PRESTIGE {prestige.count}
+              </div>
+            )}
           </div>
 
           {/* Name + XP — bottom overlay */}
@@ -621,25 +664,61 @@ export default function CharacterTab({
               </div>
               <div className="flex justify-between mt-0.5">
                 <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{xpInLevel.toFixed(0)} XP</span>
-                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>LV.{level+1} — {xpToNext.toFixed(0)} left{nextMilestone ? `  ✨→${nextMilestone}` : ''}</span>
+                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>LV.{level+1} — {xpToNext.toFixed(0)} left{nextMilestone ? ` →${nextMilestone}` : ''}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Quick stats bar ──────────────────────── */}
-        <div className="grid grid-cols-4 gap-0 mb-4" style={{ borderTop: `1px solid ${aura}22`, borderBottom: `1px solid rgba(255,255,255,0.05)`, background: 'rgba(4,8,18,0.95)' }}>
+        <div className="grid grid-cols-4 gap-0" style={{ borderTop: `1px solid ${aura}22`, background: 'rgba(4,8,18,0.95)' }}>
           {QUICK_STATS.map((s, i) => (
             <div
               key={s.label}
               className="flex flex-col items-center py-3"
               style={{ borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
             >
-              <span style={{ fontSize: '13px', lineHeight: 1 }}>{s.icon}</span>
+              <GameIcon name={s.icon} size={13} color={s.color} />
               <div className="neon-text mt-1" style={{ color: s.color, fontSize: '11px', textShadow: `0 0 6px ${s.color}` }}>{s.val}</div>
               <div className="neon-text" style={{ color: '#334155', fontSize: '6px', letterSpacing: '1px' }}>{s.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* ── Streak + class row ──────────────────── */}
+        <div
+          className="grid grid-cols-2 gap-0 mb-4"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(4,8,18,0.9)' }}
+        >
+          {/* Streak */}
+          <div
+            className="flex items-center gap-2 px-3 py-2"
+            style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}
+          >
+            <GameIcon name="flame" size={16} color="#fb923c" />
+            <div>
+              <div className="neon-text" style={{ color: streak.count > 0 ? '#fb923c' : '#334155', fontSize: '9px' }}>
+                {streak.count > 0 ? `${streak.count}-DAY` : 'NO STREAK'}
+              </div>
+              <div className="neon-text" style={{ color: '#334155', fontSize: '6px', letterSpacing: '1px' }}>
+                {streak.count > 1
+                  ? `+${Math.round((Math.min(streak.count - 1, 6)) * 10)}% XP`
+                  : 'DAILY STREAK'}
+              </div>
+            </div>
+          </div>
+          {/* Class */}
+          <div className="flex items-center gap-2 px-3 py-2">
+            <GameIcon name={playerClass?.icon || 'dumbbell'} size={16} color={playerClass?.color || '#475569'} />
+            <div>
+              <div className="neon-text" style={{ color: playerClass?.color || '#475569', fontSize: '9px' }}>
+                {playerClass?.name?.toUpperCase() || 'NOVICE'}
+              </div>
+              <div className="neon-text" style={{ color: '#334155', fontSize: '6px', letterSpacing: '1px' }}>
+                {playerClass?.bonus?.label || 'KEEP GRINDING'}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Inventory / Loot panel ─────────────── */}
@@ -652,8 +731,9 @@ export default function CharacterTab({
               border: `1px solid ${showInventory ? 'rgba(192,132,252,0.4)' : 'rgba(192,132,252,0.2)'}`,
             }}
           >
-            <div className="neon-text" style={{ color: '#c084fc', fontSize: '8px', letterSpacing: '2px' }}>
-              🎒 INVENTORY {inventory.length > 0 ? `(${inventory.length})` : ''}
+            <div className="neon-text flex items-center gap-1.5" style={{ color: '#c084fc', fontSize: '8px', letterSpacing: '2px' }}>
+              <GameIcon name="chest" size={12} color="#c084fc" />
+              INVENTORY {inventory.length > 0 ? `(${inventory.length})` : ''}
             </div>
             <div className="neon-text" style={{ color: '#475569', fontSize: '10px' }}>
               {showInventory ? '▲' : '▼'}
@@ -667,7 +747,7 @@ export default function CharacterTab({
             >
               {inventory.length === 0 ? (
                 <div className="text-center py-2">
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🏰</div>
+                  <div style={{ marginBottom: '8px' }}><GameIcon name="chest" size={28} color="#334155" /></div>
                   <div className="neon-text" style={{ color: '#334155', fontSize: '7px', letterSpacing: '1px' }}>
                     NO ITEMS YET
                   </div>
@@ -687,18 +767,20 @@ export default function CharacterTab({
                         border: `1px solid ${isEquipped ? item.rarityColor : 'rgba(255,255,255,0.06)'}`,
                       }}
                     >
-                      <span style={{ fontSize: '20px', flexShrink: 0 }}>{item.icon}</span>
+                      <span style={{ flexShrink: 0 }}>
+                        <GameIcon name={item.icon || 'star'} size={20} color={item.rarityColor} />
+                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="neon-text" style={{ color: item.rarityColor, fontSize: '7px', letterSpacing: '1px' }}>
                           {item.name}
                         </div>
                         <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>
                           {item.slot.toUpperCase()}
-                          {item.atk   > 0 && ` · ⚔️+${item.atk}`}
-                          {item.def   > 0 && ` · 🛡️+${item.def}`}
-                          {item.hp    > 0 && ` · ❤️+${item.hp}`}
-                          {item.crit  > 0 && ` · 💥+${item.crit}%`}
-                          {item.dodge > 0 && ` · 💨+${item.dodge}%`}
+                          {item.atk   > 0 && ` · ATK+${item.atk}`}
+                          {item.def   > 0 && ` · DEF+${item.def}`}
+                          {item.hp    > 0 && ` · HP+${item.hp}`}
+                          {item.crit  > 0 && ` · CRIT+${item.crit}%`}
+                          {item.dodge > 0 && ` · DODGE+${item.dodge}%`}
                         </div>
                       </div>
                       <button
@@ -732,7 +814,9 @@ export default function CharacterTab({
         {/* ── Weakness warnings ───────────────────── */}
         {warnings.length > 0 && (
           <div className="mb-4 rounded-sm p-3" style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)' }}>
-            <div className="neon-text mb-1.5" style={{ color: '#f87171', fontSize: '8px', letterSpacing: '1px' }}>⚠️ {t('weakMuscles', language)}</div>
+            <div className="neon-text mb-1.5 flex items-center gap-1" style={{ color: '#f87171', fontSize: '8px', letterSpacing: '1px' }}>
+              <GameIcon name="impact" size={10} color="#f87171" /> {t('weakMuscles', language)}
+            </div>
             {warnings.map(m => (
               <div key={m} className="neon-text" style={{ color: '#475569', fontSize: '7px', marginBottom: '2px' }}>
                 • <span style={{ color: MUSCLE_COLORS[m] }}>{m}</span> — {language === 'nl' ? 'bazen doen extra schade!' : 'bosses deal extra damage!'}
@@ -775,6 +859,108 @@ export default function CharacterTab({
             {MUSCLE_GROUPS.map(m => (
               <MuscleRankRow key={m} muscle={m} xp={muscleXP[m] || 0} isFocus={focusSet.has(m)} />
             ))}
+          </div>
+        </div>
+
+        {/* ── Prestige section ─────────────────────── */}
+        <div className="mt-5 mb-2">
+          <div className="neon-text mb-2 flex items-center gap-1.5" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
+            <GameIcon name="star" size={10} color="#475569" /> PRESTIGE
+          </div>
+          <div
+            className="rounded-sm p-4"
+            style={{
+              background: prestige.count > 0
+                ? 'linear-gradient(135deg, rgba(250,204,21,0.1), rgba(6,10,20,0.9))'
+                : 'rgba(6,10,20,0.75)',
+              border: `1px solid ${prestige.count > 0 ? 'rgba(250,204,21,0.35)' : 'rgba(255,255,255,0.06)'}`,
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="neon-text flex items-center gap-1" style={{ color: prestige.count > 0 ? '#facc15' : '#475569', fontSize: '9px', letterSpacing: '1px' }}>
+                  {prestige.count > 0 && <GameIcon name="star" size={10} color="#facc15" />}
+                  {prestige.count > 0 ? `PRESTIGE ${prestige.count}` : 'NOT YET PRESTIGED'}
+                </div>
+                <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>
+                  {prestige.count > 0
+                    ? `×${prestige.multiplier.toFixed(2)} permanent XP multiplier`
+                    : 'Reach level 200 to prestige'}
+                </div>
+              </div>
+              {prestige.count > 0 && (
+                <div style={{ filter: 'drop-shadow(0 0 8px #facc15)' }}>
+                  <GameIcon name="star" size={24} color="#facc15" />
+                </div>
+              )}
+            </div>
+
+            {level >= 200 && !showPrestigeConfirm && (
+              <button
+                onClick={() => setShowPrestigeConfirm(true)}
+                className="w-full py-2 rounded-sm pixel-btn neon-text"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(250,204,21,0.2), rgba(250,204,21,0.05))',
+                  border: '2px solid rgba(250,204,21,0.6)',
+                  color: '#facc15',
+                  fontSize: '8px',
+                  letterSpacing: '2px',
+                  boxShadow: '0 0 16px rgba(250,204,21,0.2)',
+                }}
+              >
+                PRESTIGE NOW (+25% XP FOREVER)
+              </button>
+            )}
+
+            {showPrestigeConfirm && (
+              <div
+                className="rounded-sm p-3"
+                style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)' }}
+              >
+                <div className="neon-text mb-2 text-center" style={{ color: '#f87171', fontSize: '7px', letterSpacing: '1px' }}>
+                  RESET ALL STATS & START OVER?
+                </div>
+                <div className="neon-text mb-3 text-center" style={{ color: '#334155', fontSize: '6px' }}>
+                  Your level, XP, and skills reset. You keep your gold and loot. Gain +25% XP permanently.
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { onPrestige && onPrestige(); setShowPrestigeConfirm(false); }}
+                    className="flex-1 py-2 rounded-sm pixel-btn neon-text"
+                    style={{ background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.4)', color: '#facc15', fontSize: '7px' }}
+                  >
+                    ✓ CONFIRM
+                  </button>
+                  <button
+                    onClick={() => setShowPrestigeConfirm(false)}
+                    className="flex-1 py-2 rounded-sm pixel-btn neon-text"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#475569', fontSize: '7px' }}
+                  >
+                    ✕ CANCEL
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {level < 200 && (
+              <div className="mt-2">
+                <div className="flex justify-between mb-1">
+                  <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>PRESTIGE PROGRESS</span>
+                  <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>LV {level} / 200</span>
+                </div>
+                <div className="h-1.5 rounded-sm overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <div
+                    className="h-full rounded-sm"
+                    style={{
+                      width: `${Math.min(100, (level / 200) * 100)}%`,
+                      background: 'linear-gradient(90deg, #facc15, #fb923c)',
+                      boxShadow: '0 0 4px #facc15',
+                      transition: 'width 0.8s ease',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

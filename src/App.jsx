@@ -6,8 +6,13 @@ import {
   getVolumeByMuscle,
   xpFromVolume,
   getLevel,
+  getSkillXPMultiplier,
 } from './utils/gameLogic';
-import { BOSS_BONUS_XP, BOSS_CONFIG, MUSCLE_GROUPS } from './constants';
+import { BOSS_BONUS_XP, BOSS_CONFIG, MUSCLE_GROUPS, WORKOUT_EVENTS } from './constants';
+import { updateStreak, getStreakMultiplier, shouldGrantStreakReward } from './utils/streakHelper';
+import { generateDailyQuests, updateQuestProgress } from './utils/questGenerator';
+import { getPlayerClass, getClassBonuses, getPlayerTitle } from './utils/classSystem';
+import { rollWorkoutLoot, generateLootItem } from './utils/lootGenerator';
 import Navigation from './components/Navigation';
 import RestTimerOverlay from './components/RestTimerOverlay';
 import WorkoutTab from './components/WorkoutTab';
@@ -16,6 +21,8 @@ import BossTab from './components/BossTab';
 import HistoryTab from './components/HistoryTab';
 import LoginScreen from './components/LoginScreen';
 import PerksTab from './components/PerksTab';
+import PostWorkoutOverlay from './components/PostWorkoutOverlay';
+import OnboardingFlow from './components/OnboardingFlow';
 
 const DEFAULT_TIMER = 60;
 
@@ -23,12 +30,23 @@ const WOODEN_SWORD = {
   id: 'starter_wooden_sword',
   name: 'Wooden Sword',
   slot: 'weapon',
-  icon: '🪵',
+  icon: 'sword',
   rarity: 'Common',
   rarityColor: '#94a3b8',
   rarityGlow: 'rgba(148,163,184,0.2)',
   atk: 2, def: 0, hp: 0, crit: 0, dodge: 0,
 };
+
+// Pick a random workout event, weighted
+function rollWorkoutEvent() {
+  const total = WORKOUT_EVENTS.reduce((s, e) => s + e.weight, 0);
+  let roll = Math.random() * total;
+  for (const ev of WORKOUT_EVENTS) {
+    if (roll < ev.weight) return ev;
+    roll -= ev.weight;
+  }
+  return WORKOUT_EVENTS[WORKOUT_EVENTS.length - 1];
+}
 
 export default function App() {
   // ── Auth ────────────────────────────────────────────────────────
@@ -82,6 +100,27 @@ export default function App() {
     helmet: null, chest: null, boots: null, weapon: WOODEN_SWORD, ring: null, special: null,
   });
 
+  // ── New feature states ─────────────────────────────────────────
+  // Streak
+  const [streak, setStreak] = useLocalStorage(`${u}gymrpg_streak`, { count: 0, lastDate: null, maxStreak: 0 });
+
+  // Daily quests (regenerate when date changes)
+  const [questsDate, setQuestsDate] = useLocalStorage(`${u}gymrpg_quests_date`, '');
+  const [dailyQuests, setDailyQuests] = useLocalStorage(`${u}gymrpg_daily_quests`, []);
+
+  // Skill tree
+  const [purchasedSkills, setPurchasedSkills] = useLocalStorage(`${u}gymrpg_purchased_skills`, []);
+
+  // Prestige
+  const [prestige, setPrestige] = useLocalStorage(`${u}gymrpg_prestige`, { count: 0, multiplier: 1 });
+
+  // Onboarding
+  const [onboardingDone, setOnboardingDone] = useLocalStorage(`${u}gymrpg_onboarding_done`, false);
+  const [playerGoal, setPlayerGoal]         = useLocalStorage(`${u}gymrpg_player_goal`, null);
+
+  // Post-workout overlay (transient — not persisted)
+  const [postWorkoutData, setPostWorkoutData] = useState(null);
+
   // Give wooden sword to any player who has no weapons at all (existing accounts)
   useEffect(() => {
     const hasAnyWeapon = inventory.some(i => i.slot === 'weapon');
@@ -93,6 +132,16 @@ export default function App() {
   }, []);
 
   const [currentDayKey, setCurrentDayKey] = useState(getTodayKey());
+
+  // Regenerate quests if date changed
+  useEffect(() => {
+    const today = getTodayKey();
+    if (questsDate !== today) {
+      setDailyQuests(generateDailyQuests(today));
+      setQuestsDate(today);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDayKey]);
 
   // Rest timer
   const [timerActive, setTimerActive] = useState(false);
@@ -135,39 +184,131 @@ export default function App() {
     setTimerSecs(secs);
   }
 
-  // PR-based XP: only award XP when volume exceeds personal record for that muscle
+  // ── Workout completion ─────────────────────────────────────────
   function handleWorkoutComplete(workout) {
     if (!workout) return;
-    const volByMuscle = getVolumeByMuscle(workout.exercises);
-    const xpGained = {};
-    const newPRs = { ...muscleVolumePRs };
+
+    const volByMuscle  = getVolumeByMuscle(workout.exercises);
+    const rawXpGained  = {};
+    const newPRs       = { ...muscleVolumePRs };
+    let   isPR         = false;
 
     for (const [muscle, vol] of Object.entries(volByMuscle)) {
       const pr = newPRs[muscle] || 0;
       if (vol > pr) {
-        xpGained[muscle] = xpFromVolume(vol);
+        rawXpGained[muscle] = xpFromVolume(vol);
         newPRs[muscle] = vol;
+        isPR = true;
       }
     }
 
+    // ── Multipliers ────────────────────────────────────────────
+    const newStreak        = updateStreak(streak);
+    const streakMult       = getStreakMultiplier(newStreak.count);
+    const workoutEvent     = rollWorkoutEvent();
+    const eventMult        = workoutEvent.xpMult;
+    const skillXpMult      = getSkillXPMultiplier(purchasedSkills);
+    const prestigeMult     = prestige.multiplier || 1;
+
+    // PR surge skill: +25% XP when setting a PR
+    const prSurgeMult      = (isPR && purchasedSkills.includes('xp_surge')) ? 1.25 : 1;
+    const totalMult        = streakMult * eventMult * skillXpMult * prestigeMult * prSurgeMult;
+
+    const finalXpGained    = {};
+    let   totalXP          = 0;
+    for (const [muscle, xp] of Object.entries(rawXpGained)) {
+      const final = xp * totalMult;
+      finalXpGained[muscle] = final;
+      totalXP += final;
+    }
+
+    // Apply XP
     setMuscleXP(prev => {
       const next = { ...prev };
-      for (const [muscle, xp] of Object.entries(xpGained)) {
+      for (const [muscle, xp] of Object.entries(finalXpGained)) {
         next[muscle] = (next[muscle] || 0) + xp;
       }
       return next;
     });
     setMuscleVolumePRs(newPRs);
 
-    // Store xpGained on the workout so we can reverse it on reopen
+    // Store xpGained + pre-workout PRs on workout so reopen can fully reverse both
+    const prevPRs = muscleVolumePRs; // snapshot before we mutated newPRs
     setWorkouts(prev => prev.map(w =>
-      w.id === workout.id ? { ...w, xpGained } : w
+      w.id === workout.id ? { ...w, xpGained: finalXpGained, prevPRs } : w
     ));
+
+    // ── Streak update ──────────────────────────────────────────
+    const prevStreakCount = streak.count;
+    setStreak(newStreak);
+
+    // 7-day streak reward: drop a random loot item
+    let streakLoot = null;
+    if (shouldGrantStreakReward(prevStreakCount, newStreak.count)) {
+      streakLoot = generateLootItem(Date.now() ^ 0x777777);
+    }
+
+    // ── Quest progress ─────────────────────────────────────────
+    const setsCount = workout.exercises.reduce((s, ex) => s + ex.sets.length, 0);
+    const musclesTrainedCount = new Set(workout.exercises.map(e => e.muscleGroup)).size;
+
+    const { updated: updatedQuests, completed: completedQuests } = updateQuestProgress(
+      dailyQuests.length ? dailyQuests : generateDailyQuests(getTodayKey()),
+      { musclesTrainedCount, setsCount, xpEarned: totalXP, isPR, streakCount: newStreak.count }
+    );
+    setDailyQuests(updatedQuests);
+
+    // Award quest rewards
+    let questGold = 0;
+    let questXP   = 0;
+    for (const q of completedQuests) {
+      if (q.reward?.gold) questGold += q.reward.gold;
+      if (q.reward?.xp)   questXP   += q.reward.xp;
+    }
+    if (questGold > 0) setCoins(prev => prev + questGold);
+    if (questXP > 0) {
+      setMuscleXP(prev => {
+        const next = { ...prev };
+        // Distribute bonus XP evenly across trained muscles
+        const muscles = Object.keys(finalXpGained);
+        if (muscles.length > 0) {
+          const each = questXP / muscles.length;
+          muscles.forEach(m => { next[m] = (next[m] || 0) + each; });
+        }
+        return next;
+      });
+    }
+
+    // ── Post-workout loot roll ─────────────────────────────────
+    const lootDrop = streakLoot || rollWorkoutLoot(Date.now());
+
+    // ── Show post-workout overlay ──────────────────────────────
+    setPostWorkoutData({
+      event: workoutEvent,
+      xpGained: finalXpGained,
+      totalXP,
+      streak: newStreak,
+      streakMultiplier: streakMult,
+      eventMultiplier: eventMult,
+      questUpdates: updatedQuests,
+      completedQuests,
+      lootDrop,
+    });
   }
 
-  // Reverse XP when a completed workout is reopened for editing
+  function handlePostWorkoutDone() {
+    setPostWorkoutData(null);
+  }
+
+  function handlePostWorkoutEquipLoot(item) {
+    handleLootEarned(item);
+    setPostWorkoutData(null);
+  }
+
+  // ── Workout reopen ─────────────────────────────────────────────
   function handleWorkoutReopen(workout) {
     if (!workout?.xpGained) return;
+    // Reverse XP
     setMuscleXP(prev => {
       const next = { ...prev };
       for (const [muscle, xp] of Object.entries(workout.xpGained)) {
@@ -175,9 +316,12 @@ export default function App() {
       }
       return next;
     });
-    // Clear stored xpGained so it can be recalculated on next complete
+    // Restore PRs to what they were before this workout so re-completing awards XP correctly
+    if (workout.prevPRs) {
+      setMuscleVolumePRs(workout.prevPRs);
+    }
     setWorkouts(prev => prev.map(w =>
-      w.id === workout.id ? { ...w, xpGained: undefined, completed: false } : w
+      w.id === workout.id ? { ...w, xpGained: undefined, prevPRs: undefined, completed: false } : w
     ));
   }
 
@@ -201,7 +345,6 @@ export default function App() {
     setCoins(prev => prev + 1);
   }
 
-  // On defeat: subtract XP penalty distributed across all muscle groups
   function handleLeagueBossDefeated() {
     const next = leagueKills + 1;
     setLeagueKills(next);
@@ -225,7 +368,6 @@ export default function App() {
   }
 
   function handleLootEarned(item) {
-    // Add to inventory and auto-equip
     setInventory(prev => {
       const without = prev.filter(i => i.id !== item.id);
       return [...without, item];
@@ -264,13 +406,38 @@ export default function App() {
     if (ownedClothing.includes(itemId)) return;
     setCoins(prev => prev - cost);
     setOwnedClothing(prev => [...prev, itemId]);
-    // Auto-equip on purchase
     setEquippedClothing(prev => ({ ...prev, [slot]: itemId }));
   }
 
   function handleEquipClothing(itemId, slot) {
-    // No ownership check — shop UI already prevents equipping unaffordable items
     setEquippedClothing(prev => ({ ...prev, [slot]: itemId }));
+  }
+
+  // ── Skill tree purchase ────────────────────────────────────────
+  function handleBuySkill(skillId, cost) {
+    if (coins < cost) return;
+    if (purchasedSkills.includes(skillId)) return;
+    setCoins(prev => prev - cost);
+    setPurchasedSkills(prev => [...prev, skillId]);
+  }
+
+  // ── Prestige ───────────────────────────────────────────────────
+  function handlePrestige() {
+    const level = getLevel(muscleXP);
+    if (level < 200) return;
+    const newCount = (prestige.count || 0) + 1;
+    const newMult  = 1 + newCount * 0.25; // +25% XP per prestige
+    setPrestige({ count: newCount, multiplier: newMult });
+    setMuscleXP(INITIAL_MUSCLE_XP);
+    setMuscleVolumePRs({});
+    setStatUpgrades({ ATK: 0, DEF: 0, HP: 0, LCK: 0 });
+    setPurchasedSkills([]);
+  }
+
+  // ── Onboarding ─────────────────────────────────────────────────
+  function handleOnboardingComplete(goalId) {
+    setPlayerGoal(goalId);
+    setOnboardingDone(true);
   }
 
   // Resolve aura color from id
@@ -301,6 +468,15 @@ export default function App() {
   const bossCleared       = bossHistory[todayKey]?.cleared;
   const equippedAuraColor = getAuraColor(equippedAura);
 
+  // Derived character data
+  const playerLevel  = getLevel(muscleXP);
+  const playerClass  = getPlayerClass(muscleXP, playerLevel);
+  const classBonuses = getClassBonuses(playerClass);
+  const playerTitle  = getPlayerTitle(playerLevel);
+
+  if (!currentUser) return <LoginScreen onLogin={handleLogin} />;
+  if (!onboardingDone) return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+
   const tabProps = {
     workout: (
       <WorkoutTab
@@ -310,6 +486,8 @@ export default function App() {
         onWorkoutComplete={handleWorkoutComplete}
         onWorkoutReopen={handleWorkoutReopen}
         muscleVolumePRs={muscleVolumePRs}
+        dailyQuests={dailyQuests}
+        streak={streak}
       />
     ),
     character: (
@@ -340,6 +518,12 @@ export default function App() {
         equippedItems={equippedItems}
         onEquipItem={handleEquipInventoryItem}
         onUnequipItem={handleUnequipItem}
+        playerClass={playerClass}
+        playerTitle={playerTitle}
+        prestige={prestige}
+        streak={streak}
+        purchasedSkills={purchasedSkills}
+        onPrestige={handlePrestige}
       />
     ),
     boss: (
@@ -358,17 +542,21 @@ export default function App() {
         leagueKills={leagueKills}
         onLeagueBossDefeated={handleLeagueBossDefeated}
         onLootEarned={handleLootEarned}
+        purchasedSkills={purchasedSkills}
+        classBonuses={classBonuses}
       />
     ),
     perks: (
-      <PerksTab />
+      <PerksTab
+        coins={coins}
+        purchasedSkills={purchasedSkills}
+        onBuySkill={handleBuySkill}
+      />
     ),
     history: (
       <HistoryTab workouts={workouts} />
     ),
   };
-
-  if (!currentUser) return <LoginScreen onLogin={handleLogin} />;
 
   return (
     <div
@@ -395,12 +583,28 @@ export default function App() {
         />
       )}
 
-      {showLevelUp && <LevelUpBanner level={getLevel(muscleXP)} />}
+      {showLevelUp && <LevelUpBanner level={playerLevel} playerTitle={playerTitle} />}
+
+      {postWorkoutData && (
+        <PostWorkoutOverlay
+          event={postWorkoutData.event}
+          xpGained={postWorkoutData.xpGained}
+          totalXP={postWorkoutData.totalXP}
+          streak={postWorkoutData.streak}
+          streakMultiplier={postWorkoutData.streakMultiplier}
+          eventMultiplier={postWorkoutData.eventMultiplier}
+          questUpdates={postWorkoutData.questUpdates}
+          completedQuests={postWorkoutData.completedQuests}
+          lootDrop={postWorkoutData.lootDrop}
+          onEquipLoot={handlePostWorkoutEquipLoot}
+          onDone={handlePostWorkoutDone}
+        />
+      )}
     </div>
   );
 }
 
-function LevelUpBanner({ level }) {
+function LevelUpBanner({ level, playerTitle }) {
   return (
     <div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none"
@@ -413,7 +617,7 @@ function LevelUpBanner({ level }) {
         }}
       >
         <div className="neon-text" style={{ color: '#facc15', fontSize: '14px', letterSpacing: '6px', marginBottom: '12px' }}>
-          ⚡ LEVEL UP! ⚡
+          LEVEL UP!
         </div>
         <div
           className="neon-text"
@@ -426,6 +630,11 @@ function LevelUpBanner({ level }) {
         >
           {level}
         </div>
+        {playerTitle && (
+          <div className="neon-text mt-2" style={{ color: playerTitle.color, fontSize: '9px', letterSpacing: '3px' }}>
+            {playerTitle.title.toUpperCase()}
+          </div>
+        )}
         <div className="neon-text" style={{ color: '#fde68a', fontSize: '9px', letterSpacing: '4px', marginTop: '12px' }}>
           YOU ARE GETTING STRONGER!
         </div>

@@ -1,11 +1,12 @@
 import React from 'react';
+import GameIcon from './GameIcon';
 
 const TABS = [
-  { id: 'workout',   label: 'TRAIN',  icon: '🏋️', activeColor: '#22d3ee' },
-  { id: 'character', label: 'HERO',   icon: '⚔️',  activeColor: '#a855f7' },
-  { id: 'boss',      label: 'BOSS',   icon: '👹',  activeColor: '#f87171' },
-  { id: 'perks',     label: 'PERKS',  icon: '✨',  activeColor: '#4ade80' },
-  { id: 'history',   label: 'LOG',    icon: '📜',  activeColor: '#facc15' },
+  { id: 'workout',   label: 'TRAIN',  icon: 'dumbbell', activeColor: '#22d3ee' },
+  { id: 'character', label: 'HERO',   icon: 'sword',    activeColor: '#a855f7' },
+  { id: 'boss',      label: 'BOSS',   icon: 'skull',    activeColor: '#f87171' },
+  { id: 'perks',     label: 'PERKS',  icon: 'star',     activeColor: '#4ade80' },
+  { id: 'history',   label: 'LOG',    icon: 'scroll',   activeColor: '#facc15' },
 ];
 
 export default function Navigation({ active, onChange, bossCleared, workoutDoneToday }) {
@@ -50,7 +51,6 @@ export default function Navigation({ active, onChange, bossCleared, workoutDoneT
             {/* Icon */}
             <span
               style={{
-                fontSize: '20px',
                 lineHeight: 1,
                 filter: isActive
                   ? `drop-shadow(0 0 6px ${tab.activeColor})`
@@ -60,7 +60,7 @@ export default function Navigation({ active, onChange, bossCleared, workoutDoneT
                 transitionProperty: 'filter, transform',
               }}
             >
-              {tab.icon}
+              <GameIcon name={tab.icon} size={20} color={isActive ? tab.activeColor : '#334155'} />
             </span>
 
             {/* Label */}
