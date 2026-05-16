@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
 import { DungeonScene } from './PixelScene';
 import GameIcon from './GameIcon';
-import { generateDailyBoss, generateBossPool, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
+import { generateDailyBoss, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
 import { getLevel, getPlayerBattleStats, getTodayKey, getDateKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
@@ -210,7 +210,16 @@ export default function BossTab({
   const leagueBoss = generateLeagueBoss(playerLevel, leagueKills);
 
   const pStats      = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses);
-  const bossGallery = generateBossPool();
+  // The 7 hand-crafted boss sprites
+  const NAMED_BOSSES = [
+    { name: 'Vampire Lord',   element: 'Shadow',  isMob: true,  id: 'vampire', label: 'VAMPIRE LORD'   },
+    { name: 'Zombie Brute',   element: 'Earth',   isMob: true,  id: 'zombie',  label: 'ZOMBIE BRUTE'   },
+    { name: 'Fire Demon',     element: 'Fire',    isMob: false, id: 'fire',    label: 'FIRE DEMON'      },
+    { name: 'Ice Golem',      element: 'Ice',     isMob: false, id: 'ice',     label: 'ICE GOLEM'       },
+    { name: 'Shadow Wraith',  element: 'Shadow',  isMob: false, id: 'shadow',  label: 'SHADOW WRAITH'   },
+    { name: 'Thunder Titan',  element: 'Thunder', isMob: false, id: 'thunder', label: 'THUNDER TITAN'   },
+    { name: 'Earth Colossus', element: 'Earth',   isMob: false, id: 'earth',   label: 'EARTH COLOSSUS'  },
+  ];
   const theme       = ELEMENT_THEMES[boss.element];
 
   function pickTrainingBoss() {
@@ -615,26 +624,38 @@ export default function BossTab({
 
       {/* Boss gallery */}
       <div className="mt-6">
-        <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>BOSS GALLERY</div>
-        <div className="grid grid-cols-5 gap-2">
-          {bossGallery.map((b, i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center rounded-sm p-2"
-              style={{
-                background: 'rgba(6,10,20,0.82)',
-                border: `1px solid ${ELEMENT_THEMES[b.element].color}33`,
-              }}
-            >
-              <div style={{ animation: `pixelBob ${1.8 + i * 0.1}s ease-in-out infinite` }}>
-                <BossSprite boss={b} size={36} />
+        <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>BOSS ROSTER</div>
+        <div className="grid grid-cols-3 gap-3" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {NAMED_BOSSES.map((b, i) => {
+            const theme = ELEMENT_THEMES[b.element];
+            return (
+              <div
+                key={b.id}
+                className="flex flex-col items-center rounded-sm py-4 px-2"
+                style={{
+                  background: `linear-gradient(160deg, ${theme.bg}cc, #06080f)`,
+                  border: `1px solid ${theme.color}44`,
+                  boxShadow: `0 0 12px ${theme.glow}`,
+                }}
+              >
+                <div style={{ animation: `pixelBob ${1.8 + i * 0.2}s ease-in-out infinite` }}>
+                  <BossSprite boss={b} size={56} />
+                </div>
+                <div
+                  className="neon-text text-center mt-2"
+                  style={{ color: theme.color, fontSize: '6px', letterSpacing: '1.5px', lineHeight: 1.4 }}
+                >
+                  {b.label.split(' ').join('\n')}
+                </div>
+                <div
+                  className="neon-text text-center mt-1"
+                  style={{ color: '#334155', fontSize: '6px', letterSpacing: '1px' }}
+                >
+                  {b.element.toUpperCase()}
+                </div>
               </div>
-              <div className="neon-text text-center mt-1" style={{ color: '#334155', fontSize: '6px' }}>
-                {b.name.split(' ')[1]}
-              </div>
-              <div style={{ fontSize: '10px' }}>{b.emoji}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       </div>

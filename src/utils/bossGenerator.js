@@ -2,6 +2,25 @@ import {
   BOSS_PREFIXES, BOSS_SUFFIXES, ELEMENTS, MUSCLE_GROUPS, BOSS_EMOJIS, BOSS_CONFIG,
 } from '../constants';
 
+// Map every element to one of the 7 hand-crafted boss names
+const ELEMENT_TO_BOSS_NAME = {
+  Fire:    'Fire Demon',
+  Lava:    'Fire Demon',
+  Ice:     'Ice Golem',
+  Crystal: 'Ice Golem',
+  Shadow:  'Shadow Wraith',
+  Void:    'Shadow Wraith',
+  Blood:   'Vampire Lord',
+  Thunder: 'Thunder Titan',
+  Storm:   'Thunder Titan',
+  Earth:   'Earth Colossus',
+  Poison:  'Earth Colossus',
+  Wind:    'Zombie Brute',
+};
+function bossName(element) {
+  return ELEMENT_TO_BOSS_NAME[element] || 'Dark Titan';
+}
+
 function lcg(seed) {
   return ((seed * 1664525 + 1013904223) >>> 0);
 }
@@ -30,7 +49,7 @@ function createBossPrototype(seed) {
 
   return {
     id: `boss-${seed}`,
-    name: `${prefix} ${suffix}`,
+    name: bossName(element),
     element, weakness, emoji,
     baseHP: bHP, baseAtk: bATK, baseSpeed: bSpeed,
   };
@@ -78,7 +97,7 @@ export function generateDailyBoss(dateStr, playerLevel = 1) {
 
   return {
     id: `boss-daily-${dateStr}`,
-    name: `${prefix} ${suffix}`,
+    name: bossName(element),
     element, weakness, emoji,
     baseHP: bHP, baseAtk: bATK, baseSpeed: bSpd,
     maxHP, atk, speed, level: lvl, diffMult, diffLabel,
@@ -106,7 +125,7 @@ export function generateLeagueBoss(playerLevel = 1, killCount = 0) {
 
   return {
     id: `boss-league-${killCount}`,
-    name: `${prefix} ${suffix}`,
+    name: bossName(element),
     element, weakness, emoji,
     baseHP: BOSS_CONFIG.baseHP, baseAtk: BOSS_CONFIG.baseATK, baseSpeed: BOSS_CONFIG.baseSpeed,
     maxHP, atk, speed, level: lvl, diffMult: scaleMult, diffLabel, scaleMult, tier,

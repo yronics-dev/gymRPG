@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import SpritePreview from './components/SpritePreview';
+const SPRITE_PREVIEW = window.location.search.includes('sprites');
 import { useLocalStorage } from './hooks/useLocalStorage';
 import {
   INITIAL_MUSCLE_XP,
@@ -557,6 +559,8 @@ export default function App() {
       <HistoryTab workouts={workouts} />
     ),
   };
+
+  if (SPRITE_PREVIEW) return <SpritePreview />;
 
   return (
     <div
