@@ -344,6 +344,7 @@ export default function DungeonRun({
   if (phase === 'fighting' && currentEnemy) {
     return (
       <BattleArena
+        key={enemyIdx}
         boss={currentEnemy}
         muscleXP={muscleXP}
         playerLevel={playerLevel}

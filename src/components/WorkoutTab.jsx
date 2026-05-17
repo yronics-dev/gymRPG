@@ -23,7 +23,7 @@ function MuscleTag({ muscle }) {
   );
 }
 
-function ExerciseCard({ exercise, onPick }) {
+function ExercisePickerCard({ exercise, onPick }) {
   const [frame, setFrame] = useState(0);
   const imgs = EXERCISE_IMAGES[exercise.name];
   const color = MUSCLE_COLORS[exercise.muscle];
@@ -200,7 +200,7 @@ function AddExerciseModal({ onAdd, onClose }) {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                     {exs.map(e => (
-                      <ExerciseCard key={e.name} exercise={e} onPick={() => handlePick(e.name, e.muscle)} />
+                      <ExercisePickerCard key={e.name} exercise={e} onPick={() => handlePick(e.name, e.muscle)} />
                     ))}
                   </div>
                 </div>

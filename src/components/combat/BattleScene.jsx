@@ -530,8 +530,9 @@ export default function BattleScene({
   const addFloat = useCallback((val, type, side) => {
     const id = ++floatId.current;
     const aw  = arenaRef.current?.offsetWidth || 360;
-    const x   = side === 'player' ? aw * 0.18 : aw * 0.72;
-    const y   = 60;
+    // Place numbers on the character torsos (arena is 260px, chars are ~120px at bottom:10)
+    const x   = side === 'player' ? aw * 0.22 : aw * 0.78;
+    const y   = 155;
     setFloats(prev => [...prev, { id, val, type, x, y }]);
   }, []);
   const rmFloat = useCallback(id => setFloats(p => p.filter(f => f.id !== id)), []);
@@ -561,13 +562,13 @@ export default function BattleScene({
     setPlayerAnim('lunge');
     await wait(200);
 
-    // Impact
-    setAtkEffect({ x: bx, y: 70 });
+    // Impact on boss body
+    setAtkEffect({ x: bx, y: 160 });
     setBossAnim('hit');
     events.forEach(e => { if (e.val != null) addFloat(e.val, e.type, 'boss'); });
 
     if (hasCrit) {
-      setSpeedR({ x: bx, y: 70, color: '#facc15' });
+      setSpeedR({ x: bx, y: 160, color: '#facc15' });
       doFlash('#facc1533', 320);
       doShake('crit', 300);
     }
@@ -595,8 +596,8 @@ export default function BattleScene({
     setBossAnim('lunge');
     await wait(200);
 
-    // Impact at player
-    setAtkEffect({ x: px, y: 70, element: 'player-hit' });
+    // Impact on player body
+    setAtkEffect({ x: px, y: 160, element: 'player-hit' });
     setPlayerAnim('hit');
     events.forEach(e => { if (e.val != null) addFloat(e.val, e.type, 'player'); });
     doFlash('#f8717122', 200);
