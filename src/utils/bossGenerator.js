@@ -1,6 +1,7 @@
 import {
   BOSS_PREFIXES, BOSS_SUFFIXES, ELEMENTS, MUSCLE_GROUPS, BOSS_EMOJIS, BOSS_CONFIG,
 } from '../constants';
+import { bossFlavorToWeaponElement } from './elementalSystem';
 
 // Map every element to one of the 7 hand-crafted boss names
 const ELEMENT_TO_BOSS_NAME = {
@@ -51,6 +52,7 @@ function createBossPrototype(seed) {
     id: `boss-${seed}`,
     name: bossName(element),
     element, weakness, emoji,
+    weaponElement: bossFlavorToWeaponElement(element),
     baseHP: bHP, baseAtk: bATK, baseSpeed: bSpeed,
   };
 }
@@ -76,7 +78,8 @@ export function generateTrainingBoss(playerLevel = 1, rngSeed = Date.now()) {
   const maxHP = Math.max(100, Math.floor((base.baseHP + lvl * BOSS_CONFIG.levelHPScale + rng() * lvl * BOSS_CONFIG.hpVariance) * scale));
   const atk   = Math.max(3,  Math.floor((base.baseAtk + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance) * scale));
   const speed = Math.floor(base.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale + rng() * 5);
-  return { ...base, maxHP, atk, speed, level: lvl, diffMult: scale, diffLabel: scale >= 3 ? 'MYTHIC' : scale >= 2 ? 'ELITE' : scale >= 1.3 ? 'HARD' : 'NORMAL' };
+  return { ...base, maxHP, atk, speed, level: lvl, diffMult: scale, diffLabel: scale >= 3 ? 'MYTHIC' : scale >= 2 ? 'ELITE' : scale >= 1.3 ? 'HARD' : 'NORMAL',
+    weaponElement: base.weaponElement || bossFlavorToWeaponElement(base.element) };
 }
 
 // Daily boss: generated directly from the date string so every day is unique
@@ -108,6 +111,7 @@ export function generateDailyBoss(dateStr, playerLevel = 1) {
     id: `boss-daily-${dateStr}`,
     name: bossName(element),
     element, weakness, emoji,
+    weaponElement: bossFlavorToWeaponElement(element),
     baseHP: bHP, baseAtk: bATK, baseSpeed: bSpd,
     maxHP, atk, speed, level: lvl, diffMult, diffLabel,
   };
@@ -136,6 +140,7 @@ export function generateLeagueBoss(playerLevel = 1, killCount = 0) {
     id: `boss-league-${killCount}`,
     name: bossName(element),
     element, weakness, emoji,
+    weaponElement: bossFlavorToWeaponElement(element),
     baseHP: BOSS_CONFIG.baseHP, baseAtk: BOSS_CONFIG.baseATK, baseSpeed: BOSS_CONFIG.baseSpeed,
     maxHP, atk, speed, level: lvl, diffMult: scaleMult, diffLabel, scaleMult, tier,
   };

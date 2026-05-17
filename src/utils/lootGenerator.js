@@ -1,4 +1,4 @@
-import { MOB_TYPES, ELEMENTS, MUSCLE_GROUPS, LOOT_RARITIES, LOOT_BASE } from '../constants';
+import { MOB_TYPES, MUSCLE_GROUPS, LOOT_RARITIES, LOOT_BASE } from '../constants';
 
 function seededRng(seed) {
   let s = (seed ^ 0xdeadbeef) >>> 0;
@@ -15,8 +15,12 @@ function seededRng(seed) {
 export function generateMob(playerLevel, boss, waveIdx, mobIdx, dungeonSeed) {
   const rng = seededRng(dungeonSeed * 31 + waveIdx * 997 + mobIdx * 113);
   const mobType = MOB_TYPES[Math.floor(rng() * MOB_TYPES.length)];
-  const element = ELEMENTS[Math.floor(rng() * ELEMENTS.length)];
   const weakness = MUSCLE_GROUPS[Math.floor(rng() * MUSCLE_GROUPS.length)];
+
+  // Use the mob type's canonical weapon element directly.
+  // ELEMENT_THEMES now includes Water/Electric/Grass/None entries.
+  const weaponElement = mobType.weaponElement || 'None';
+  const element       = weaponElement;
 
   // Each successive wave is 15% harder
   const waveScale = 1 + waveIdx * 0.15;
@@ -24,15 +28,15 @@ export function generateMob(playerLevel, boss, waveIdx, mobIdx, dungeonSeed) {
   const scaledATK = Math.max(3,  Math.floor(boss.atk  * mobType.atkMult * waveScale));
 
   return {
-    id: mobType.id,
-    name: mobType.name,
-    emoji: mobType.emoji,
-    element,
+    id:            mobType.id,
+    name:          mobType.name,
+    element,               // ELEMENT_THEMES display key (Fire/Ice/Shadow/Thunder/Earth)
+    weaponElement,         // weapon combat element (Fire/Water/Shadow/Electric/Earth/None)
     weakness,
-    maxHP: scaledHP,
-    atk:   scaledATK,
-    speed: mobType.speed,
-    level: playerLevel,
+    maxHP:  scaledHP,
+    atk:    scaledATK,
+    speed:  mobType.speed,
+    level:  playerLevel,
   };
 }
 

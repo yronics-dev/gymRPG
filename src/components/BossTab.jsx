@@ -186,7 +186,7 @@ export default function BossTab({
   muscleXP, workouts, bossHistory, coins, statUpgrades = {}, equippedAura,
   equippedClothing = {}, equippedItems = {},
   onBossCleared, onBossDefeat, todayKey, leagueKills = 0, onLeagueBossDefeated,
-  onLootEarned, purchasedSkills = [], classBonuses = {},
+  onLootEarned, purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
 }) {
   const currentDayKey = todayKey || getTodayKey();
   const playerLevel   = Math.max(1, getLevel(muscleXP));
@@ -209,16 +209,16 @@ export default function BossTab({
 
   const leagueBoss = generateLeagueBoss(playerLevel, leagueKills);
 
-  const pStats      = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses);
+  const pStats      = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses, skillTreeStats);
   // The 7 hand-crafted boss sprites
   const NAMED_BOSSES = [
-    { name: 'Vampire Lord',   element: 'Shadow',  isMob: true,  id: 'vampire', label: 'VAMPIRE LORD'   },
-    { name: 'Zombie Brute',   element: 'Earth',   isMob: true,  id: 'zombie',  label: 'ZOMBIE BRUTE'   },
-    { name: 'Fire Demon',     element: 'Fire',    isMob: false, id: 'fire',    label: 'FIRE DEMON'      },
-    { name: 'Ice Golem',      element: 'Ice',     isMob: false, id: 'ice',     label: 'ICE GOLEM'       },
-    { name: 'Shadow Wraith',  element: 'Shadow',  isMob: false, id: 'shadow',  label: 'SHADOW WRAITH'   },
-    { name: 'Thunder Titan',  element: 'Thunder', isMob: false, id: 'thunder', label: 'THUNDER TITAN'   },
-    { name: 'Earth Colossus', element: 'Earth',   isMob: false, id: 'earth',   label: 'EARTH COLOSSUS'  },
+    { name: 'Vampire Lord',   element: 'Shadow',  weaponElement: 'Shadow',   isMob: true,  id: 'vampire', label: 'VAMPIRE LORD'   },
+    { name: 'Zombie Brute',   element: 'Earth',   weaponElement: 'Earth',    isMob: true,  id: 'zombie',  label: 'ZOMBIE BRUTE'   },
+    { name: 'Fire Demon',     element: 'Fire',    weaponElement: 'Fire',     isMob: false, id: 'fire',    label: 'FIRE DEMON'      },
+    { name: 'Ice Golem',      element: 'Ice',     weaponElement: 'Water',    isMob: false, id: 'ice',     label: 'ICE GOLEM'       },
+    { name: 'Shadow Wraith',  element: 'Shadow',  weaponElement: 'Shadow',   isMob: false, id: 'shadow',  label: 'SHADOW WRAITH'   },
+    { name: 'Thunder Titan',  element: 'Thunder', weaponElement: 'Electric', isMob: false, id: 'thunder', label: 'THUNDER TITAN'   },
+    { name: 'Earth Colossus', element: 'Earth',   weaponElement: 'Earth',    isMob: false, id: 'earth',   label: 'EARTH COLOSSUS'  },
   ];
   const theme       = ELEMENT_THEMES[boss.element];
 
@@ -262,6 +262,9 @@ export default function BossTab({
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
         finalBoss={generateTrainingBoss(playerLevel, Date.now())}
+        purchasedSkills={purchasedSkills}
+        classBonuses={classBonuses}
+        skillTreeStats={skillTreeStats}
         onLootEarned={item => { if (onLootEarned) onLootEarned(item); }}
         onComplete={(won) => {
           setInDungeon(false);
@@ -284,6 +287,7 @@ export default function BossTab({
         equippedItems={equippedItems}
         purchasedSkills={purchasedSkills}
         classBonuses={classBonuses}
+        skillTreeStats={skillTreeStats}
         equippedAura={equippedAura}
         onVictory={handleVictory}
         onDefeat={handleDefeat}
@@ -303,6 +307,7 @@ export default function BossTab({
         equippedItems={equippedItems}
         purchasedSkills={purchasedSkills}
         classBonuses={classBonuses}
+        skillTreeStats={skillTreeStats}
         equippedAura={equippedAura}
         isTraining
         onVictory={() => { setTrainingBoss(pickTrainingBoss()); }}
@@ -323,6 +328,7 @@ export default function BossTab({
         equippedItems={equippedItems}
         purchasedSkills={purchasedSkills}
         classBonuses={classBonuses}
+        skillTreeStats={skillTreeStats}
         equippedAura={equippedAura}
         onVictory={handleLeagueVictory}
         onDefeat={() => setInLeague(false)}

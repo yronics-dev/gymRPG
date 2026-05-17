@@ -108,8 +108,8 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                         className="flex items-center justify-center rounded-sm"
                         style={{
                           width: 44, height: 44,
-                          background: `${ELEMENT_THEMES[mob.element].bg}cc`,
-                          border: `1px solid ${ELEMENT_THEMES[mob.element].color}55`,
+                          background: `${(ELEMENT_THEMES[mob.element] || ELEMENT_THEMES.Earth).bg}cc`,
+                          border: `1px solid ${(ELEMENT_THEMES[mob.element] || ELEMENT_THEMES.Earth).color}55`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           overflow: 'hidden',
                         }}
@@ -241,6 +241,7 @@ export default function DungeonRun({
   muscleXP, statUpgrades = {}, equippedAura, equippedClothing = {},
   equippedItems = {}, playerLevel, todayMuscles = [],
   finalBoss, onLootEarned, onComplete, onClose,
+  purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
 }) {
   const dungeonSeed = Math.floor(Date.now() / 60000); // changes every minute for variety
 
@@ -350,8 +351,12 @@ export default function DungeonRun({
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
         statUpgrades={statUpgrades}
+        equippedItems={equippedInSession}
         equippedAura={equippedAura}
         equippedClothing={equippedClothing}
+        purchasedSkills={purchasedSkills}
+        classBonuses={classBonuses}
+        skillTreeStats={skillTreeStats}
         isTraining={false}
         onVictory={handleVictory}
         onDefeat={handleDefeat}

@@ -5,7 +5,7 @@ const TABS = [
   { id: 'workout',   label: 'TRAIN',  icon: 'dumbbell', activeColor: '#22d3ee' },
   { id: 'character', label: 'HERO',   icon: 'sword',    activeColor: '#a855f7' },
   { id: 'boss',      label: 'BOSS',   icon: 'skull',    activeColor: '#f87171' },
-  { id: 'perks',     label: 'PERKS',  icon: 'star',     activeColor: '#4ade80' },
+  { id: 'skills',    label: 'SKILLS', icon: 'star',     activeColor: '#a78bfa' },
   { id: 'history',   label: 'LOG',    icon: 'scroll',   activeColor: '#facc15' },
 ];
 

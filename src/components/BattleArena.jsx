@@ -3,6 +3,7 @@ import { getPlayerBattleStats, runBattleTurn } from '../utils/gameLogic';
 import { ELEMENT_THEMES, BOSS_DIALOGUES } from '../constants';
 import CharacterSprite from './CharacterSprite';
 import BossSprite from './BossSprite';
+import MobSprite from './combat/MobSprite';
 import GameIcon from './GameIcon';
 import BattleScene from './combat/BattleScene';
 
@@ -533,10 +534,10 @@ function pickDialogue(arr) { return arr[Math.floor(Math.random() * arr.length)];
 export default function BattleArena({
   boss, muscleXP, playerLevel, todayMuscles, statUpgrades = {},
   equippedAura, equippedClothing = {}, equippedItems = {},
-  purchasedSkills = [], classBonuses = {},
+  purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
   isTraining = false, onVictory, onDefeat, onClose,
 }) {
-  const pStats = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses);
+  const pStats = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses, skillTreeStats);
   const theme  = ELEMENT_THEMES[boss.element] || ELEMENT_THEMES.Fire;
   const hasWeaknessBonus = todayMuscles.includes(boss.weakness);
 
@@ -793,7 +794,9 @@ export default function BattleArena({
         <div className="flex flex-col items-center animate-boss-intro"
           style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
           <div style={{ position: 'relative' }}>
-            <BossSprite boss={boss} size={130} isRage={false}/>
+            {boss.isMob
+              ? <MobSprite mob={boss} size={130}/>
+              : <BossSprite boss={boss} size={130} isRage={false}/>}
             {bossDialogue && <BossDialogue text={bossDialogue}/>}
           </div>
           <div className="mt-4 text-center animate-slide-up" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>

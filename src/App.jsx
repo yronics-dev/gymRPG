@@ -22,7 +22,8 @@ import CharacterTab from './components/CharacterTab';
 import BossTab from './components/BossTab';
 import HistoryTab from './components/HistoryTab';
 import LoginScreen from './components/LoginScreen';
-import PerksTab from './components/PerksTab';
+import SkillTreeScreen from './components/skilltree/SkillTreeScreen';
+import { useSkillTree } from './components/skilltree/useSkillTree';
 import PostWorkoutOverlay from './components/PostWorkoutOverlay';
 import OnboardingFlow from './components/OnboardingFlow';
 
@@ -110,8 +111,9 @@ export default function App() {
   const [questsDate, setQuestsDate] = useLocalStorage(`${u}gymrpg_quests_date`, '');
   const [dailyQuests, setDailyQuests] = useLocalStorage(`${u}gymrpg_daily_quests`, []);
 
-  // Skill tree
-  const [purchasedSkills, setPurchasedSkills] = useLocalStorage(`${u}gymrpg_purchased_skills`, []);
+  // Skill tree (new constellation system)
+  const skillTree = useSkillTree(u);
+  const purchasedSkills = skillTree.unlockedSkills; // backward compat alias
 
   // Prestige
   const [prestige, setPrestige] = useLocalStorage(`${u}gymrpg_prestige`, { count: 0, multiplier: 1 });
@@ -281,6 +283,9 @@ export default function App() {
       });
     }
 
+    // ── Award STP for completing a workout ────────────────────
+    skillTree.awardSTP(1);
+
     // ── Post-workout loot roll ─────────────────────────────────
     const lootDrop = streakLoot || rollWorkoutLoot(Date.now());
 
@@ -345,6 +350,7 @@ export default function App() {
       [dateKey]: { cleared: true, attempted: true, bossName },
     }));
     setCoins(prev => prev + 1);
+    skillTree.awardSTP(1);
   }
 
   function handleLeagueBossDefeated() {
@@ -415,13 +421,7 @@ export default function App() {
     setEquippedClothing(prev => ({ ...prev, [slot]: itemId }));
   }
 
-  // ── Skill tree purchase ────────────────────────────────────────
-  function handleBuySkill(skillId, cost) {
-    if (coins < cost) return;
-    if (purchasedSkills.includes(skillId)) return;
-    setCoins(prev => prev - cost);
-    setPurchasedSkills(prev => [...prev, skillId]);
-  }
+  // ── Skill tree purchase (handled by useSkillTree hook) ───────
 
   // ── Prestige ───────────────────────────────────────────────────
   function handlePrestige() {
@@ -433,7 +433,6 @@ export default function App() {
     setMuscleXP(INITIAL_MUSCLE_XP);
     setMuscleVolumePRs({});
     setStatUpgrades({ ATK: 0, DEF: 0, HP: 0, LCK: 0 });
-    setPurchasedSkills([]);
   }
 
   // ── Onboarding ─────────────────────────────────────────────────
@@ -546,13 +545,16 @@ export default function App() {
         onLootEarned={handleLootEarned}
         purchasedSkills={purchasedSkills}
         classBonuses={classBonuses}
+        skillTreeStats={skillTree.derivedStats}
       />
     ),
-    perks: (
-      <PerksTab
-        coins={coins}
-        purchasedSkills={purchasedSkills}
-        onBuySkill={handleBuySkill}
+    skills: (
+      <SkillTreeScreen
+        stp={skillTree.stp}
+        unlockedSkills={skillTree.unlockedSkills}
+        getNodeState={skillTree.getNodeState}
+        canUnlock={skillTree.canUnlock}
+        unlock={skillTree.unlock}
       />
     ),
     history: (

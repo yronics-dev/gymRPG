@@ -131,7 +131,7 @@ export function getMuscleRankProgress(xp) {
   return (xp - current.min) / (next.min - current.min);
 }
 
-export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems = {}, purchasedSkills = [], classBonuses = {}) {
+export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems = {}, purchasedSkills = [], classBonuses = {}, skillTreeStats = {}) {
   const stats   = getStats(muscleXP);
   const atkUp   = statUpgrades.ATK   || 0;
   const defUp   = statUpgrades.DEF   || 0;
@@ -147,23 +147,31 @@ export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems 
   const lootCrit  = items.reduce((s, it) => s + (it.crit  || 0), 0);
   const lootDodge = items.reduce((s, it) => s + (it.dodge || 0), 0);
 
-  // Skill tree bonuses
-  const skillDefs = SKILLS.filter(s => purchasedSkills.includes(s.id));
-  const skillHP    = skillDefs.filter(s => s.effect === 'hp').reduce((a, s) => a + s.val, 0);
-  const skillATK   = (classBonuses.atk || 0);
-  const skillDEF   = skillDefs.filter(s => s.effect === 'def').reduce((a, s) => a + s.val, 0) + (classBonuses.def || 0);
-  const skillCrit  = skillDefs.filter(s => s.effect === 'crit').reduce((a, s) => a + s.val, 0) + (classBonuses.crit || 0);
-  const skillDodge = skillDefs.filter(s => s.effect === 'dodge').reduce((a, s) => a + s.val, 0) + (classBonuses.dodge || 0);
-  const classHP    = classBonuses.hp || 0;
+  // Class bonuses
+  const classATK   = classBonuses.atk   || 0;
+  const classDEF   = classBonuses.def   || 0;
+  const classCrit  = classBonuses.crit  || 0;
+  const classDodge = classBonuses.dodge || 0;
+  const classHP    = classBonuses.hp    || 0;
+
+  // New skill tree stat bonuses (from useSkillTree derivedStats)
+  const treeATKBonus = skillTreeStats.atkBonus  || 0;
+  const treeATKMult  = skillTreeStats.atkMult   || 0; // additive % bonus (e.g. 0.10 = +10%)
+  const treeCrit     = skillTreeStats.critBonus || 0;
+  const treeDodge    = skillTreeStats.dodgeBonus|| 0;
+  const treeDEF      = skillTreeStats.defBonus  || 0;
+  const treeHP       = skillTreeStats.hpBonus   || 0;
+
+  const baseATK = Math.floor(6 + stats.ATK * 0.55) + atkUp * 3 + lootATK + classATK + treeATKBonus;
 
   return {
-    maxHP:    Math.max(100, 85 + stats.VIT * 6 + hpUp * 15 + lootHP + skillHP + classHP),
-    atk:      Math.floor(6 + stats.ATK * 0.55) + atkUp * 3 + lootATK + skillATK,
-    defPct:   Math.min(60, stats.DEF * 0.7 + defUp * 2 + lootDEF + skillDEF),
-    dodgePct: Math.min(40, stats.AGI * 0.5 + dodgeUp + lootDodge + skillDodge),
+    maxHP:    Math.max(100, 85 + stats.VIT * 6 + hpUp * 15 + lootHP + classHP + treeHP),
+    atk:      Math.floor(baseATK * (1 + treeATKMult)),
+    defPct:   Math.min(60, stats.DEF * 0.7 + defUp * 2 + lootDEF + classDEF + treeDEF),
+    dodgePct: Math.min(40, stats.AGI * 0.5 + dodgeUp + lootDodge + classDodge + treeDodge),
     staPct:   Math.min(30, stats.STA * 0.5),
     speed:    stats.AGI,
-    critPct:  Math.min(50, 10 + lckUp * 2 + lootCrit + skillCrit),
+    critPct:  Math.min(50, 10 + lckUp * 2 + lootCrit + classCrit + treeCrit),
     luckPct:  lckUp * 2,
   };
 }

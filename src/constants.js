@@ -199,6 +199,11 @@ export const ELEMENT_THEMES = {
   Crystal: { color: '#e0f2fe', bg: '#0f2744', icon: 'star',     glow: 'rgba(224,242,254,0.5)', particle: '#e0f2fe' },
   Poison:  { color: '#a3e635', bg: '#1a2e05', icon: 'skull',    glow: 'rgba(163,230,53,0.5)',  particle: '#a3e635' },
   Blood:   { color: '#fca5a5', bg: '#450a0a', icon: 'heart',    glow: 'rgba(252,165,165,0.5)', particle: '#fca5a5' },
+  // Weapon-system element aliases (for dungeon mobs)
+  Water:    { color: '#38bdf8', bg: '#0c2840', icon: 'shield',   glow: 'rgba(56,189,248,0.5)',  particle: '#38bdf8' },
+  Electric: { color: '#facc15', bg: '#713f12', icon: 'lightning', glow: 'rgba(250,204,21,0.5)', particle: '#facc15' },
+  Grass:    { color: '#4ade80', bg: '#14532d', icon: 'wing',     glow: 'rgba(74,222,128,0.5)',  particle: '#4ade80' },
+  None:     { color: '#94a3b8', bg: '#0f172a', icon: 'skull',    glow: 'rgba(148,163,184,0.3)', particle: '#94a3b8' },
 };
 
 export const BOSS_PREFIXES = [
@@ -447,16 +452,16 @@ export const MUSCLE_RANKS = [
 // hpMult × boss.maxHP = mob HP,  atkMult × boss.atk = mob ATK
 // Wave scaling adds +15% per wave, so later waves naturally hit harder.
 export const MOB_TYPES = [
-  { id: 'zombie',   name: 'Zombie',   icon: 'skull',    hpMult: 0.38, atkMult: 0.50, speed: 5  },
-  { id: 'skeleton', name: 'Skeleton', icon: 'skull',    hpMult: 0.28, atkMult: 0.60, speed: 10 },
-  { id: 'bat',      name: 'Bat',      icon: 'wing',     hpMult: 0.22, atkMult: 0.46, speed: 14 },
-  { id: 'vampire',  name: 'Vampire',  icon: 'heart',    hpMult: 0.46, atkMult: 0.70, speed: 12 },
-  { id: 'werewolf', name: 'Werewolf', icon: 'sword',    hpMult: 0.55, atkMult: 0.80, speed: 11 },
-  { id: 'goblin',   name: 'Goblin',   icon: 'sword',    hpMult: 0.32, atkMult: 0.55, speed: 13 },
-  { id: 'ghost',    name: 'Ghost',    icon: 'orb',      hpMult: 0.25, atkMult: 0.48, speed: 15 },
-  { id: 'spider',   name: 'Spider',   icon: 'shield',   hpMult: 0.35, atkMult: 0.56, speed: 12 },
-  { id: 'demon',    name: 'Demon',    icon: 'flame',    hpMult: 0.65, atkMult: 0.90, speed: 9  },
-  { id: 'slime',    name: 'Slime',    icon: 'potion',   hpMult: 0.50, atkMult: 0.38, speed: 6  },
+  { id: 'zombie',       name: 'Zombie',       icon: 'skull',  hpMult: 0.38, atkMult: 0.50, speed: 5,  weaponElement: 'Earth'    },
+  { id: 'skeleton',     name: 'Skeleton',     icon: 'skull',  hpMult: 0.28, atkMult: 0.60, speed: 10, weaponElement: 'None'     },
+  { id: 'vampire_bat',  name: 'Vampire Bat',  icon: 'wing',   hpMult: 0.22, atkMult: 0.46, speed: 14, weaponElement: 'Shadow'   },
+  { id: 'bandit',       name: 'Bandit',       icon: 'sword',  hpMult: 0.46, atkMult: 0.70, speed: 12, weaponElement: 'None'     },
+  { id: 'forest_troll', name: 'Forest Troll', icon: 'impact', hpMult: 0.55, atkMult: 0.80, speed: 11, weaponElement: 'Earth'    },
+  { id: 'goblin',       name: 'Goblin',       icon: 'sword',  hpMult: 0.32, atkMult: 0.55, speed: 13, weaponElement: 'None'     },
+  { id: 'dark_mage',    name: 'Dark Mage',    icon: 'orb',    hpMult: 0.25, atkMult: 0.48, speed: 15, weaponElement: 'Shadow'   },
+  { id: 'stone_golem',  name: 'Stone Golem',  icon: 'shield', hpMult: 0.35, atkMult: 0.56, speed: 12, weaponElement: 'Earth'    },
+  { id: 'fire_imp',     name: 'Fire Imp',     icon: 'flame',  hpMult: 0.65, atkMult: 0.90, speed: 9,  weaponElement: 'Fire'     },
+  { id: 'slime',        name: 'Slime',        icon: 'potion', hpMult: 0.50, atkMult: 0.38, speed: 6,  weaponElement: 'Water'    },
 ];
 
 /* ═══════════════════════════════════════════

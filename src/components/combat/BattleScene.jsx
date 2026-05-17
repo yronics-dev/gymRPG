@@ -527,12 +527,17 @@ export default function BattleScene({
   const themeGlow  = theme?.glow  || '#f8717155';
 
   // ── Float helpers ─────────────────────────────────────────────────────────
+  // Arena = 260px tall, chars sit at bottom:10, sprites ~120px → body spans y≈130–240
+  // Player is left ~10–130px, boss is right ~(aw-130)–(aw-10)
   const addFloat = useCallback((val, type, side) => {
     const id = ++floatId.current;
     const aw  = arenaRef.current?.offsetWidth || 360;
-    // Place numbers on the character torsos (arena is 260px, chars are ~120px at bottom:10)
-    const x   = side === 'player' ? aw * 0.22 : aw * 0.78;
-    const y   = 155;
+    const rx  = Math.random();   // horizontal jitter within body width (~110px)
+    const ry  = Math.random();   // vertical jitter within torso (~80px)
+    const x   = side === 'player'
+      ? 20  + rx * 100           // 20–120 px from left
+      : aw - 120 + rx * 100;    // 20–120 px from right edge
+    const y   = 140 + ry * 80;  // 140–220 px from top (torso → hips)
     setFloats(prev => [...prev, { id, val, type, x, y }]);
   }, []);
   const rmFloat = useCallback(id => setFloats(p => p.filter(f => f.id !== id)), []);
@@ -553,7 +558,9 @@ export default function BattleScene({
   async function animPlayerAttack(events) {
     const hasCrit = events.some(e => e.type === 'crit');
     const aw = arenaRef.current?.offsetWidth || 360;
-    const bx = aw * 0.72;
+    // Random hit spot on boss body
+    const bx = aw - 120 + Math.random() * 100;
+    const by = 140 + Math.random() * 80;
 
     setPlayerAnim('charge');
     setSpeedH(true);
@@ -563,12 +570,12 @@ export default function BattleScene({
     await wait(200);
 
     // Impact on boss body
-    setAtkEffect({ x: bx, y: 160 });
+    setAtkEffect({ x: bx, y: by });
     setBossAnim('hit');
     events.forEach(e => { if (e.val != null) addFloat(e.val, e.type, 'boss'); });
 
     if (hasCrit) {
-      setSpeedR({ x: bx, y: 160, color: '#facc15' });
+      setSpeedR({ x: bx, y: by, color: '#facc15' });
       doFlash('#facc1533', 320);
       doShake('crit', 300);
     }
@@ -586,7 +593,9 @@ export default function BattleScene({
   async function animBossAttack(events) {
     const isRage = events.some(e => e.type === 'boss_rage');
     const aw = arenaRef.current?.offsetWidth || 360;
-    const px = aw * 0.18;
+    // Random hit spot on player body
+    const px = 20 + Math.random() * 100;
+    const py = 140 + Math.random() * 80;
 
     // Telegraph (200ms windup)
     setBossAnim('telegraph');
@@ -597,7 +606,7 @@ export default function BattleScene({
     await wait(200);
 
     // Impact on player body
-    setAtkEffect({ x: px, y: 160, element: 'player-hit' });
+    setAtkEffect({ x: px, y: py, element: 'player-hit' });
     setPlayerAnim('hit');
     events.forEach(e => { if (e.val != null) addFloat(e.val, e.type, 'player'); });
     doFlash('#f8717122', 200);
