@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { runBattleTurn } from '../../utils/gameLogic';
-import CharacterSprite from '../CharacterSprite';
+import CharacterRenderer from '../CharacterRenderer';
 import BossSprite from '../BossSprite';
+import MobSprite from './MobSprite';
 
 // ── Keyframes (injected once) ────────────────────────────────────────────────
 const KEYFRAMES = `
@@ -133,6 +134,178 @@ function injectStyles() {
   el.id = 'bs-keyframes';
   el.textContent = KEYFRAMES;
   document.head.appendChild(el);
+}
+
+// ── Stadium crowd ────────────────────────────────────────────────────────────
+const FAN_COLORS  = ['#ef4444','#3b82f6','#22c55e','#f59e0b','#a855f7','#ec4899','#14b8a6','#f97316','#eab308','#06b6d4'];
+const SKIN_TONES  = ['#fde68a','#fbbf24','#d97706','#a16207','#e2c9a0','#c8a87a','#8d6748','#f5d0a9'];
+const HAIR_COLORS = ['#1a0a00','#3d1f00','#7c3d00','#b5651d','#f4c542','#e8e8e8','#111','#8b0000','#cc44aa'];
+// hair style: 0=short, 1=long, 2=spiky, 3=bun, 4=curly
+const SIGN_TEXTS  = ['GO!','WIN!','LFG','💪','🔥','POG','EZ','!!!','GG'];
+
+function Fan({ f }) {
+  const hx = f.x, hy = f.y - f.headR - f.size * 0.3;
+  const hw = f.headR, sw = f.size * 0.22;
+
+  // hair paths relative to head center
+  const hair = f.hairStyle;
+  const hairColor = HAIR_COLORS[f.hairColor];
+
+  return (
+    <g style={{ animation: `bs-idle-float-boss ${f.dur}s ease-in-out ${f.delay}s infinite` }}>
+      {/* Body / jersey */}
+      <rect x={hx - f.size/2} y={hy + hw} width={f.size} height={f.size * 1.3} rx="1" fill={f.color} opacity="0.92"/>
+      {/* Jersey stripe */}
+      <rect x={hx - f.size/2 + 1} y={hy + hw + 1} width={f.size - 2} height={f.size * 0.35} rx="0" fill="rgba(255,255,255,0.15)"/>
+
+      {/* Neck */}
+      <rect x={hx - sw/2} y={hy + hw - 1} width={sw} height={f.size * 0.18} fill={f.skin}/>
+
+      {/* Head */}
+      <circle cx={hx} cy={hy} r={hw} fill={f.skin}/>
+
+      {/* Eyes — only on larger fans */}
+      {f.headR >= 4.5 && (
+        <>
+          <circle cx={hx - hw * 0.32} cy={hy - hw * 0.05} r={hw * 0.18} fill="#111"/>
+          <circle cx={hx + hw * 0.32} cy={hy - hw * 0.05} r={hw * 0.18} fill="#111"/>
+          {/* eye shine */}
+          <circle cx={hx - hw * 0.28} cy={hy - hw * 0.08} r={hw * 0.07} fill="white"/>
+          <circle cx={hx + hw * 0.36} cy={hy - hw * 0.08} r={hw * 0.07} fill="white"/>
+        </>
+      )}
+
+      {/* Mouth — smile or open "O" */}
+      {f.headR >= 5.5 && (
+        f.raised
+          ? <ellipse cx={hx} cy={hy + hw * 0.4} rx={hw * 0.28} ry={hw * 0.22} fill="#111"/>
+          : <path d={`M${hx - hw*0.28} ${hy + hw*0.3} Q${hx} ${hy + hw*0.55} ${hx + hw*0.28} ${hy + hw*0.3}`}
+              stroke="#111" strokeWidth={hw*0.12} fill="none"/>
+      )}
+
+      {/* Hair */}
+      {hair === 0 && <rect x={hx - hw} y={hy - hw} width={hw*2} height={hw*0.7} rx={hw*0.3} fill={hairColor}/>}
+      {hair === 1 && <>
+        <rect x={hx - hw} y={hy - hw} width={hw*2} height={hw*0.7} rx={hw*0.3} fill={hairColor}/>
+        <rect x={hx - hw} y={hy - hw*0.3} width={hw*0.35} height={hw*1.4} rx={hw*0.15} fill={hairColor}/>
+        <rect x={hx + hw*0.65} y={hy - hw*0.3} width={hw*0.35} height={hw*1.4} rx={hw*0.15} fill={hairColor}/>
+      </>}
+      {hair === 2 && <>
+        <rect x={hx - hw} y={hy - hw} width={hw*2} height={hw*0.6} rx={hw*0.2} fill={hairColor}/>
+        <polygon points={`${hx-hw*0.5},${hy-hw} ${hx-hw*0.3},${hy-hw*1.7} ${hx-hw*0.1},${hy-hw}`} fill={hairColor}/>
+        <polygon points={`${hx-hw*0.1},${hy-hw} ${hx+hw*0.1},${hy-hw*1.9} ${hx+hw*0.3},${hy-hw}`} fill={hairColor}/>
+        <polygon points={`${hx+hw*0.3},${hy-hw} ${hx+hw*0.5},${hy-hw*1.6} ${hx+hw*0.7},${hy-hw}`} fill={hairColor}/>
+      </>}
+      {hair === 3 && <>
+        <rect x={hx - hw} y={hy - hw} width={hw*2} height={hw*0.6} rx={hw*0.2} fill={hairColor}/>
+        <circle cx={hx} cy={hy - hw*1.1} r={hw*0.45} fill={hairColor}/>
+      </>}
+      {hair === 4 && <>
+        <ellipse cx={hx} cy={hy - hw*0.8} rx={hw*1.1} ry={hw*0.8} fill={hairColor}/>
+        <circle cx={hx - hw*0.7} cy={hy - hw*0.3} r={hw*0.35} fill={hairColor}/>
+        <circle cx={hx + hw*0.7} cy={hy - hw*0.3} r={hw*0.35} fill={hairColor}/>
+      </>}
+
+      {/* Arms */}
+      {f.raised ? (
+        <g stroke={f.color} strokeWidth={sw} strokeLinecap="round">
+          <line x1={hx - f.size/2} y1={hy + hw + f.size*0.4}
+                x2={hx - f.size - f.size*0.5} y2={hy - f.size*0.2}/>
+          <line x1={hx + f.size/2} y1={hy + hw + f.size*0.4}
+                x2={hx + f.size + f.size*0.5} y2={hy - f.size*0.2}/>
+        </g>
+      ) : (
+        <g stroke={f.color} strokeWidth={sw} strokeLinecap="round">
+          <line x1={hx - f.size/2} y1={hy + hw + f.size*0.4}
+                x2={hx - f.size*0.9} y2={hy + hw + f.size*0.95}/>
+          <line x1={hx + f.size/2} y1={hy + hw + f.size*0.4}
+                x2={hx + f.size*0.9} y2={hy + hw + f.size*0.95}/>
+        </g>
+      )}
+
+      {/* Sign held by some front-row fans */}
+      {f.hasSign && f.raised && f.headR >= 7 && (
+        <g>
+          <rect x={hx + f.size + f.size*0.4} y={hy - f.size*0.5}
+                width={f.size * 1.8} height={f.size * 0.85} rx="1"
+                fill="white" stroke="#ccc" strokeWidth="0.5"/>
+          <text x={hx + f.size + f.size*0.4 + f.size*0.9} y={hy - f.size*0.05}
+                textAnchor="middle" fontSize={f.size * 0.55}
+                fontFamily="Courier New" fontWeight="bold" fill="#111">
+            {f.signText}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+function StadiumCrowd({ themeColor, bossHPPct, playerHPPct, phase }) {
+  const excited = phase === 'victory' || bossHPPct < 30 || playerHPPct < 25;
+  const rowDefs = [
+    { y: 32,  count: 18, gap: 19,   size: 7,  headR: 4   },
+    { y: 68,  count: 13, gap: 26,   size: 9,  headR: 5   },
+    { y: 110, count: 9,  gap: 37,   size: 12, headR: 6.5 },
+    { y: 158, count: 6,  gap: 56,   size: 16, headR: 9   },
+  ];
+
+  const fans = rowDefs.flatMap((row, ri) =>
+    Array.from({ length: row.count }, (_, i) => {
+      const seed      = ri * 97 + i * 37;
+      const x         = (ri === 3 ? 28 : 10) + i * row.gap;
+      return {
+        x, y: row.y,
+        size: row.size, headR: row.headR,
+        color:      FAN_COLORS[seed % FAN_COLORS.length],
+        skin:       SKIN_TONES[(seed * 3) % SKIN_TONES.length],
+        hairStyle:  seed % 5,
+        hairColor:  (seed * 7) % HAIR_COLORS.length,
+        raised:     excited ? (seed % 4 !== 0) : (seed % 5 === 0),
+        hasSign:    seed % 7 === 0,
+        signText:   SIGN_TEXTS[seed % SIGN_TEXTS.length],
+        delay:      ((ri * 0.4 + i * 0.13) % 2).toFixed(2),
+        dur:        (1.5 + (seed % 7) * 0.18).toFixed(2),
+      };
+    })
+  );
+
+  return (
+    <div style={{ flexShrink: 0, overflow: 'hidden', minHeight: 280 }}>
+      <svg viewBox="0 0 360 195" width="100%" height="280" preserveAspectRatio="xMidYMid slice"
+        style={{ display: 'block' }}>
+        {/* Background */}
+        <rect width="360" height="195" fill="#050a12"/>
+
+        {/* Stadium arch ceiling */}
+        <path d="M0 0 Q180 22 360 0 L360 38 Q180 58 0 38 Z" fill="#0a1220"/>
+        <path d="M0 0 Q180 16 360 0 L360 26 Q180 44 0 26 Z" fill="#0d1828" stroke={themeColor} strokeWidth="0.5" opacity="0.5"/>
+
+        {/* Scoreboard */}
+        <rect x="132" y="4" width="96" height="20" rx="2" fill="#111c2e" stroke={themeColor} strokeWidth="0.8"/>
+        <rect x="134" y="6" width="92" height="16" rx="1" fill="#07101e"/>
+        <text x="180" y="17" textAnchor="middle" fontSize="6" fontFamily="Courier New" fill={themeColor} letterSpacing="2">★ ARENA ★</text>
+
+        {/* Stadium spotlights */}
+        <line x1="20" y1="28" x2="80"  y2="130" stroke={themeColor} strokeWidth="18" opacity="0.025"/>
+        <line x1="340" y1="28" x2="280" y2="130" stroke={themeColor} strokeWidth="18" opacity="0.025"/>
+        <ellipse cx="20"  cy="28" rx="12" ry="5" fill={themeColor} opacity="0.15"/>
+        <ellipse cx="340" cy="28" rx="12" ry="5" fill={themeColor} opacity="0.15"/>
+
+        {/* Bleacher row backgrounds */}
+        {rowDefs.map((row, ri) => (
+          <rect key={ri} x="0" y={row.y - row.size - 4} width="360" height={row.size * 2.8 + 8}
+            fill={ri % 2 === 0 ? '#08101e' : '#060d1a'} stroke="#111c2e" strokeWidth="0.5"/>
+        ))}
+
+        {/* Fans — back rows first so front overlaps */}
+        {fans.map((f, idx) => <Fan key={idx} f={f}/>)}
+
+        {/* Floor glow bar */}
+        <rect x="0" y="182" width="360" height="13" fill="#050a12"/>
+        <rect x="0" y="181" width="360" height="3" fill={themeColor} opacity="0.15"/>
+      </svg>
+    </div>
+  );
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
@@ -347,6 +520,7 @@ export default function BattleScene({
   const animating   = useRef(false);
   const defeatDone  = useRef(false);
   const arenaRef    = useRef(null);
+  const autoFight   = useRef(false);
 
   const themeColor = theme?.color || '#f87171';
   const themeBg    = theme?.bg    || '#1a0a14';
@@ -454,13 +628,13 @@ export default function BattleScene({
     // ── Phase 1 ──
     if (playerFirst) {
       await animPlayerAttack(phase1Events);
-      setPrevBossHP(b => b);
+      setPrevBossHP(bossHP);
       setBossHP(phase1BossHP);
     } else {
       const hasDodge = phase1Events.some(e => e.type === 'dodge');
       if (hasDodge) await animDodge(phase1Events);
       else await animBossAttack(phase1Events);
-      setPrevPlayerHP(p => p);
+      setPrevPlayerHP(playerHP);
       setPlayerHP(phase1PlayerHP);
     }
 
@@ -480,13 +654,13 @@ export default function BattleScene({
     if (phase2Events.length > 0) {
       if (!playerFirst) {
         await animPlayerAttack(phase2Events);
-        setPrevBossHP(b => b);
+        setPrevBossHP(phase1BossHP);
         setBossHP(finalBossHP);
       } else {
         const hasDodge = phase2Events.some(e => e.type === 'dodge');
         if (hasDodge) await animDodge(phase2Events);
         else await animBossAttack(phase2Events);
-        setPrevPlayerHP(p => p);
+        setPrevPlayerHP(phase1PlayerHP);
         setPlayerHP(finalPlayerHP);
       }
       await wait(400);
@@ -517,6 +691,7 @@ export default function BattleScene({
   // ── Turn driver ───────────────────────────────────────────────────────────
   async function doTurn() {
     if (animating.current || phase !== 'ready') return;
+    autoFight.current = true;
     animating.current = true;
     setPhase('animating');
 
@@ -531,6 +706,15 @@ export default function BattleScene({
     animating.current = false;
     if (result.status === 'ongoing') setPhase('ready');
   }
+
+  // ── Auto-advance turns after first FIGHT press ────────────────────────────
+  useEffect(() => {
+    if (phase === 'ready' && autoFight.current) {
+      const t = setTimeout(() => doTurn(), 400);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   // ── Defeat callback ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -575,8 +759,8 @@ export default function BattleScene({
   };
 
   return (
-    <div style={{ ...shakeStyle, position:'relative', width:'100%', height:'100%',
-                  display:'flex', flexDirection:'column', overflow:'hidden' }}>
+    <div style={{ ...shakeStyle, position:'relative', width:'100%',
+                  display:'flex', flexDirection:'column' }}>
 
       {/* Screen flash */}
       {flash && (
@@ -584,11 +768,22 @@ export default function BattleScene({
                       pointerEvents:'none', zIndex:100 }}/>
       )}
 
-      {/* ── ARENA ── */}
+      {/* ── ARENA BOX ── */}
       <div ref={arenaRef} style={{
-        position: 'relative', flex: 1, overflow: 'hidden',
-        display: 'flex', alignItems: 'flex-end',
+        position: 'relative', height: 260, flexShrink: 0, overflow: 'hidden',
+        margin: '10px 12px 0',
+        background: `linear-gradient(135deg, ${themeBg}dd 0%, #05080f 100%)`,
+        border: `1px solid ${themeColor}44`,
+        borderRadius: 8,
+        boxShadow: `0 0 32px ${themeGlow}, inset 0 0 60px rgba(0,0,0,0.5)`,
+        transform: 'translateZ(0)',
       }}>
+        {/* Scanline overlay inside box */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
+          backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 1px, transparent 1px, transparent 3px)',
+          borderRadius: 8,
+        }}/>
         {/* Speed lines */}
         <SpeedLinesH active={speedH}/>
         {speedR && <SpeedLinesRadial {...speedR}/>}
@@ -605,51 +800,50 @@ export default function BattleScene({
             onDone={() => rmFloat(f.id)}/>
         ))}
 
-        {/* ── PLAYER (left 15%) ── */}
-        <div style={{
-          position: 'absolute', left: '8%', bottom: 16,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 10,
-        }}>
-          <FloatHpBar current={playerHP} max={pStats.maxHP} label="YOU" ghostHP={prevPlayerHP}/>
-          <div style={pStyle}>
-            <CharacterSprite
-              level={playerLevel} muscleXP={muscleXP}
-              size={88} equippedAura={equippedAura}
-              equippedClothing={equippedClothing}
-              equippedItems={equippedItems}
-              inBattle={true}
-            />
-          </div>
-        </div>
-
-        {/* ── BOSS (right) ── */}
-        <div style={{
-          position: 'absolute', right: '8%', bottom: 16,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 10,
-        }}>
-          <FloatHpBar current={bossHP} max={boss.maxHP} label={boss.name} ghostHP={prevBossHP}/>
-          <div style={bStyle}>
-            <BossSprite boss={boss} size={100} isRage={bossRage}/>
-          </div>
-        </div>
+        {/* Rage label */}
+        {bossRage && (
+          <div style={{
+            position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)',
+            fontFamily: 'Courier New', fontSize: 7, letterSpacing: 3,
+            color: '#ef4444', background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.35)', padding: '2px 8px', borderRadius: 2,
+            animation: 'bs-critical-pulse 0.6s ease-in-out infinite', zIndex: 25,
+          }}>!! RAGE !!</div>
+        )}
 
         {/* Divider line */}
         <div style={{
           position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1,
-          background: `linear-gradient(180deg, transparent, ${themeColor}28, transparent)`,
+          background: `linear-gradient(180deg, transparent, ${themeColor}22, transparent)`,
           transform: 'translateX(-50%)', pointerEvents: 'none',
         }}/>
 
-        {/* Rage label */}
-        {bossRage && (
-          <div style={{
-            position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-            fontFamily: 'Courier New', fontSize: 8, letterSpacing: 3,
-            color: '#ef4444', background: 'rgba(239,68,68,0.12)',
-            border: '1px solid rgba(239,68,68,0.35)', padding: '2px 10px', borderRadius: 2,
-            animation: 'bs-critical-pulse 0.6s ease-in-out infinite',
-          }}>!! RAGE !!</div>
-        )}
+        {/* ── PLAYER (left) — HP bar directly above character ── */}
+        <div style={{
+          position: 'absolute', left: 10, bottom: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, zIndex: 10,
+        }}>
+          <FloatHpBar current={playerHP} max={pStats.maxHP} label="YOU" ghostHP={prevPlayerHP}/>
+          <div style={pStyle}>
+            <Suspense fallback={null}>
+              <CharacterRenderer level={playerLevel} equippedItems={equippedItems} size={120}/>
+            </Suspense>
+          </div>
+        </div>
+
+        {/* ── BOSS (right) — HP bar directly above character ── */}
+        <div style={{
+          position: 'absolute', right: 10, bottom: 10,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, zIndex: 10,
+        }}>
+          <FloatHpBar current={bossHP} max={boss.maxHP} label={boss.name.split(' ').slice(-1)[0].toUpperCase()} ghostHP={prevBossHP}/>
+          <div style={bStyle}>
+            {boss.isMob
+              ? <MobSprite mob={boss} size={90}/>
+              : <BossSprite boss={boss} size={110} isRage={bossRage}/>
+            }
+          </div>
+        </div>
       </div>
 
       {/* ── BATTLE LOG ── */}
@@ -725,6 +919,7 @@ export default function BattleScene({
           {phase === 'defeat' && (
             <button onClick={() => {
               defeatDone.current = false;
+              autoFight.current = false;
               setPlayerHP(pStats.maxHP); setBossHP(boss.maxHP);
               setPrevPlayerHP(pStats.maxHP); setPrevBossHP(boss.maxHP);
               setLog([]); setTurn(0); setPhase('ready');
@@ -751,6 +946,38 @@ export default function BattleScene({
           <span style={{ fontSize:12, color:'#e2e8f0', fontFamily:'Courier New' }}>{turn}</span>
         </div>
       </div>
+
+      {/* ── BATTLE STATS STRIP ── */}
+      <div style={{
+        display: 'flex', gap: 5, padding: '7px 12px', flexWrap: 'wrap',
+        background: 'rgba(0,0,0,0.5)', borderTop: `1px solid ${themeColor}22`,
+        flexShrink: 0,
+      }}>
+        {[
+          { label: 'ELEMENT',    val: boss.element,                     col: themeColor },
+          { label: 'WEAKNESS',   val: boss.weakness,                    col: '#facc15'  },
+          { label: 'DIFFICULTY', val: boss.diffLabel || 'NORMAL',       col: /HARD|ELITE|MYTHIC|LEGEND/.test(boss.diffLabel) ? '#ef4444' : '#4ade80' },
+          { label: 'YOUR ATK',   val: pStats.atk,                       col: '#f87171'  },
+          { label: 'DEF',        val: `${Math.floor(pStats.defPct)}%`,  col: '#60a5fa'  },
+          { label: 'DODGE',      val: `${Math.floor(pStats.dodgePct)}%`,col: '#a78bfa'  },
+        ].map(({ label, val, col }) => (
+          <div key={label} style={{
+            background: 'rgba(255,255,255,0.04)', border: `1px solid ${col}33`,
+            borderRadius: 4, padding: '3px 8px', textAlign: 'center', flex: '1 0 auto',
+          }}>
+            <div style={{ fontSize: 6, color: '#475569', fontFamily: 'Courier New', letterSpacing: 1 }}>{label}</div>
+            <div style={{ fontSize: 9, color: col, fontFamily: 'Courier New', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── STADIUM CROWD ── */}
+      <StadiumCrowd
+        themeColor={themeColor}
+        bossHPPct={(bossHP / boss.maxHP) * 100}
+        playerHPPct={(playerHP / pStats.maxHP) * 100}
+        phase={phase}
+      />
     </div>
   );
 }

@@ -158,7 +158,7 @@ export function getPlayerBattleStats(muscleXP, statUpgrades = {}, equippedItems 
 
   return {
     maxHP:    Math.max(100, 85 + stats.VIT * 6 + hpUp * 15 + lootHP + skillHP + classHP),
-    atk:      Math.floor(8 + stats.ATK * 1.0) + atkUp * 3 + lootATK + skillATK,
+    atk:      Math.floor(6 + stats.ATK * 0.55) + atkUp * 3 + lootATK + skillATK,
     defPct:   Math.min(60, stats.DEF * 0.7 + defUp * 2 + lootDEF + skillDEF),
     dodgePct: Math.min(40, stats.AGI * 0.5 + dodgeUp + lootDodge + skillDodge),
     staPct:   Math.min(30, stats.STA * 0.5),
@@ -196,8 +196,8 @@ export function runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, 
     const isCrit = Math.random() * 100 < critPct;
     let eventEffect = 'hit';
 
-    if (adrenalineActive) { dmg = Math.floor(dmg * 1.5); eventEffect = 'adrenaline'; }
-    if (isCrit)           { dmg = Math.floor(dmg * 2);   eventEffect = 'crit'; }
+    if (adrenalineActive) { dmg = Math.floor(dmg * 1.25); eventEffect = 'adrenaline'; }
+    if (isCrit)           { dmg = Math.floor(dmg * 1.5);  eventEffect = 'crit'; }
 
     if (hasWeaknessBonus) {
       dmg = Math.floor(dmg * WEAKNESS_BONUS_MULTIPLIER);

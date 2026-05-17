@@ -533,9 +533,10 @@ function pickDialogue(arr) { return arr[Math.floor(Math.random() * arr.length)];
 export default function BattleArena({
   boss, muscleXP, playerLevel, todayMuscles, statUpgrades = {},
   equippedAura, equippedClothing = {}, equippedItems = {},
+  purchasedSkills = [], classBonuses = {},
   isTraining = false, onVictory, onDefeat, onClose,
 }) {
-  const pStats = getPlayerBattleStats(muscleXP, statUpgrades);
+  const pStats = getPlayerBattleStats(muscleXP, statUpgrades, equippedItems, purchasedSkills, classBonuses);
   const theme  = ELEMENT_THEMES[boss.element] || ELEMENT_THEMES.Fire;
   const hasWeaknessBonus = todayMuscles.includes(boss.weakness);
 
@@ -826,20 +827,15 @@ export default function BattleArena({
   // BATTLE SCREEN — handled by BattleScene
   // ═════════════════════════════════════════════
   return (
-    <div className="fixed inset-0 z-40 flex flex-col"
-      style={{ background: `linear-gradient(180deg, ${theme.bg}cc 0%, #02050a 70%)` }}>
-
-      {/* Scanlines */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 1px, transparent 1px, transparent 3px)',
-        zIndex: 1,
-      }}/>
-
-      {/* Pixel-art background (element-specific) */}
-      <BattleBackground element={boss.element} theme={theme}/>
-
-      {/* ── BATTLE SCENE (anime combat system) ── */}
-      <div className="relative z-10 flex-1 flex flex-col" style={{ minHeight:0 }}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 40,
+      background: '#02050a',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'flex-start',
+      paddingTop: 20,
+    }}>
+      {/* ── BATTLE SCENE (compact card) ── */}
+      <div style={{ width: '100%', maxWidth: 480 }}>
         <BattleScene
           boss={boss}
           pStats={pStats}

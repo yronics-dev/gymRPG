@@ -281,6 +281,9 @@ export default function BossTab({
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
         statUpgrades={statUpgrades}
+        equippedItems={equippedItems}
+        purchasedSkills={purchasedSkills}
+        classBonuses={classBonuses}
         equippedAura={equippedAura}
         onVictory={handleVictory}
         onDefeat={handleDefeat}
@@ -297,6 +300,9 @@ export default function BossTab({
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
         statUpgrades={statUpgrades}
+        equippedItems={equippedItems}
+        purchasedSkills={purchasedSkills}
+        classBonuses={classBonuses}
         equippedAura={equippedAura}
         isTraining
         onVictory={() => { setTrainingBoss(pickTrainingBoss()); }}
@@ -314,6 +320,9 @@ export default function BossTab({
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
         statUpgrades={statUpgrades}
+        equippedItems={equippedItems}
+        purchasedSkills={purchasedSkills}
+        classBonuses={classBonuses}
         equippedAura={equippedAura}
         onVictory={handleLeagueVictory}
         onDefeat={() => setInLeague(false)}

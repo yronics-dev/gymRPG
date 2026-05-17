@@ -485,149 +485,233 @@ function GoldShop({
   );
 }
 
+// ─── Item Detail Popup ────────────────────────────────────────────────────────
+function ItemPopup({ item, equippedItems, onEquip, onUnequip, onClose }) {
+  if (!item) return null;
+  const isEquipped = equippedItems[item.slot]?.id === item.id;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center"
+      style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}
+        className="w-full max-w-sm rounded-t-2xl p-5"
+        style={{
+          background: `linear-gradient(160deg, ${item.rarityGlow}cc 0%, rgba(6,10,20,0.98) 50%)`,
+          border: `2px solid ${item.rarityColor}`,
+          borderBottom: 'none',
+          boxShadow: `0 -8px 40px ${item.rarityGlow}66`,
+          animation: 'slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards',
+        }}>
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center justify-center rounded-xl flex-shrink-0"
+            style={{
+              width: 60, height: 60,
+              background: `radial-gradient(circle, ${item.rarityGlow}aa, rgba(0,0,0,0.8))`,
+              border: `2px solid ${item.rarityColor}66`,
+              boxShadow: `0 0 20px ${item.rarityGlow}`,
+            }}>
+            <ItemIcon name={item.name} size={32} color={item.rarityColor}/>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="neon-text px-2 py-0.5 rounded-full inline-block mb-1"
+              style={{ background: `${item.rarityColor}22`, border: `1px solid ${item.rarityColor}55`,
+                       color: item.rarityColor, fontSize: '7px', letterSpacing: 2 }}>
+              {item.rarity.toUpperCase()} · {item.slot.toUpperCase()}
+            </div>
+            <div className="neon-text" style={{ color: '#f1f5f9', fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>
+              {item.name}
+            </div>
+          </div>
+          <button onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                     color: '#475569', borderRadius: 8, width: 30, height: 30, fontSize: 12,
+                     cursor: 'pointer', flexShrink: 0 }}>✕</button>
+        </div>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-5 gap-2 mb-4">
+          {[
+            { val: item.atk,   label: 'ATK',   color: '#f87171', show: item.atk > 0 },
+            { val: item.def,   label: 'DEF',   color: '#60a5fa', show: item.def > 0 },
+            { val: item.hp,    label: 'HP',    color: '#4ade80', show: item.hp > 0 },
+            { val: `${item.crit}%`,  label: 'CRIT',  color: '#facc15', show: item.crit > 0 },
+            { val: `${item.dodge}%`, label: 'DODGE', color: '#a78bfa', show: item.dodge > 0 },
+          ].filter(s => s.show).map((s, i) => (
+            <div key={i} className="text-center rounded-lg py-2"
+              style={{ background: `${s.color}12`, border: `1px solid ${s.color}30` }}>
+              <div className="neon-text" style={{ color: s.color, fontSize: '11px', fontWeight: 700 }}>+{s.val}</div>
+              <div className="neon-text" style={{ color: '#475569', fontSize: '6px', letterSpacing: 1 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Action */}
+        {isEquipped ? (
+          <button onClick={() => { onUnequip && onUnequip(item.slot); onClose(); }}
+            className="w-full py-3 rounded-xl neon-text"
+            style={{ background: 'rgba(248,113,113,0.12)', border: '2px solid rgba(248,113,113,0.5)',
+                     color: '#f87171', fontSize: '10px', letterSpacing: 3, cursor: 'pointer' }}>
+            UNEQUIP
+          </button>
+        ) : (
+          <button onClick={() => { onEquip && onEquip(item); onClose(); }}
+            className="w-full py-3 rounded-xl neon-text"
+            style={{
+              background: `linear-gradient(135deg, ${item.rarityGlow}88, rgba(0,0,0,0.5))`,
+              border: `2px solid ${item.rarityColor}`,
+              color: item.rarityColor, fontSize: '10px', letterSpacing: 3,
+              boxShadow: `0 0 16px ${item.rarityGlow}66`, cursor: 'pointer',
+            }}>
+            ✓ EQUIP
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Inventory Modal ─────────────────────────────────────────────────────────
+const SLOT_FILTERS = ['ALL', 'helmet', 'chest', 'boots', 'weapon', 'ring', 'special'];
+const RARITY_ORDER = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 };
+
 function InventoryModal({ inventory, equippedItems, onEquip, onUnequip, onClose }) {
-  const [selected, setSelected] = React.useState(null);
-  const selectedItem = inventory.find(it => it.id === selected);
+  const [slotFilter, setSlotFilter] = React.useState('ALL');
+  const [popup, setPopup] = React.useState(null);
+  const [search, setSearch] = React.useState('');
+
+  const filtered = inventory
+    .filter(it => (slotFilter === 'ALL' || it.slot === slotFilter))
+    .filter(it => !search || it.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => (RARITY_ORDER[a.rarity] ?? 4) - (RARITY_ORDER[b.rarity] ?? 4));
+
+  const equippedCount = Object.keys(equippedItems).filter(s => equippedItems[s]).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(2,5,12,0.97)', backdropFilter: 'blur(8px)' }}>
-      {/* Scanlines */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
-      }}/>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(2,5,12,0.98)' }}>
+      {/* Popup */}
+      {popup && (
+        <ItemPopup item={popup} equippedItems={equippedItems}
+          onEquip={onEquip} onUnequip={onUnequip} onClose={() => setPopup(null)}/>
+      )}
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-4 pt-10 pb-3"
-        style={{ borderBottom: '1px solid rgba(192,132,252,0.15)' }}>
+      <div className="flex items-center justify-between px-4 pt-10 pb-3"
+        style={{ borderBottom: '1px solid rgba(192,132,252,0.2)', flexShrink: 0 }}>
         <div>
-          <div className="neon-text flex items-center gap-2" style={{ color: '#c084fc', fontSize: '12px', letterSpacing: '3px' }}>
+          <div className="neon-text flex items-center gap-2"
+            style={{ color: '#c084fc', fontSize: '13px', letterSpacing: '3px' }}>
             <GameIcon name="chest" size={14} color="#c084fc"/>
             INVENTORY
           </div>
-          <div className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>{inventory.length} ITEMS</div>
+          <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>
+            {inventory.length} items · {equippedCount} equipped
+          </div>
         </div>
-        <button onClick={onClose} className="pixel-btn px-3 py-1.5 rounded-sm"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#475569', fontSize: '8px' }}>
+        <button onClick={onClose}
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                   color: '#475569', borderRadius: 8, padding: '6px 12px',
+                   fontFamily: 'Courier New', fontSize: 9, cursor: 'pointer' }}>
           ✕ CLOSE
         </button>
       </div>
 
-      <div className="relative z-10 flex-1 overflow-y-auto px-4 py-3">
-        {inventory.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <GameIcon name="chest" size={48} color="#1e2d3d"/>
-            <div className="neon-text" style={{ color: '#334155', fontSize: '8px', letterSpacing: '2px' }}>NO ITEMS YET</div>
-            <div className="neon-text" style={{ color: '#1e2d3d', fontSize: '6px' }}>Complete dungeon runs to earn loot</div>
+      {/* Slot filter tabs */}
+      <div className="px-3 py-2 flex gap-1.5 overflow-x-auto" style={{ flexShrink: 0, scrollbarWidth: 'none' }}>
+        {SLOT_FILTERS.map(f => (
+          <button key={f} onClick={() => setSlotFilter(f)}
+            style={{
+              padding: '4px 10px', borderRadius: 6, whiteSpace: 'nowrap', cursor: 'pointer',
+              fontFamily: 'Courier New', fontSize: 7, letterSpacing: 1,
+              background: slotFilter === f ? '#c084fc22' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${slotFilter === f ? '#c084fc88' : 'rgba(255,255,255,0.08)'}`,
+              color: slotFilter === f ? '#c084fc' : '#475569',
+            }}>
+            {f.toUpperCase()}
+            {f !== 'ALL' && equippedItems[f] && (
+              <span style={{ marginLeft: 4, color: '#4ade80' }}>•</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Items grid */}
+      <div className="flex-1 overflow-y-auto px-3 pb-4">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <GameIcon name="chest" size={44} color="#1e2d3d"/>
+            <div className="neon-text" style={{ color: '#334155', fontSize: '8px', letterSpacing: '2px' }}>
+              {inventory.length === 0 ? 'NO ITEMS YET' : 'NOTHING MATCHES'}
+            </div>
+            <div className="neon-text" style={{ color: '#1e2d3d', fontSize: '6px' }}>
+              {inventory.length === 0 ? 'Complete dungeon runs to earn loot' : 'Try a different filter'}
+            </div>
           </div>
         ) : (
-          <>
-            {/* Item detail panel */}
-            {selectedItem && (
-              <div className="mb-4 rounded-sm p-3 animate-slide-up"
-                style={{
-                  background: `linear-gradient(135deg, ${selectedItem.rarityGlow}cc, rgba(6,10,20,0.95))`,
-                  border: `2px solid ${selectedItem.rarityColor}`,
-                  boxShadow: `0 0 24px ${selectedItem.rarityGlow}`,
-                }}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center justify-center rounded-sm"
-                    style={{
-                      width: 52, height: 52,
-                      background: `radial-gradient(circle, ${selectedItem.rarityGlow}88, rgba(0,0,0,0.7))`,
-                      border: `2px solid ${selectedItem.rarityColor}55`,
-                      boxShadow: `0 0 16px ${selectedItem.rarityGlow}`,
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {filtered.map(item => {
+              const isEquipped = equippedItems[item.slot]?.id === item.id;
+              const rarityBadge = item.rarity !== 'Common';
+              return (
+                <button key={item.id} onClick={() => setPopup(item)}
+                  style={{
+                    background: isEquipped
+                      ? `linear-gradient(135deg, ${item.rarityGlow}33, rgba(6,10,20,0.9))`
+                      : 'rgba(6,10,20,0.85)',
+                    border: `1px solid ${isEquipped ? item.rarityColor : 'rgba(255,255,255,0.1)'}`,
+                    borderRadius: 10, padding: '10px 10px',
+                    display: 'flex', flexDirection: 'column', gap: 6,
+                    textAlign: 'left', cursor: 'pointer',
+                    boxShadow: isEquipped ? `0 0 12px ${item.rarityGlow}44` : 'none',
+                    transition: 'all 0.15s ease',
+                  }}>
+                  {/* Icon row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 8, flexShrink: 0,
+                      background: `radial-gradient(circle, ${item.rarityGlow}55, rgba(0,0,0,0.6))`,
+                      border: `1px solid ${item.rarityColor}44`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                    <ItemIcon name={selectedItem.name} size={28} color={selectedItem.rarityColor}/>
-                  </div>
-                  <div className="flex-1">
-                    <div className="neon-text px-1.5 py-0.5 rounded-sm inline-block mb-1"
-                      style={{ background: `${selectedItem.rarityColor}22`, border: `1px solid ${selectedItem.rarityColor}44`, color: selectedItem.rarityColor, fontSize: '6px' }}>
-                      {selectedItem.rarity.toUpperCase()} · {selectedItem.slot.toUpperCase()}
+                      <ItemIcon name={item.name} size={22} color={item.rarityColor}/>
                     </div>
-                    <div className="neon-text" style={{ color: '#f1f5f9', fontSize: '11px' }}>{selectedItem.name}</div>
-                  </div>
-                </div>
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-1.5 mb-3">
-                  {selectedItem.atk  > 0 && <div className="text-center rounded-sm py-1.5" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}>
-                    <div className="neon-text" style={{ color: '#f87171', fontSize: '9px' }}>+{selectedItem.atk}</div>
-                    <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>ATK</div>
-                  </div>}
-                  {selectedItem.def  > 0 && <div className="text-center rounded-sm py-1.5" style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.2)' }}>
-                    <div className="neon-text" style={{ color: '#60a5fa', fontSize: '9px' }}>+{selectedItem.def}</div>
-                    <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>DEF</div>
-                  </div>}
-                  {selectedItem.hp   > 0 && <div className="text-center rounded-sm py-1.5" style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}>
-                    <div className="neon-text" style={{ color: '#4ade80', fontSize: '9px' }}>+{selectedItem.hp}</div>
-                    <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>HP</div>
-                  </div>}
-                  {selectedItem.crit > 0 && <div className="text-center rounded-sm py-1.5" style={{ background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.2)' }}>
-                    <div className="neon-text" style={{ color: '#facc15', fontSize: '9px' }}>+{selectedItem.crit}%</div>
-                    <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>CRIT</div>
-                  </div>}
-                  {selectedItem.dodge > 0 && <div className="text-center rounded-sm py-1.5" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
-                    <div className="neon-text" style={{ color: '#a78bfa', fontSize: '9px' }}>+{selectedItem.dodge}%</div>
-                    <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>DODGE</div>
-                  </div>}
-                </div>
-                {/* Action buttons */}
-                {equippedItems[selectedItem.slot]?.id === selectedItem.id ? (
-                  <button onClick={() => { onUnequip && onUnequip(selectedItem.slot); setSelected(null); }}
-                    className="w-full py-2.5 rounded-sm pixel-btn neon-text"
-                    style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.4)', color: '#f87171', fontSize: '8px' }}>
-                    UNEQUIP
-                  </button>
-                ) : (
-                  <button onClick={() => { onEquip && onEquip(selectedItem); setSelected(null); }}
-                    className="w-full py-2.5 rounded-sm pixel-btn neon-text"
-                    style={{
-                      background: `linear-gradient(135deg, ${selectedItem.rarityGlow}, rgba(0,0,0,0.4))`,
-                      border: `2px solid ${selectedItem.rarityColor}`,
-                      color: selectedItem.rarityColor, fontSize: '8px',
-                      boxShadow: `0 0 12px ${selectedItem.rarityGlow}`,
-                    }}>
-                    ✓ EQUIP
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Grid of items */}
-            <div className="grid grid-cols-2 gap-2">
-              {inventory.map(item => {
-                const isEquipped = equippedItems[item.slot]?.id === item.id;
-                const isSelected = selected === item.id;
-                return (
-                  <button key={item.id} onClick={() => setSelected(isSelected ? null : item.id)}
-                    className="rounded-sm p-2.5 flex items-center gap-2.5 text-left"
-                    style={{
-                      background: isSelected
-                        ? `linear-gradient(135deg, ${item.rarityGlow}, rgba(6,10,20,0.8))`
-                        : isEquipped ? `${item.rarityGlow}44` : 'rgba(6,10,20,0.7)',
-                      border: `${isSelected ? '2px' : '1px'} solid ${isSelected || isEquipped ? item.rarityColor : 'rgba(255,255,255,0.08)'}`,
-                      boxShadow: isSelected ? `0 0 16px ${item.rarityGlow}` : 'none',
-                      transition: 'all 0.2s ease',
-                    }}>
-                    <div className="flex-shrink-0 flex items-center justify-center rounded-sm"
-                      style={{ width: 36, height: 36,
-                        background: `${item.rarityGlow}44`,
-                        border: `1px solid ${item.rarityColor}44`,
-                      }}>
-                      <ItemIcon name={item.name} size={20} color={item.rarityColor}/>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="neon-text truncate" style={{ color: item.rarityColor, fontSize: '7px' }}>{item.name}</div>
-                      <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{item.slot.toUpperCase()}</div>
-                      {isEquipped && (
-                        <div className="neon-text" style={{ color: item.rarityColor, fontSize: '6px' }}>✓ ON</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {rarityBadge && (
+                        <div style={{
+                          fontSize: 6, letterSpacing: 1, color: item.rarityColor,
+                          fontFamily: 'Courier New', marginBottom: 2, opacity: 0.9,
+                        }}>{item.rarity.toUpperCase()}</div>
                       )}
+                      <div style={{
+                        fontSize: 9, color: '#e2e8f0', fontFamily: 'Courier New',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        fontWeight: 600,
+                      }}>{item.name}</div>
+                      <div style={{ fontSize: 7, color: '#475569', fontFamily: 'Courier New' }}>
+                        {item.slot.toUpperCase()}
+                      </div>
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          </>
+                  </div>
+                  {/* Stat pills */}
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    {item.atk  > 0 && <span style={{ fontSize:7, color:'#f87171', background:'rgba(248,113,113,0.1)', borderRadius:4, padding:'1px 5px' }}>+{item.atk} ATK</span>}
+                    {item.def  > 0 && <span style={{ fontSize:7, color:'#60a5fa', background:'rgba(96,165,250,0.1)',  borderRadius:4, padding:'1px 5px' }}>+{item.def} DEF</span>}
+                    {item.hp   > 0 && <span style={{ fontSize:7, color:'#4ade80', background:'rgba(74,222,128,0.1)', borderRadius:4, padding:'1px 5px' }}>+{item.hp} HP</span>}
+                    {item.crit > 0 && <span style={{ fontSize:7, color:'#facc15', background:'rgba(250,204,21,0.1)', borderRadius:4, padding:'1px 5px' }}>+{item.crit}% CRIT</span>}
+                    {item.dodge > 0 && <span style={{ fontSize:7, color:'#a78bfa', background:'rgba(167,139,250,0.1)',borderRadius:4, padding:'1px 5px' }}>+{item.dodge}% DODGE</span>}
+                  </div>
+                  {/* Equipped badge */}
+                  {isEquipped && (
+                    <div style={{
+                      fontSize: 7, color: '#4ade80', fontFamily: 'Courier New', letterSpacing: 1,
+                      background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
+                      borderRadius: 4, padding: '2px 6px', alignSelf: 'flex-start',
+                    }}>✓ EQUIPPED</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -767,33 +851,33 @@ export default function CharacterTab({
             </div>
           </div>
 
-          {/* Level badge — top-left overlay */}
-          <div style={{ position: 'absolute', top: 10, left: 74, zIndex: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div className="neon-text px-2 py-0.5 rounded-sm" style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${aura}88`, color: aura, fontSize: '8px', textShadow: `0 0 6px ${aura}` }}>
-              {t('level', language)}.{level}
-            </div>
-            {playerClass && playerClass.id !== 'NOVICE' && (
-              <div
-                className="neon-text px-2 py-0.5 rounded-sm flex items-center gap-1"
-                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerClass.color}88`, color: playerClass.color, fontSize: '7px', letterSpacing: '1px' }}
-              >
-                <GameIcon name={playerClass.icon} size={10} color={playerClass.color} /> {playerClass.name.toUpperCase()}
+          {/* Level + title badges — compact overlay */}
+          <div style={{ position: 'absolute', top: 8, left: 74, right: 74, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3, pointerEvents: 'none' }}>
+            {/* Level + prestige on one line */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+              <div className="neon-text px-2 py-0.5 rounded-sm"
+                style={{ background: 'rgba(4,8,18,0.92)', border: `1px solid ${aura}88`, color: aura, fontSize: '8px', textShadow: `0 0 6px ${aura}`, whiteSpace: 'nowrap' }}>
+                {t('level', language)}.{level}
               </div>
-            )}
+              {prestige?.count > 0 && (
+                <div className="neon-text px-1.5 py-0.5 rounded-sm"
+                  style={{ background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.5)', color: '#facc15', fontSize: '6px', whiteSpace: 'nowrap' }}>
+                  ★{prestige.count}
+                </div>
+              )}
+            </div>
+            {/* Title */}
             {playerTitle && (
-              <div
-                className="neon-text px-2 py-0.5 rounded-sm"
-                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerTitle.color}55`, color: playerTitle.color, fontSize: '6px', letterSpacing: '1px' }}
-              >
+              <div className="neon-text px-2 py-0.5 rounded-sm"
+                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerTitle.color}55`, color: playerTitle.color, fontSize: '6px', letterSpacing: '1px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {playerTitle.title.toUpperCase()}
               </div>
             )}
-            {prestige?.count > 0 && (
-              <div
-                className="neon-text px-2 py-0.5 rounded-sm"
-                style={{ background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.5)', color: '#facc15', fontSize: '6px', letterSpacing: '1px' }}
-              >
-                ★ PRESTIGE {prestige.count}
+            {/* Class */}
+            {playerClass && playerClass.id !== 'NOVICE' && (
+              <div className="neon-text px-2 py-0.5 rounded-sm flex items-center gap-1"
+                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerClass.color}88`, color: playerClass.color, fontSize: '6px', whiteSpace: 'nowrap' }}>
+                <GameIcon name={playerClass.icon} size={9} color={playerClass.color}/> {playerClass.name.toUpperCase()}
               </div>
             )}
           </div>
@@ -813,8 +897,10 @@ export default function CharacterTab({
                 <div style={{ width: `${xpPct}%`, height: '100%', background: `linear-gradient(90deg, ${aura}88, ${aura})`, boxShadow: `0 0 6px ${aura}`, transition: 'width 1s ease' }} />
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{xpInLevel.toFixed(0)} XP</span>
-                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>LV.{level+1} — {xpToNext.toFixed(0)} left{nextMilestone ? ` →${nextMilestone}` : ''}</span>
+                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{xpPct.toFixed(0)}%</span>
+                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>
+                  {nextMilestone ? `→ LV.${nextMilestone}` : `LV.${level+1} — ${xpToNext.toFixed(0)} XP`}
+                </span>
               </div>
             </div>
           </div>

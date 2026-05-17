@@ -59,16 +59,24 @@ export function generateBossPool(size = 25) {
   return Array.from({ length: size }, (_, i) => createBossPrototype(i));
 }
 
+function levelDiffMult(lvl) {
+  if (lvl >= 150) return 3.5 + (lvl - 150) * 0.04;
+  if (lvl >= 100) return 2.0 + (lvl - 100) * 0.03;
+  if (lvl >= 50)  return 1.2 + (lvl - 50)  * 0.016;
+  return 1.0;
+}
+
 export function generateTrainingBoss(playerLevel = 1, rngSeed = Date.now()) {
   const pool  = generateBossPool(40);
   const index = Math.floor(makeRng(rngSeed >>> 0)() * pool.length);
   const base  = pool[index];
   const lvl   = Math.max(1, playerLevel);
   const rng   = makeRng((rngSeed * 31) >>> 0);
-  const maxHP = Math.max(100, Math.floor(base.baseHP + lvl * BOSS_CONFIG.levelHPScale + rng() * lvl * BOSS_CONFIG.hpVariance));
-  const atk   = Math.max(3,  Math.floor(base.baseAtk + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance));
+  const scale = levelDiffMult(lvl);
+  const maxHP = Math.max(100, Math.floor((base.baseHP + lvl * BOSS_CONFIG.levelHPScale + rng() * lvl * BOSS_CONFIG.hpVariance) * scale));
+  const atk   = Math.max(3,  Math.floor((base.baseAtk + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance) * scale));
   const speed = Math.floor(base.baseSpeed + lvl * BOSS_CONFIG.levelSpeedScale + rng() * 5);
-  return { ...base, maxHP, atk, speed, level: lvl, diffMult: 1, diffLabel: 'NORMAL' };
+  return { ...base, maxHP, atk, speed, level: lvl, diffMult: scale, diffLabel: scale >= 3 ? 'MYTHIC' : scale >= 2 ? 'ELITE' : scale >= 1.3 ? 'HARD' : 'NORMAL' };
 }
 
 // Daily boss: generated directly from the date string so every day is unique
@@ -89,8 +97,9 @@ export function generateDailyBoss(dateStr, playerLevel = 1) {
   const bATK = Math.floor(BOSS_CONFIG.baseATK  * (0.75 + rng() * 0.5));
   const bSpd = Math.max(1, Math.floor(BOSS_CONFIG.baseSpeed * (0.75 + rng() * 0.5)));
 
-  const maxHP = Math.max(100, Math.floor((bHP  + lvl * BOSS_CONFIG.levelHPScale  + rng() * lvl * BOSS_CONFIG.hpVariance)  * diffMult));
-  const atk   = Math.max(3,   Math.floor((bATK + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance) * diffMult));
+  const lvlScale = levelDiffMult(lvl);
+  const maxHP = Math.max(100, Math.floor((bHP  + lvl * BOSS_CONFIG.levelHPScale  + rng() * lvl * BOSS_CONFIG.hpVariance)  * diffMult * lvlScale));
+  const atk   = Math.max(3,   Math.floor((bATK + lvl * BOSS_CONFIG.levelATKScale + rng() * lvl * BOSS_CONFIG.atkVariance) * diffMult * lvlScale));
   const speed = Math.floor(bSpd + lvl * BOSS_CONFIG.levelSpeedScale + rng() * 5);
 
   const diffLabel = diffMult >= 1.10 ? 'HARD' : diffMult <= 0.90 ? 'EASY' : 'NORMAL';

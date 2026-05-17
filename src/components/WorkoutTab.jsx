@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  MUSCLE_GROUPS, EXERCISES_BY_MUSCLE, EXERCISE_ICONS, MUSCLE_COLORS,
+  MUSCLE_GROUPS, EXERCISES_BY_MUSCLE, EXERCISE_ICONS, EXERCISE_IMAGES, MUSCLE_COLORS,
 } from '../constants';
 import GameIcon from './GameIcon';
 import { getVolumeByMuscle, getTodayKey, isCardioExercise } from '../utils/gameLogic';
@@ -23,15 +23,85 @@ function MuscleTag({ muscle }) {
   );
 }
 
+function ExerciseCard({ exercise, onPick }) {
+  const [frame, setFrame] = useState(0);
+  const imgs = EXERCISE_IMAGES[exercise.name];
+  const color = MUSCLE_COLORS[exercise.muscle];
+
+  return (
+    <button
+      onClick={onPick}
+      style={{
+        background: '#0b1628',
+        border: `1px solid ${color}44`,
+        borderRadius: 14,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        textAlign: 'left',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'border-color 0.15s',
+      }}
+    >
+      {/* Image */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: '#0d1a2e', overflow: 'hidden' }}>
+        {imgs ? (
+          <img
+            src={imgs[frame]}
+            alt={exercise.name}
+            loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            onError={e => { e.currentTarget.style.display = 'none'; }}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <GameIcon name={EXERCISE_ICONS[exercise.name] || 'dumbbell'} size={44} color={color} />
+          </div>
+        )}
+
+        {/* Frame toggle — tap to flip start/end */}
+        {imgs && (
+          <button
+            onPointerDown={e => { e.stopPropagation(); setFrame(f => f === 0 ? 1 : 0); }}
+            style={{
+              position: 'absolute', bottom: 7, right: 7,
+              background: 'rgba(0,0,0,0.65)', border: `1px solid ${color}66`,
+              borderRadius: 6, padding: '3px 7px',
+              fontSize: 9, color, fontFamily: 'Courier New', letterSpacing: 1,
+            }}
+          >
+            {frame === 0 ? 'START' : 'END'}
+          </button>
+        )}
+
+        {/* Muscle badge */}
+        <div style={{
+          position: 'absolute', top: 7, left: 7,
+          background: `${color}22`, border: `1px solid ${color}55`,
+          borderRadius: 5, padding: '2px 7px',
+          fontSize: 9, color, fontFamily: 'Courier New',
+        }}>
+          {exercise.muscle}
+        </div>
+      </div>
+
+      {/* Name */}
+      <div style={{ padding: '10px 11px 12px' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0', lineHeight: 1.3 }}>{exercise.name}</div>
+      </div>
+    </button>
+  );
+}
+
 function AddExerciseModal({ onAdd, onClose }) {
   const [query, setQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState('');
   const [customName, setCustomName] = useState('');
-  const [mode, setMode] = useState('search');
+  const [mode, setMode] = useState('browse');
 
   const allExercises = MUSCLE_GROUPS.flatMap(m =>
     EXERCISES_BY_MUSCLE[m].map(e => ({ name: e, muscle: m }))
-  ).sort((a, b) => a.name.localeCompare(b.name));
+  );
 
   const filtered = allExercises.filter(e => {
     if (selectedMuscle && e.muscle !== selectedMuscle) return false;
@@ -52,91 +122,85 @@ function AddExerciseModal({ onAdd, onClose }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-30 flex flex-col"
-      style={{ background: 'rgba(6,13,26,0.98)', backdropFilter: 'blur(4px)' }}
-    >
-      <div className="flex items-center justify-between px-4 pt-12 pb-3 border-b"
-        style={{ borderColor: 'rgba(34,211,238,0.15)' }}>
-        <span className="text-cyan-400 font-bold tracking-wide">Add Exercise</span>
-        <button onClick={onClose} className="text-slate-500 p-1">✕</button>
+    <div className="fixed inset-0 z-30 flex flex-col" style={{ background: '#060d1a' }}>
+
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '48px 16px 14px',
+        borderBottom: '1px solid rgba(34,211,238,0.12)',
+      }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#e2e8f0', letterSpacing: -0.5 }}>Choose Exercise</div>
+          <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{filtered.length} exercises</div>
+        </div>
+        <button onClick={onClose} style={{ color: '#475569', fontSize: 20, padding: 4, lineHeight: 1 }}>✕</button>
       </div>
 
-      <div className="flex gap-2 px-4 pt-3">
-        {['search', 'custom'].map(m => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className="flex-1 py-2 rounded-lg text-sm capitalize transition-colors"
-            style={{
-              background: mode === m ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${mode === m ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.1)'}`,
-              color: mode === m ? '#22d3ee' : '#64748b',
-            }}
-          >
-            {m === 'search' ? 'Built-in' : 'Custom'}
-          </button>
+      {/* Mode tabs */}
+      <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
+        {[['browse', 'Browse'], ['custom', 'Custom']].map(([m, label]) => (
+          <button key={m} onClick={() => setMode(m)} style={{
+            flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 13, fontWeight: 600,
+            background: mode === m ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${mode === m ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.08)'}`,
+            color: mode === m ? '#22d3ee' : '#64748b',
+          }}>{label}</button>
         ))}
       </div>
 
-      {mode === 'search' ? (
+      {mode === 'browse' ? (
         <>
-          <div className="px-4 pt-3">
+          {/* Search bar */}
+          <div style={{ padding: '12px 16px 0' }}>
             <input
               autoFocus
-              className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-              style={{ background: '#111e36', border: '1px solid rgba(34,211,238,0.2)', color: '#e2e8f0' }}
+              style={{
+                width: '100%', borderRadius: 12, padding: '11px 14px', fontSize: 14,
+                background: '#111e36', border: '1px solid rgba(34,211,238,0.2)',
+                color: '#e2e8f0', outline: 'none', boxSizing: 'border-box',
+              }}
               placeholder="Search exercises…"
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
           </div>
-          <div className="px-4 pt-3 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedMuscle('')}
-              className="px-3 py-2 rounded-full text-xs font-semibold"
-              style={{
-                background: selectedMuscle === '' ? '#22d3ee' : 'rgba(255,255,255,0.06)',
-                color: selectedMuscle === '' ? '#020617' : '#e2e8f0',
-              }}
-            >
-              All
-            </button>
-            {MUSCLE_GROUPS.map(m => (
-              <button
-                key={m}
-                onClick={() => setSelectedMuscle(m)}
-                className="px-3 py-2 rounded-full text-xs font-semibold"
-                style={{
-                  background: selectedMuscle === m ? MUSCLE_COLORS[m] : 'rgba(255,255,255,0.06)',
-                  color: selectedMuscle === m ? '#020617' : '#e2e8f0',
-                  border: selectedMuscle === m ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.05)',
-                }}
-              >
-                {m}
-              </button>
-            ))}
+
+          {/* Muscle filter chips */}
+          <div style={{ display: 'flex', gap: 7, padding: '10px 16px', overflowX: 'auto', flexShrink: 0 }}>
+            {[{ label: 'All', value: '' }, ...MUSCLE_GROUPS.map(m => ({ label: m, value: m }))].map(({ label, value }) => {
+              const active = selectedMuscle === value;
+              const col = value ? MUSCLE_COLORS[value] : '#22d3ee';
+              return (
+                <button key={label} onClick={() => setSelectedMuscle(value)} style={{
+                  flexShrink: 0, padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  background: active ? `${col}22` : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${active ? col : 'rgba(255,255,255,0.08)'}`,
+                  color: active ? col : '#64748b', whiteSpace: 'nowrap',
+                }}>{label}</button>
+              );
+            })}
           </div>
-          <div className="flex-1 overflow-y-auto px-4 pt-2 pb-6">
+
+          {/* Exercise card grid */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px 80px' }}>
             {MUSCLE_GROUPS.map(muscle => {
               const exs = filtered.filter(e => e.muscle === muscle);
               if (!exs.length) return null;
               return (
-                <div key={muscle} className="mb-4">
-                  <div className="text-xs mb-2 uppercase tracking-widest" style={{ color: MUSCLE_COLORS[muscle] }}>
-                    {muscle}
+                <div key={muscle} style={{ marginBottom: 28 }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    marginBottom: 12,
+                  }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: MUSCLE_COLORS[muscle], flexShrink: 0 }}/>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: MUSCLE_COLORS[muscle], letterSpacing: 1, textTransform: 'uppercase' }}>{muscle}</span>
+                    <div style={{ flex: 1, height: 1, background: `${MUSCLE_COLORS[muscle]}33` }}/>
+                    <span style={{ fontSize: 11, color: '#334155' }}>{exs.length}</span>
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                     {exs.map(e => (
-                      <button
-                        key={e.name}
-                        onClick={() => handlePick(e.name, e.muscle)}
-                        className="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-3"
-                        style={{ background: 'rgba(8,13,28,0.82)', border: '1px solid rgba(255,255,255,0.07)', color: '#e2e8f0' }}
-                      >
-                        <GameIcon name={EXERCISE_ICONS[e.name] || 'dumbbell'} size={18} color={MUSCLE_COLORS[e.muscle]} />
-                        <span>{e.name}</span>
-                      </button>
+                      <ExerciseCard key={e.name} exercise={e} onPick={() => handlePick(e.name, e.muscle)} />
                     ))}
                   </div>
                 </div>
@@ -145,45 +209,43 @@ function AddExerciseModal({ onAdd, onClose }) {
           </div>
         </>
       ) : (
-        <div className="flex-1 px-4 pt-4 flex flex-col gap-4">
+        <div style={{ flex: 1, padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <label className="text-xs text-slate-500 mb-1.5 block uppercase tracking-widest">Exercise Name</label>
+            <label style={{ fontSize: 11, color: '#475569', display: 'block', marginBottom: 8, letterSpacing: 2, textTransform: 'uppercase' }}>Exercise Name</label>
             <input
               autoFocus
-              className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-              style={{ background: '#111e36', border: '1px solid rgba(34,211,238,0.2)', color: '#e2e8f0' }}
+              style={{
+                width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: 14,
+                background: '#111e36', border: '1px solid rgba(34,211,238,0.2)',
+                color: '#e2e8f0', outline: 'none', boxSizing: 'border-box',
+              }}
               placeholder="e.g. Rope Climb"
               value={customName}
               onChange={e => setCustomName(e.target.value)}
             />
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1.5 block uppercase tracking-widest">Muscle Group</label>
-            <div className="grid grid-cols-3 gap-2">
+            <label style={{ fontSize: 11, color: '#475569', display: 'block', marginBottom: 8, letterSpacing: 2, textTransform: 'uppercase' }}>Muscle Group</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {MUSCLE_GROUPS.map(m => (
-                <button
-                  key={m}
-                  onClick={() => setSelectedMuscle(m)}
-                  className="py-2 rounded-lg text-xs transition-colors"
-                  style={{
-                    background: selectedMuscle === m ? `${MUSCLE_COLORS[m]}22` : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${selectedMuscle === m ? MUSCLE_COLORS[m] : 'rgba(255,255,255,0.1)'}`,
-                    color: selectedMuscle === m ? MUSCLE_COLORS[m] : '#64748b',
-                  }}
-                >
-                  {m}
-                </button>
+                <button key={m} onClick={() => setSelectedMuscle(m)} style={{
+                  padding: '10px 4px', borderRadius: 10, fontSize: 12, fontWeight: 600,
+                  background: selectedMuscle === m ? `${MUSCLE_COLORS[m]}22` : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${selectedMuscle === m ? MUSCLE_COLORS[m] : 'rgba(255,255,255,0.1)'}`,
+                  color: selectedMuscle === m ? MUSCLE_COLORS[m] : '#64748b',
+                }}>{m}</button>
               ))}
             </div>
           </div>
           <button
             onClick={handleAddCustom}
             disabled={!customName.trim() || !selectedMuscle}
-            className="w-full py-3 rounded-xl font-bold text-sm tracking-widest uppercase mt-2 disabled:opacity-40"
-            style={{ background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.5)', color: '#22d3ee' }}
-          >
-            Add Exercise
-          </button>
+            style={{
+              padding: '14px 0', borderRadius: 14, fontSize: 14, fontWeight: 700, letterSpacing: 2,
+              background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.5)',
+              color: '#22d3ee', textTransform: 'uppercase', opacity: (!customName.trim() || !selectedMuscle) ? 0.4 : 1,
+            }}
+          >Add Exercise</button>
         </div>
       )}
     </div>

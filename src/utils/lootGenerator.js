@@ -58,18 +58,36 @@ export function generateDungeonEnemies(playerLevel, boss, dungeonSeed) {
   return enemies;
 }
 
+// ── Armor set rarity constraints ─────────────────────────────────────────────
+// Maps item name prefix → allowed rarity names + weights override (null = all)
+const SET_RARITY_RULES = {
+  'Iron Scraps':    { allowed: ['Common'],               weights: [1] },
+  'Forest Ranger':  { allowed: ['Common', 'Rare'],       weights: [70, 30] },
+  'Steel Knight':   { allowed: ['Rare', 'Epic'],         weights: [60, 40] },
+  'Void Reaper':    { allowed: ['Epic', 'Legendary'],    weights: [65, 35] },
+  'Solar Titan':    { allowed: ['Legendary'],            weights: [1] },
+};
+
+function getSetKey(baseName) {
+  for (const key of Object.keys(SET_RARITY_RULES)) {
+    if (baseName.startsWith(key)) return key;
+  }
+  return null;
+}
+
+function pickRarity(rng, rarityPool) {
+  const totalWeight = rarityPool.reduce((s, r) => s + r.weight, 0);
+  let roll = rng() * totalWeight;
+  for (const r of rarityPool) {
+    if (roll < r.weight) return r;
+    roll -= r.weight;
+  }
+  return rarityPool[rarityPool.length - 1];
+}
+
 // ─── Generate a loot item ────────────────────────────────────────────────────
 export function generateLootItem(seed) {
   const rng = seededRng(seed ^ 0xc0ffee);
-
-  // Weighted rarity roll
-  const totalWeight = LOOT_RARITIES.reduce((s, r) => s + r.weight, 0);
-  let roll = rng() * totalWeight;
-  let rarity = LOOT_RARITIES[0];
-  for (const r of LOOT_RARITIES) {
-    if (roll < r.weight) { rarity = r; break; }
-    roll -= r.weight;
-  }
 
   // Random slot
   const slots = Object.keys(LOOT_BASE);
@@ -78,6 +96,19 @@ export function generateLootItem(seed) {
   // Random base item
   const baseItems = LOOT_BASE[slot];
   const base = baseItems[Math.floor(rng() * baseItems.length)];
+
+  // Rarity — restricted per armor set if applicable
+  const setKey = getSetKey(base.name);
+  let rarity;
+  if (setKey) {
+    const rules = SET_RARITY_RULES[setKey];
+    const rarityPool = LOOT_RARITIES
+      .filter(r => rules.allowed.includes(r.name))
+      .map((r, i) => ({ ...r, weight: rules.weights[i] ?? r.weight }));
+    rarity = pickRarity(rng, rarityPool);
+  } else {
+    rarity = pickRarity(rng, LOOT_RARITIES);
+  }
 
   const m = rarity.mult;
   return {

@@ -4,6 +4,7 @@ import LootChest from './LootChest';
 import { generateDungeonEnemies, generateChestLoot } from '../utils/lootGenerator';
 import { ELEMENT_THEMES } from '../constants';
 import GameIcon from './GameIcon';
+import MobSprite from './combat/MobSprite';
 
 // ─── Wave-complete banner (auto-advances) ────────────────────────────────────
 function WaveBanner({ waveLabel, nextLabel, onContinue }) {
@@ -106,13 +107,14 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                         key={mi}
                         className="flex items-center justify-center rounded-sm"
                         style={{
-                          width: 36, height: 36,
+                          width: 44, height: 44,
                           background: `${ELEMENT_THEMES[mob.element].bg}cc`,
                           border: `1px solid ${ELEMENT_THEMES[mob.element].color}55`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden',
                         }}
                       >
-                        <GameIcon name={mob.emoji || ELEMENT_THEMES[mob.element]?.icon || 'skull'} size={18} color={ELEMENT_THEMES[mob.element].color} />
+                        <MobSprite mob={mob} size={40}/>
                       </div>
                     ))}
                   </div>
@@ -169,8 +171,11 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                   border: `1px solid ${t.color}33`,
                 }}
               >
-                <span style={{ flexShrink: 0 }}>
-                  <GameIcon name={enemy.emoji || ELEMENT_THEMES[enemy.element]?.icon || 'skull'} size={22} color={(ELEMENT_THEMES[enemy.element] || ELEMENT_THEMES.Fire).color} />
+                <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
+                  {enemy.isMob
+                    ? <MobSprite mob={enemy} size={34}/>
+                    : <GameIcon name={enemy.emoji || ELEMENT_THEMES[enemy.element]?.icon || 'skull'} size={22} color={(ELEMENT_THEMES[enemy.element] || ELEMENT_THEMES.Fire).color}/>
+                  }
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
