@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { runBattleTurn } from '../../utils/gameLogic';
+import { runBattleTurn, initFightState } from '../../utils/gameLogic';
 import CharacterRenderer from '../CharacterRenderer';
 import BossSprite from '../BossSprite';
 import MobSprite from './MobSprite';
@@ -484,6 +484,155 @@ function FloatHpBar({ current, max, label, ghostHP }) {
   );
 }
 
+// ── Stats Info Panel ─────────────────────────────────────────────────────────
+function StatsInfoPanel({ pStats, onClose }) {
+  const p = pStats;
+  const pct = v => `${Math.round(v * 100)}%`;
+
+  // Core stats rows
+  const core = [
+    { label: 'MAX HP',   val: p.maxHP,                      col: '#4ade80',  desc: 'Total health pool' },
+    { label: 'ATK',      val: p.atk,                        col: '#f87171',  desc: 'Base damage per hit' },
+    { label: 'DEF',      val: `${Math.floor(p.defPct)}%`,   col: '#60a5fa',  desc: 'Incoming damage reduced by this %' },
+    { label: 'DODGE',    val: `${Math.floor(p.dodgePct)}%`, col: '#a78bfa',  desc: 'Chance to avoid a hit entirely' },
+    { label: 'CRIT',     val: `${Math.floor(p.critPct)}%`,  col: '#facc15',  desc: 'Chance to deal 1.5× damage' },
+    { label: 'SPEED',    val: p.speed,                       col: '#22d3ee',  desc: 'Higher speed attacks first' },
+  ];
+
+  // Active tree bonuses (only show non-zero / true)
+  const treeRows = [
+    p.treeLifeSteal   > 0 && { label: 'Life Steal',    val: pct(p.treeLifeSteal),   col: '#f472b6', desc: '% of damage dealt is healed back' },
+    p.treeReflect     > 0 && { label: 'Reflect',       val: pct(p.treeReflect),     col: '#a78bfa', desc: '% of incoming damage reflected to boss' },
+    p.treeHpRegen     > 0 && { label: 'HP Regen',      val: pct(p.treeHpRegen)+'/turn', col: '#4ade80', desc: 'HP restored at the start of each turn' },
+    p.treeElemDmg     > 0 && { label: 'Elem Dmg',      val: pct(p.treeElemDmg),     col: '#38bdf8', desc: 'Bonus elemental damage on every hit' },
+    p.treeWeakDmg     > 0 && { label: 'Weak Bonus',    val: pct(p.treeWeakDmg),     col: '#fde047', desc: 'Extra % added to the weakness bonus' },
+    p.treeCounterBonus> 0 && { label: 'Counter Dmg',   val: pct(p.treeCounterBonus),col: '#22d3ee', desc: 'Counter-attack damage on dodge' },
+    p.treeLowHpDmg    > 0 && { label: 'Low HP Dmg',    val: pct(p.treeLowHpDmg),    col: '#fb923c', desc: 'Bonus damage when boss is below 50% HP' },
+    p.treeExecutioner > 0 && { label: 'Executioner',   val: pct(p.treeExecutioner), col: '#ef4444', desc: 'Bonus damage when boss is below 25% HP' },
+    p.treeCritDefPen  > 0 && { label: 'Crit DEF-Pen',  val: pct(p.treeCritDefPen),  col: '#facc15', desc: 'Crits penetrate this % of enemy defence' },
+    p.treePoisonDmg   > 0 && { label: 'Poison Dmg',    val: pct(p.treePoisonDmg)+'/turn', col: '#a3e635', desc: 'Poison tick damage as % of boss max HP' },
+  ].filter(Boolean);
+
+  // Active passives (booleans)
+  const passives = [
+    p.treeLastStand     && { label: 'Last Stand',      col: '#f87171', desc: 'Below 20% HP → +30% DEF, +20% ATK' },
+    p.treeGhostStep     && { label: 'Ghost Step',      col: '#a78bfa', desc: '25% chance to phase through any hit + backstab' },
+    p.treeFuryProc      && { label: 'Fury Proc',       col: '#facc15', desc: 'After a crit, your next attack is guaranteed to crit' },
+    p.treeGodOfWar      && { label: 'God of War',      col: '#ef4444', desc: 'Every 3rd attack auto-crits + ignores 30% DEF' },
+    p.treeStoneWall     && { label: 'Stone Wall',      col: '#60a5fa', desc: 'First hit of each fight is completely negated' },
+    p.treeUnbreakable   && { label: 'Unbreakable',     col: '#fbbf24', desc: 'Survive one killing blow at 1 HP → +50% ATK 2 turns' },
+    p.treeVenomStrike   && { label: 'Venom Strike',    col: '#a3e635', desc: '85% chance to poison boss for 3 turns on hit' },
+    p.treeDeathMark     && { label: 'Death Mark',      col: '#c084fc', desc: '+20% damage to all attacks' },
+    p.treePhantomKiller && { label: 'Phantom Killer',  col: '#818cf8', desc: 'Every 4th attack deals 400% damage' },
+    p.treeArcaneSurge   && { label: 'Arcane Surge',    col: '#38bdf8', desc: 'Every 5th attack triggers a free elemental explosion' },
+    p.treeArcaneAscendant&&{ label: 'Arcane Ascendant',col: '#a855f7', desc: 'Always hits weakness. +30% elem. 20% life drain.' },
+  ].filter(Boolean);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.5)' }} />
+
+      {/* Panel */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 210,
+        background: '#080e1c',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderTop: '2px solid #22d3ee',
+        borderRadius: '20px 20px 0 0',
+        padding: '16px 18px 32px',
+        maxHeight: '72vh', overflowY: 'auto',
+        animation: 'st-panel-up 0.22s ease-out',
+      }}>
+        {/* Handle */}
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.12)', margin: '-4px auto 14px' }} />
+
+        {/* Title */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ fontFamily: 'Courier New', fontSize: 12, fontWeight: 800, color: '#e2e8f0', letterSpacing: 2 }}>
+            ⓘ COMBAT STATS
+          </div>
+          <button onClick={onClose} style={{ color: '#475569', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>✕</button>
+        </div>
+
+        {/* Core stats */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 7, color: '#334155', fontFamily: 'Courier New', letterSpacing: 2, marginBottom: 8 }}>COMBAT STATS</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+            {core.map(({ label, val, col, desc }) => (
+              <div key={label} style={{
+                background: `${col}0d`, border: `1px solid ${col}2a`,
+                borderRadius: 8, padding: '8px 10px',
+              }}>
+                <div style={{ fontSize: 6, color: '#475569', fontFamily: 'Courier New', letterSpacing: 1, marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 14, color: col, fontFamily: 'Courier New', fontWeight: 800, lineHeight: 1 }}>{val}</div>
+                <div style={{ fontSize: 7, color: '#334155', fontFamily: 'system-ui', marginTop: 4, lineHeight: 1.3 }}>{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tree numeric bonuses */}
+        {treeRows.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 7, color: '#334155', fontFamily: 'Courier New', letterSpacing: 2, marginBottom: 8 }}>SKILL TREE BONUSES</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {treeRows.map(({ label, val, col, desc }) => (
+                <div key={label} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: `${col}0a`, border: `1px solid ${col}22`,
+                  borderRadius: 6, padding: '6px 10px',
+                }}>
+                  <div>
+                    <span style={{ fontSize: 9, color: col, fontFamily: 'Courier New', fontWeight: 700 }}>{label}</span>
+                    <div style={{ fontSize: 7, color: '#475569', fontFamily: 'system-ui', marginTop: 1 }}>{desc}</div>
+                  </div>
+                  <span style={{ fontSize: 13, color: col, fontFamily: 'Courier New', fontWeight: 800, flexShrink: 0, marginLeft: 10 }}>{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active passives */}
+        {passives.length > 0 && (
+          <div>
+            <div style={{ fontSize: 7, color: '#334155', fontFamily: 'Courier New', letterSpacing: 2, marginBottom: 8 }}>ACTIVE PASSIVES</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {passives.map(({ label, col, desc }) => (
+                <div key={label} style={{
+                  background: `${col}12`, border: `1px solid ${col}44`,
+                  borderRadius: 20, padding: '5px 12px',
+                  fontFamily: 'Courier New', fontSize: 8, color: col, fontWeight: 700,
+                  letterSpacing: 1,
+                  title: desc,
+                }} title={desc}>
+                  ✦ {label}
+                </div>
+              ))}
+            </div>
+            {/* Describe active passives */}
+            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {passives.map(({ label, col, desc }) => (
+                <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 8, color: col, fontFamily: 'Courier New', fontWeight: 700, flexShrink: 0, width: 100 }}>{label}</span>
+                  <span style={{ fontSize: 8, color: '#64748b', fontFamily: 'system-ui', lineHeight: 1.4 }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {treeRows.length === 0 && passives.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 9, color: '#334155', fontFamily: 'Courier New', letterSpacing: 1 }}>
+            No skill tree bonuses active yet.{'\n'}Unlock skills in the SKILLS tab to power up!
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  BATTLESCENE — main export
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -496,7 +645,8 @@ export default function BattleScene({
 }) {
   injectStyles();
 
-  const [phase, setPhase]     = useState('ready');
+  const [phase, setPhase]       = useState('ready');
+  const [showStatsInfo, setShowStatsInfo] = useState(false);
   const [playerHP, setPlayerHP]   = useState(pStats.maxHP);
   const [bossHP, setBossHP]       = useState(boss.maxHP);
   const [prevPlayerHP, setPrevPlayerHP] = useState(pStats.maxHP);
@@ -521,6 +671,7 @@ export default function BattleScene({
   const defeatDone  = useRef(false);
   const arenaRef    = useRef(null);
   const autoFight   = useRef(false);
+  const fightStateRef = useRef(initFightState());
 
   const themeColor = theme?.color || '#f87171';
   const themeBg    = theme?.bg    || '#1a0a14';
@@ -701,12 +852,14 @@ export default function BattleScene({
   // ── Turn driver ───────────────────────────────────────────────────────────
   async function doTurn() {
     if (animating.current || phase !== 'ready') return;
+    // Reset fight state on first press (turn 0 = fresh fight)
+    if (!autoFight.current) fightStateRef.current = initFightState();
     autoFight.current = true;
     animating.current = true;
     setPhase('animating');
 
     const bossHPPct = (bossHP / boss.maxHP) * 100;
-    const result = runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, bossHPPct);
+    const result = runBattleTurn(playerHP, bossHP, pStats, boss, hasWeaknessBonus, bossHPPct, fightStateRef.current);
 
     setLog(prev => [...prev, ...result.events]);
     setTurn(t => t + 1);
@@ -930,6 +1083,7 @@ export default function BattleScene({
             <button onClick={() => {
               defeatDone.current = false;
               autoFight.current = false;
+              fightStateRef.current = initFightState();
               setPlayerHP(pStats.maxHP); setBossHP(boss.maxHP);
               setPrevPlayerHP(pStats.maxHP); setPrevBossHP(boss.maxHP);
               setLog([]); setTurn(0); setPhase('ready');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import GameIcon from './GameIcon';
 import ItemIcon from './ItemIcon';
+import { useT } from '../i18n/LangContext';
 
 // ─── Burst Particle ───────────────────────────────────────────────
 function BurstParticle({ color, angle, distance, delay, size }) {
@@ -70,6 +71,7 @@ function StatRow({ icon, label, value, color }) {
 
 // ─── Full item card shown after reveal ────────────────────────────
 function ItemCard({ item, onEquip, onSkip, alreadyEquipped }) {
+  const t     = useT();
   const rc    = item.rarityColor;
   const glow  = item.rarityGlow;
   const tier  = RARITY_TIER[item.rarity] || RARITY_TIER.Common;
@@ -142,11 +144,11 @@ function ItemCard({ item, onEquip, onSkip, alreadyEquipped }) {
               color: rc, fontSize: '9px', letterSpacing: '2px',
               boxShadow: `0 0 16px ${glow}`,
             }}>
-            ✓ EQUIP
+            ✓ {t('loot_equip')}
           </button>
           <button onClick={onSkip} className="px-4 py-3 rounded-sm pixel-btn neon-text"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#475569', fontSize: '8px' }}>
-            SKIP
+            {t('gen_close')}
           </button>
         </div>
       )}
@@ -242,6 +244,7 @@ function ChestSVG({ phase, color = '#facc15' }) {
 
 // ─── MAIN LOOT CHEST ─────────────────────────────────────────────
 export default function LootChest({ items, equippedItems = {}, onEquip, onDone }) {
+  const t = useT();
   // phases: 'locked' → 'shaking' → 'burst' → 'open'
   const [phase, setPhase]         = useState('locked');
   const [burstActive, setBurstActive] = useState(false);
@@ -318,13 +321,13 @@ export default function LootChest({ items, equippedItems = {}, onEquip, onDone }
         <div className="text-center pt-12 pb-4">
           <div className="neon-text flex items-center gap-2 justify-center"
             style={{ color: '#facc15', fontSize: '13px', letterSpacing: '4px', textShadow: '0 0 24px #facc15' }}>
-            {phase === 'locked' && <><GameIcon name="chest" size={15} color="#facc15"/> LOOT CHEST</>}
-            {phase === 'shaking' && <><GameIcon name="chest" size={15} color="#facc15"/> OPENING...</>}
-            {phase === 'burst' && <><GameIcon name="star" size={15} color="#facc15"/> BURSTING!</>}
-            {phase === 'open' && <><GameIcon name="trophy" size={15} color="#facc15"/> LOOT FOUND!</>}
+            {phase === 'locked' && <><GameIcon name="chest" size={15} color="#facc15"/> {t('loot_title')}</>}
+            {phase === 'shaking' && <><GameIcon name="chest" size={15} color="#facc15"/> {t('loot_open')}...</>}
+            {phase === 'burst' && <><GameIcon name="star" size={15} color="#facc15"/> !!</>}
+            {phase === 'open' && <><GameIcon name="trophy" size={15} color="#facc15"/> {t('loot_item_found')}</>}
           </div>
           <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>
-            {phase === 'open' ? 'DUNGEON CLEARED!' : 'DUNGEON REWARD'}
+            {phase === 'open' ? t('dungeon_cleared') : t('dungeon_loot')}
           </div>
         </div>
 
@@ -362,7 +365,7 @@ export default function LootChest({ items, equippedItems = {}, onEquip, onDone }
               textShadow: '0 0 12px #facc15',
             }}
           >
-            ▶ TAP TO OPEN ◀
+            ▶ {t('loot_open')} ◀
           </div>
         )}
 
@@ -409,7 +412,7 @@ export default function LootChest({ items, equippedItems = {}, onEquip, onDone }
                 boxShadow: allActioned ? '0 0 20px rgba(250,204,21,0.3)' : 'none',
                 transition: 'all 0.3s ease',
               }}>
-              CONTINUE →
+              {t('loot_done')} →
             </button>
           </div>
         )}

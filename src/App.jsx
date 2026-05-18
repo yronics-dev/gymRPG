@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SpritePreview from './components/SpritePreview';
+import { LangContext } from './i18n/LangContext';
 const SPRITE_PREVIEW = window.location.search.includes('sprites');
 import { useLocalStorage } from './hooks/useLocalStorage';
 import {
@@ -161,9 +162,10 @@ export default function App() {
     if (newLevel > prevLevelRef.current) {
       setShowLevelUp(true);
       setTimeout(() => setShowLevelUp(false), 3000);
+      skillTree.awardLevelUpSTP();   // +1 STP per level-up
     }
     prevLevelRef.current = newLevel;
-  }, [muscleXP]);
+  }, [muscleXP]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer tick
   useEffect(() => {
@@ -283,9 +285,6 @@ export default function App() {
       });
     }
 
-    // ── Award STP for completing a workout ────────────────────
-    skillTree.awardSTP(1);
-
     // ── Post-workout loot roll ─────────────────────────────────
     const lootDrop = streakLoot || rollWorkoutLoot(Date.now());
 
@@ -350,7 +349,7 @@ export default function App() {
       [dateKey]: { cleared: true, attempted: true, bossName },
     }));
     setCoins(prev => prev + 1);
-    skillTree.awardSTP(1);
+    skillTree.awardBossKillSTP(bossName);   // +2 STP first time this boss is defeated
   }
 
   function handleLeagueBossDefeated() {
@@ -565,6 +564,7 @@ export default function App() {
   if (SPRITE_PREVIEW) return <SpritePreview />;
 
   return (
+    <LangContext.Provider value={language}>
     <div
       className="flex flex-col safe-top"
       style={{ height: '100dvh', background: 'var(--bg-primary)' }}
@@ -607,6 +607,7 @@ export default function App() {
         />
       )}
     </div>
+    </LangContext.Provider>
   );
 }
 

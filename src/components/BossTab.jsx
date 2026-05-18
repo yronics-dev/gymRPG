@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
+import { useT } from '../i18n/LangContext';
 import { DungeonScene } from './PixelScene';
 import GameIcon from './GameIcon';
 import { generateDailyBoss, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
@@ -8,7 +9,224 @@ import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
 import DungeonRun from './DungeonRun';
 
+// ─── League Panel ─────────────────────────────────────────────────────────────
+const DIFF_META = {
+  NORMAL:    { color: '#4ade80', labelKey: 'diff_normal',    icon: 'shield'  },
+  HARD:      { color: '#fb923c', labelKey: 'diff_hard',      icon: 'flame'   },
+  ELITE:     { color: '#f87171', labelKey: 'diff_elite',     icon: 'skull'   },
+  LEGENDARY: { color: '#facc15', labelKey: 'diff_legendary', icon: 'trophy'  },
+};
+
+function LeaguePanel({ leagueBoss, leagueKills, leagueGoldFlash, onEnter }) {
+  const t = useT();
+  const theme   = ELEMENT_THEMES[leagueBoss.element] || ELEMENT_THEMES.Fire;
+  const diffRaw = DIFF_META[leagueBoss.diffLabel] || DIFF_META.NORMAL;
+  const diff    = { ...diffRaw, label: t(diffRaw.labelKey) };
+  const killsToGold = 5 - (leagueKills % 5);
+  const goldProgress = (leagueKills % 5) / 5;
+
+  // Threat colour: interpolate from green → orange → red based on scaleMult
+  const threatPct = Math.min(1, (leagueBoss.scaleMult - 1) / 5);
+  const threatColor = threatPct < 0.4
+    ? '#4ade80'
+    : threatPct < 0.7 ? '#fb923c' : '#f87171';
+
+  // Tier milestone markers (every 5 kills)
+  const milestones = Array.from({ length: 5 }, (_, i) => ({
+    kill: i * 5,
+    reached: leagueKills >= i * 5,
+    isCurrent: leagueKills >= i * 5 && leagueKills < (i + 1) * 5,
+  }));
+
+  return (
+    <div className="mt-6">
+      {/* Section label */}
+      <div className="neon-text mb-3 flex items-center gap-2" style={{ color: '#facc15', fontSize: '7px', letterSpacing: '3px' }}>
+        <GameIcon name="trophy" size={11} color="#facc15" />
+        {t('boss_league')}
+        <span className="ml-auto neon-text px-2 py-0.5 rounded-sm"
+          style={{ background: `${diff.color}22`, color: diff.color, border: `1px solid ${diff.color}55`, fontSize: '6px', letterSpacing: '2px' }}>
+          {diff.label}
+        </span>
+      </div>
+
+      {leagueGoldFlash && (
+        <div className="neon-text text-center py-2 px-3 rounded-sm mb-3"
+          style={{ background: 'rgba(250,204,21,0.15)', color: '#facc15', border: '1px solid rgba(250,204,21,0.5)', fontSize: '9px', letterSpacing: '2px', boxShadow: '0 0 20px rgba(250,204,21,0.3)', animation: 'levelUpPop 0.4s ease' }}>
+          ✦ +1 GOLD EARNED! ✦
+        </div>
+      )}
+
+      {/* Main card */}
+      <div className="rounded-sm overflow-hidden" style={{
+        background: `linear-gradient(160deg, ${theme.bg}cc 0%, #05080f 100%)`,
+        border: `1px solid ${theme.color}55`,
+        boxShadow: `0 0 24px ${theme.glow}, inset 0 0 40px rgba(0,0,0,0.4)`,
+      }}>
+
+        {/* Boss showcase — full-width top section */}
+        <div className="relative flex items-end justify-between px-4 pt-4 pb-0" style={{ minHeight: 130 }}>
+          {/* Background glow blob */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `radial-gradient(ellipse 70% 80% at 60% 100%, ${theme.color}18 0%, transparent 70%)`,
+            pointerEvents: 'none',
+          }} />
+
+          {/* Left: boss identity */}
+          <div className="relative z-10 pb-4 flex-1">
+            {/* Tier badge */}
+            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-sm mb-2"
+              style={{ background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.4)' }}>
+              <GameIcon name="trophy" size={9} color="#facc15" />
+              <span className="neon-text" style={{ color: '#facc15', fontSize: '6px', letterSpacing: '2px' }}>
+                {t('boss_tier')} {leagueBoss.tier}
+              </span>
+            </div>
+
+            {/* Boss name */}
+            <div className="neon-text font-black leading-tight" style={{
+              color: '#ffffff', fontSize: '16px', fontFamily: 'Courier New',
+              textShadow: `0 0 12px ${theme.color}88`,
+            }}>
+              {leagueBoss.name}
+            </div>
+
+            {/* Element + kill count */}
+            <div className="flex items-center gap-2 mt-1">
+              <div className="neon-text flex items-center gap-1" style={{ color: theme.color, fontSize: '7px' }}>
+                <GameIcon name={leagueBoss.emoji || theme.icon} size={10} color={theme.color} />
+                {leagueBoss.element}
+              </div>
+              <span style={{ color: '#334155', fontSize: '7px' }}>·</span>
+              <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>
+                {leagueKills} {t('boss_slain')}
+              </span>
+            </div>
+
+            {/* Stats row */}
+            <div className="flex gap-4 mt-3">
+              {[
+                { label: 'HP',  val: leagueBoss.maxHP, color: '#4ade80' },
+                { label: 'ATK', val: leagueBoss.atk,   color: '#f87171' },
+                { label: 'SPD', val: leagueBoss.speed,  color: '#38bdf8' },
+              ].map(({ label, val, color }) => (
+                <div key={label}>
+                  <div className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>{label}</div>
+                  <div className="neon-text" style={{ color, fontSize: '11px', textShadow: `0 0 6px ${color}88` }}>{val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: sprite */}
+          <div className="relative z-10 flex-shrink-0" style={{ animation: 'pixelBob 2.2s ease-in-out infinite' }}>
+            <BossSprite boss={leagueBoss} size={90} isRage={leagueBoss.scaleMult >= 2} />
+          </div>
+        </div>
+
+        {/* Threat / Scale section */}
+        <div className="px-4 pt-3 pb-3" style={{ borderTop: `1px solid ${theme.color}22` }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="neon-text" style={{ color: '#475569', fontSize: '6px', letterSpacing: '2px' }}>{t('boss_threat')}</span>
+            <span className="neon-text" style={{ color: threatColor, fontSize: '8px', textShadow: `0 0 8px ${threatColor}` }}>
+              ×{leagueBoss.scaleMult.toFixed(2)}
+            </span>
+          </div>
+          <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              width: `${Math.min(100, threatPct * 100)}%`,
+              height: '100%',
+              background: `linear-gradient(90deg, #4ade80, ${threatColor})`,
+              boxShadow: `0 0 8px ${threatColor}`,
+              transition: 'width 0.5s ease',
+            }} />
+          </div>
+        </div>
+
+        {/* Milestone progress */}
+        <div className="px-4 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="neon-text" style={{ color: '#475569', fontSize: '6px', letterSpacing: '2px' }}>{t('boss_kill_streak')}</span>
+            <span className="neon-text flex items-center gap-1" style={{ color: '#facc15', fontSize: '7px' }}>
+              {killsToGold === 5 ? t('boss_reward_ready') : `${killsToGold} to `}
+              {killsToGold < 5 && <GameIcon name="coin" size={10} color="#facc15" />}
+            </span>
+          </div>
+
+          {/* 5-segment streak bar */}
+          <div className="flex gap-1 mb-3">
+            {Array.from({ length: 5 }, (_, i) => {
+              const filled = i < (leagueKills % 5);
+              const isNext = i === (leagueKills % 5);
+              return (
+                <div key={i} className="flex-1 rounded-sm" style={{
+                  height: 8,
+                  background: filled
+                    ? 'linear-gradient(90deg, #ca8a04, #facc15)'
+                    : isNext
+                      ? 'rgba(250,204,21,0.15)'
+                      : 'rgba(255,255,255,0.04)',
+                  border: isNext
+                    ? '1px solid rgba(250,204,21,0.4)'
+                    : '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: filled ? '0 0 6px #facc1566' : 'none',
+                  transition: 'all 0.3s ease',
+                }} />
+              );
+            })}
+          </div>
+
+          {/* Tier milestones */}
+          <div className="flex justify-between mb-4">
+            {milestones.map(({ kill, reached, isCurrent }) => (
+              <div key={kill} className="flex flex-col items-center gap-0.5">
+                <div className="w-5 h-5 rounded-sm flex items-center justify-center"
+                  style={{
+                    background: reached ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.04)',
+                    border: isCurrent
+                      ? '1px solid #facc15'
+                      : reached ? '1px solid rgba(250,204,21,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: isCurrent ? '0 0 8px #facc1588' : 'none',
+                  }}>
+                  <GameIcon name="trophy" size={10}
+                    color={reached ? '#facc15' : '#334155'} />
+                </div>
+                <span className="neon-text" style={{ color: reached ? '#facc15' : '#334155', fontSize: '5px' }}>
+                  T{Math.floor(kill / 5) + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Enter button */}
+          <button
+            onClick={onEnter}
+            className="w-full py-3.5 rounded-sm pixel-btn neon-text relative overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, ${diff.color}28, ${diff.color}0e)`,
+              border: `2px solid ${diff.color}`,
+              color: diff.color,
+              boxShadow: `0 0 24px ${diff.color}44, inset 0 0 20px ${diff.color}08`,
+              fontSize: '11px',
+              letterSpacing: '4px',
+              textShadow: `0 0 12px ${diff.color}`,
+            }}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <GameIcon name={diff.icon} size={13} color={diff.color} />
+              {t('boss_enter_league')}
+              <GameIcon name={diff.icon} size={13} color={diff.color} />
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BossCard({ boss, isToday, cleared }) {
+  const t = useT();
   const theme = ELEMENT_THEMES[boss.element];
   return (
     <div
@@ -30,7 +248,7 @@ function BossCard({ boss, isToday, cleared }) {
           className="absolute top-3 right-3 neon-text"
           style={{ color: '#facc15', fontSize: '8px', textShadow: '0 0 8px #facc15' }}
         >
-          ✓ CLEARED
+          ✓ {t('boss_cleared')}
         </div>
       )}
       {isToday && !cleared && (
@@ -38,7 +256,7 @@ function BossCard({ boss, isToday, cleared }) {
           className="absolute top-3 right-3 neon-text px-2 py-0.5 rounded-sm"
           style={{ background: `${theme.color}22`, color: theme.color, border: `1px solid ${theme.color}44`, fontSize: '7px' }}
         >
-          TODAY
+          {t('boss_today')}
         </div>
       )}
 
@@ -53,7 +271,7 @@ function BossCard({ boss, isToday, cleared }) {
           <div className="font-black text-white text-xl leading-tight" style={{ fontFamily: 'Courier New', textShadow: `0 0 8px ${theme.color}66` }}>
             {boss.name}
           </div>
-          <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '7px' }}>LEVEL {boss.level}</div>
+          <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '7px' }}>{t('boss_level')} {boss.level}</div>
 
           <div className="flex gap-4 mt-3">
             <div>
@@ -69,7 +287,7 @@ function BossCard({ boss, isToday, cleared }) {
       </div>
 
       <div className="mt-4 flex items-center gap-2">
-        <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>WEAK:</span>
+        <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>{t('boss_weak')}:</span>
         <span
           className="neon-text px-2 py-0.5 rounded-sm"
           style={{
@@ -81,13 +299,14 @@ function BossCard({ boss, isToday, cleared }) {
         >
           {boss.weakness}
         </span>
-        <span className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>+25% dmg if trained</span>
+        <span className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>{t('boss_dmg_bonus')}</span>
       </div>
     </div>
   );
 }
 
 function WeekCalendar({ bossHistory, playerLevel, currentDayKey }) {
+  const t = useT();
   const days = [];
   const today = new Date();
   for (let i = 6; i >= 0; i--) {
@@ -103,7 +322,7 @@ function WeekCalendar({ bossHistory, playerLevel, currentDayKey }) {
 
   return (
     <div>
-      <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>7-DAY HISTORY</div>
+      <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('boss_history')}</div>
       <div className="flex gap-1.5">
         {days.map(({ key, d, boss, theme, history, isToday }) => {
           const cleared = history?.cleared === true;
@@ -145,6 +364,7 @@ function WeekCalendar({ bossHistory, playerLevel, currentDayKey }) {
 }
 
 function BossOutlook({ playerLevel }) {
+  const t = useT();
   const days = [];
   const today = new Date();
   for (let i = 1; i <= 7; i++) {
@@ -158,7 +378,7 @@ function BossOutlook({ playerLevel }) {
 
   return (
     <div className="mt-5">
-      <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>UPCOMING BOSSES</div>
+      <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('boss_upcoming')}</div>
       <div className="flex gap-1.5">
         {days.map(({ key, boss }, index) => {
           const theme = ELEMENT_THEMES[boss.element];
@@ -188,6 +408,7 @@ export default function BossTab({
   onBossCleared, onBossDefeat, todayKey, leagueKills = 0, onLeagueBossDefeated,
   onLootEarned, purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
 }) {
+  const t = useT();
   const currentDayKey = todayKey || getTodayKey();
   const playerLevel   = Math.max(1, getLevel(muscleXP));
   const boss          = generateDailyBoss(currentDayKey, playerLevel);
@@ -342,7 +563,7 @@ export default function BossTab({
       <DungeonScene />
       <div className="absolute inset-0 overflow-y-auto z-10 px-4 pb-6">
       <div className="pt-4 mb-4">
-        <div className="neon-text" style={{ color: theme.color, fontSize: '11px' }}>DAILY BOSS</div>
+        <div className="neon-text" style={{ color: theme.color, fontSize: '11px' }}>{t('boss_daily')}</div>
         <p className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()}
         </p>
@@ -354,7 +575,7 @@ export default function BossTab({
         style={{ background: 'rgba(6,10,20,0.82)', border: '1px solid rgba(250,204,21,0.2)', boxShadow: '0 0 12px rgba(250,204,21,0.05)' }}
       >
         <div>
-          <div className="neon-text" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>GOLD</div>
+          <div className="neon-text" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>{t('gen_gold')}</div>
           <div className="neon-text mt-0.5 flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '16px', textShadow: '0 0 10px #facc15' }}>
             {coins ?? 0} <GameIcon name="coin" size={14} color="#facc15" />
           </div>
@@ -375,7 +596,7 @@ export default function BossTab({
           >
             <div style={{ lineHeight: 1.2 }}><GameIcon name="trophy" size={32} color="#facc15" /></div>
             <div className="neon-text mt-2" style={{ color: '#facc15', fontSize: '10px', textShadow: '0 0 10px #facc15' }}>
-              BOSS CLEARED!
+              {t('boss_cleared')}!
             </div>
             <div className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>
               NEW BOSS AT MIDNIGHT
@@ -452,7 +673,7 @@ export default function BossTab({
             fontSize: '9px', letterSpacing: '2px',
           }}
         >
-          {dungeonResult === 'win' ? 'DUNGEON CLEARED! LOOT ACQUIRED!' : 'DUNGEON FAILED — TRAIN HARDER!'}
+          {dungeonResult === 'win' ? `${t('dungeon_cleared')} ${t('dungeon_loot')}!` : `${t('dungeon_title')} — ${t('battle_defeat')}`}
         </div>
       )}
 
@@ -543,92 +764,12 @@ export default function BossTab({
       </div>
 
       {/* League Mode */}
-      <div className="mt-6">
-        <div className="neon-text mb-2 flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '7px', letterSpacing: '3px' }}>
-          <GameIcon name="trophy" size={10} color="#facc15" /> LEAGUE MODE
-        </div>
-
-        {leagueGoldFlash && (
-          <div
-            className="neon-text text-center py-2 px-3 rounded-sm mb-3"
-            style={{ background: 'rgba(250,204,21,0.15)', color: '#facc15', border: '1px solid rgba(250,204,21,0.5)', fontSize: '9px', letterSpacing: '2px', boxShadow: '0 0 20px rgba(250,204,21,0.3)' }}
-          >
-            +1 GOLD EARNED!
-          </div>
-        )}
-
-        <div className="rounded-sm p-4" style={{ background: 'rgba(6,10,20,0.82)', border: '1px solid rgba(250,204,21,0.3)', boxShadow: '0 0 16px rgba(250,204,21,0.06)' }}>
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="neon-text" style={{ color: '#facc15', fontSize: '10px', letterSpacing: '2px' }}>
-                TIER {leagueBoss.tier}
-              </div>
-              <div className="neon-text mt-0.5" style={{ color: '#334155', fontSize: '7px' }}>
-                {leagueKills} boss{leagueKills !== 1 ? 'es' : ''} slain
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>NEXT GOLD</div>
-              <div className="neon-text" style={{ color: '#facc15', fontSize: '13px', textShadow: '0 0 8px #facc15' }}>
-                <span className="flex items-center gap-1">{leagueKills % 5}/5 <GameIcon name="coin" size={12} color="#facc15" /></span>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mb-4" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '2px', height: '6px', overflow: 'hidden' }}>
-            <div style={{
-              width: `${(leagueKills % 5) / 5 * 100}%`,
-              height: '100%',
-              background: 'linear-gradient(90deg, #ca8a04, #facc15)',
-              boxShadow: '0 0 8px #facc15',
-              transition: 'width 0.4s ease',
-            }} />
-          </div>
-
-          {/* League boss preview */}
-          <div
-            className="flex items-center gap-3 mb-3 p-2 rounded-sm"
-            style={{ background: `${ELEMENT_THEMES[leagueBoss.element].bg}44`, border: `1px solid ${ELEMENT_THEMES[leagueBoss.element].color}33` }}
-          >
-            <div style={{ animation: 'pixelBob 2s ease-in-out infinite', flexShrink: 0 }}>
-              <BossSprite boss={leagueBoss} size={52} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="neon-text flex items-center gap-1" style={{ color: ELEMENT_THEMES[leagueBoss.element].color, fontSize: '7px', letterSpacing: '1px' }}>
-                <GameIcon name={leagueBoss.emoji || ELEMENT_THEMES[leagueBoss.element].icon} size={10} color={ELEMENT_THEMES[leagueBoss.element].color} />
-                {leagueBoss.element} · {leagueBoss.diffLabel}
-              </div>
-              <div className="neon-text" style={{ color: '#e2e8f0', fontSize: '9px', marginTop: '2px' }}>{leagueBoss.name}</div>
-              <div className="flex gap-3 mt-1.5">
-                <span className="neon-text" style={{ color: '#4ade80', fontSize: '7px' }}>HP {leagueBoss.maxHP}</span>
-                <span className="neon-text" style={{ color: '#f87171', fontSize: '7px' }}>ATK {leagueBoss.atk}</span>
-                <span className="neon-text" style={{ color: '#facc15', fontSize: '7px' }}>×{leagueBoss.scaleMult.toFixed(1)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', lineHeight: '1.6' }}>
-            • Bosses get harder each run &nbsp;• 1 coin every 5 slain &nbsp;• No workout required
-          </div>
-
-          <button
-            onClick={() => setInLeague(true)}
-            className="w-full py-3 rounded-sm pixel-btn"
-            style={{
-              background: 'linear-gradient(135deg, rgba(250,204,21,0.18), rgba(250,204,21,0.06))',
-              border: '2px solid #facc15',
-              color: '#facc15',
-              boxShadow: '0 0 20px rgba(250,204,21,0.25)',
-              fontSize: '10px',
-              letterSpacing: '3px',
-            }}
-          >
-            ENTER LEAGUE
-          </button>
-        </div>
-      </div>
+      <LeaguePanel
+        leagueBoss={leagueBoss}
+        leagueKills={leagueKills}
+        leagueGoldFlash={leagueGoldFlash}
+        onEnter={() => setInLeague(true)}
+      />
 
       {/* Week calendar */}
       <div className="mt-6">

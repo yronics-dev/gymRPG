@@ -5,6 +5,7 @@ import { generateDungeonEnemies, generateChestLoot } from '../utils/lootGenerato
 import { ELEMENT_THEMES } from '../constants';
 import GameIcon from './GameIcon';
 import MobSprite from './combat/MobSprite';
+import { useT } from '../i18n/LangContext';
 
 // ─── Wave-complete banner (auto-advances) ────────────────────────────────────
 function WaveBanner({ waveLabel, nextLabel, onContinue }) {
@@ -51,6 +52,7 @@ function WaveBanner({ waveLabel, nextLabel, onContinue }) {
 
 // ─── Dungeon lobby (overview before entering) ─────────────────────────────────
 function DungeonLobby({ enemies, onStart, onClose }) {
+  const t = useT();
   const mobs = enemies.filter(e => e.isMob);
   const boss = enemies.find(e => e.isBoss);
   const theme = ELEMENT_THEMES[boss.element] || ELEMENT_THEMES.Fire;
@@ -73,10 +75,10 @@ function DungeonLobby({ enemies, onStart, onClose }) {
         <div className="flex items-center justify-between pt-10 pb-4">
           <div>
             <div className="neon-text flex items-center gap-2" style={{ color: '#c084fc', fontSize: '12px', letterSpacing: '4px', textShadow: '0 0 16px #c084fc' }}>
-              <GameIcon name="skull" size={14} color="#c084fc" /> DUNGEON RUN
+              <GameIcon name="skull" size={14} color="#c084fc" /> {t('dungeon_title')}
             </div>
             <div className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>
-              5 ENEMIES · 3 WAVES · 1 BOSS
+              {t('dungeon_enemies')}
             </div>
           </div>
           <button
@@ -84,7 +86,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
             className="pixel-btn px-3 py-1.5 rounded-sm neon-text"
             style={{ color: '#475569', fontSize: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
-            ✕ BACK
+            ✕ {t('dungeon_back')}
           </button>
         </div>
 
@@ -93,14 +95,14 @@ function DungeonLobby({ enemies, onStart, onClose }) {
           className="rounded-sm p-4 mb-4"
           style={{ background: 'rgba(6,10,20,0.85)', border: '1px solid rgba(192,132,252,0.2)' }}
         >
-          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>DUNGEON MAP</div>
+          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('dungeon_map')}</div>
 
           <div className="flex items-center gap-1">
             {waves.map((wave, wi) => (
               <React.Fragment key={wi}>
                 {/* Wave block */}
                 <div className="flex flex-col items-center gap-1 flex-1">
-                  <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>WAVE {wi + 1}</div>
+                  <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{t('dungeon_wave')} {wi + 1}</div>
                   <div className="flex gap-1 justify-center">
                     {wave.map((mob, mi) => (
                       <div
@@ -130,7 +132,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
 
             {/* Boss */}
             <div className="flex flex-col items-center gap-1 flex-1">
-              <div className="neon-text" style={{ color: theme.color, fontSize: '6px', letterSpacing: '1px' }}>BOSS</div>
+              <div className="neon-text" style={{ color: theme.color, fontSize: '6px', letterSpacing: '1px' }}>{t('dungeon_boss')}</div>
               <div
                 className="flex items-center justify-center rounded-sm"
                 style={{
@@ -152,7 +154,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
             {/* Chest */}
             <div className="neon-text" style={{ color: '#334155', fontSize: '10px' }}>→</div>
             <div className="flex flex-col items-center gap-1">
-              <div className="neon-text" style={{ color: '#facc15', fontSize: '6px' }}>LOOT</div>
+              <div className="neon-text" style={{ color: '#facc15', fontSize: '6px' }}>{t('dungeon_loot')}</div>
               <div style={{ filter: 'drop-shadow(0 0 8px #facc15)' }}><GameIcon name="chest" size={28} color="#facc15" /></div>
             </div>
           </div>
@@ -161,14 +163,14 @@ function DungeonLobby({ enemies, onStart, onClose }) {
         {/* Enemy list */}
         <div className="flex flex-col gap-2 mb-4">
           {[...mobs, boss].map((enemy, i) => {
-            const t = ELEMENT_THEMES[enemy.element] || ELEMENT_THEMES.Fire;
+            const theme2 = ELEMENT_THEMES[enemy.element] || ELEMENT_THEMES.Fire;
             return (
               <div
                 key={i}
                 className="flex items-center gap-3 rounded-sm p-2.5"
                 style={{
-                  background: `${t.bg}55`,
-                  border: `1px solid ${t.color}33`,
+                  background: `${theme2.bg}55`,
+                  border: `1px solid ${theme2.color}33`,
                 }}
               >
                 <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
@@ -179,25 +181,25 @@ function DungeonLobby({ enemies, onStart, onClose }) {
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className="neon-text" style={{ color: t.color, fontSize: '8px' }}>
+                    <div className="neon-text" style={{ color: theme2.color, fontSize: '8px' }}>
                       {enemy.name}
                     </div>
                     {enemy.isBoss && (
                       <div
                         className="neon-text px-1.5 py-0.5 rounded-sm"
-                        style={{ background: `${t.color}22`, border: `1px solid ${t.color}44`, color: t.color, fontSize: '6px' }}
+                        style={{ background: `${theme2.color}22`, border: `1px solid ${theme2.color}44`, color: theme2.color, fontSize: '6px' }}
                       >
-                        BOSS
+                        {t('dungeon_boss')}
                       </div>
                     )}
                   </div>
                   <div className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>
-                    {enemy.element} · WEAK: {enemy.weakness}
+                    {enemy.element} · {t('boss_weak')}: {enemy.weakness}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="neon-text" style={{ color: '#4ade80', fontSize: '7px' }}>HP {enemy.maxHP}</div>
-                  <div className="neon-text" style={{ color: '#f87171', fontSize: '7px' }}>ATK {enemy.atk}</div>
+                  <div className="neon-text" style={{ color: '#4ade80', fontSize: '7px' }}>{t('battle_hp')} {enemy.maxHP}</div>
+                  <div className="neon-text" style={{ color: '#f87171', fontSize: '7px' }}>{t('battle_atk')} {enemy.atk}</div>
                 </div>
               </div>
             );
@@ -210,10 +212,10 @@ function DungeonLobby({ enemies, onStart, onClose }) {
           style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}
         >
           <div className="neon-text flex items-center gap-1.5 justify-center" style={{ color: '#facc15', fontSize: '8px', letterSpacing: '2px' }}>
-            <GameIcon name="chest" size={12} color="#facc15" /> CLEAR DUNGEON → OPEN CHEST → GET LOOT
+            <GameIcon name="chest" size={12} color="#facc15" /> {t('dungeon_reward')}
           </div>
           <div className="neon-text mt-1" style={{ color: '#475569', fontSize: '6px' }}>
-            Equippable gear that boosts your battle stats
+            {t('dungeon_reward_sub')}
           </div>
         </div>
 
@@ -229,7 +231,7 @@ function DungeonLobby({ enemies, onStart, onClose }) {
             letterSpacing: '4px',
           }}
         >
-          ENTER DUNGEON
+          {t('dungeon_enter')}
         </button>
       </div>
     </div>
@@ -243,6 +245,7 @@ export default function DungeonRun({
   finalBoss, onLootEarned, onComplete, onClose,
   purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
 }) {
+  const t = useT();
   const dungeonSeed = Math.floor(Date.now() / 60000); // changes every minute for variety
 
   const enemies = useMemo(
@@ -263,17 +266,17 @@ export default function DungeonRun({
   function getWaveLabel(idx) {
     const enemy = enemies[idx];
     if (!enemy) return '';
-    if (enemy.isBoss) return 'BOSS FIGHT!';
-    return `WAVE ${enemy.waveIdx + 1} CLEARED!`;
+    if (enemy.isBoss) return `${t('dungeon_boss')} ${t('battle_fight')}!`;
+    return `${t('dungeon_wave')} ${enemy.waveIdx + 1} ${t('dungeon_cleared')}`;
   }
 
   function getNextLabel(idx) {
     const next = enemies[idx + 1];
-    if (!next) return 'CHEST';
-    if (next.isBoss) return 'BOSS FIGHT';
+    if (!next) return t('dungeon_loot');
+    if (next.isBoss) return `${t('dungeon_boss')} ${t('battle_fight')}`;
     // Check if next enemy is in a new wave
     const curr = enemies[idx];
-    if (next.waveIdx !== curr.waveIdx) return `WAVE ${next.waveIdx + 1}`;
+    if (next.waveIdx !== curr.waveIdx) return `${t('dungeon_wave')} ${next.waveIdx + 1}`;
     return next.name.toUpperCase();
   }
 

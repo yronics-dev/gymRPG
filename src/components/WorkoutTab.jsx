@@ -5,6 +5,7 @@ import {
 import GameIcon from './GameIcon';
 import { getVolumeByMuscle, getTodayKey, isCardioExercise } from '../utils/gameLogic';
 import { GymScene } from './PixelScene';
+import { useT } from '../i18n/LangContext';
 
 const MAX_WEIGHT_KG = 400;
 
@@ -94,6 +95,7 @@ function ExercisePickerCard({ exercise, onPick }) {
 }
 
 function AddExerciseModal({ onAdd, onClose }) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState('');
   const [customName, setCustomName] = useState('');
@@ -160,7 +162,7 @@ function AddExerciseModal({ onAdd, onClose }) {
                 background: '#111e36', border: '1px solid rgba(34,211,238,0.2)',
                 color: '#e2e8f0', outline: 'none', boxSizing: 'border-box',
               }}
-              placeholder="Search exercises…"
+              placeholder={t('workout_search')}
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
@@ -245,7 +247,7 @@ function AddExerciseModal({ onAdd, onClose }) {
               background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.5)',
               color: '#22d3ee', textTransform: 'uppercase', opacity: (!customName.trim() || !selectedMuscle) ? 0.4 : 1,
             }}
-          >Add Exercise</button>
+          >{t('workout_add_exercise')}</button>
         </div>
       )}
     </div>
@@ -556,6 +558,7 @@ export default function WorkoutTab({
   workouts, onWorkoutUpdate, onRestTimerStart, onWorkoutComplete, onWorkoutReopen,
   muscleVolumePRs = {}, dailyQuests = [], streak = { count: 0 },
 }) {
+  const t = useT();
   const todayKey = getTodayKey();
   const todayWorkout = workouts.find(w => w.date === todayKey);
   const [showModal, setShowModal] = useState(false);
@@ -626,7 +629,7 @@ export default function WorkoutTab({
       <div className="flex-1 relative overflow-hidden">
         <GymScene />
         <div className="absolute inset-0 overflow-y-auto z-10 pt-4 pb-6">
-          <div className="neon-text mb-1 px-4" style={{ color: '#22d3ee', fontSize: '11px' }}>TODAY'S WORKOUT</div>
+          <div className="neon-text mb-1 px-4" style={{ color: '#22d3ee', fontSize: '11px' }}>{t('workout_today')}</div>
           <div className="neon-text mb-3 px-4" style={{ color: '#334155', fontSize: '7px', letterSpacing: '2px' }}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase()}
           </div>
@@ -638,7 +641,7 @@ export default function WorkoutTab({
           >
             <div style={{ lineHeight: 1.2 }}><GameIcon name="trophy" size={36} color="#22d3ee" /></div>
             <div className="neon-text mt-2 neon-text-pulse" style={{ color: '#22d3ee', fontSize: '10px', letterSpacing: '2px' }}>
-              WORKOUT COMPLETE!
+              {t('workout_done')}!
             </div>
             <div className="neon-text mt-1" style={{ color: '#334155', fontSize: '7px' }}>
               {todayWorkout.exercises.length} EX · {totalSets} SETS · {totalVolume.toFixed(0)} VOL
@@ -659,7 +662,7 @@ export default function WorkoutTab({
                 letterSpacing: '2px',
               }}
             >
-              EDIT WORKOUT
+              {t('workout_end')}
             </button>
           </div>
           {Object.entries(volumeByMuscle).map(([muscle, vol]) => {
@@ -702,7 +705,7 @@ export default function WorkoutTab({
             </div>
             <div className="text-center">
               <div className="neon-text neon-text-pulse" style={{ color: '#22d3ee', fontSize: '14px', letterSpacing: '2px' }}>
-                READY TO TRAIN?
+                {t('workout_start')}
               </div>
               <div className="neon-text mt-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '3px' }}>
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()}
@@ -720,7 +723,7 @@ export default function WorkoutTab({
                 letterSpacing: '4px',
               }}
             >
-              START WORKOUT
+              {t('workout_start')}
             </button>
           </div>
 
@@ -785,13 +788,13 @@ export default function WorkoutTab({
               className="w-full mt-3 py-3 rounded-xl text-sm tracking-wide border-dashed transition-colors"
               style={{ background: 'transparent', border: '1.5px dashed rgba(34,211,238,0.25)', color: '#22d3ee' }}
             >
-              + Add Exercise
+              {t('workout_add_exercise')}
             </button>
 
             {Object.keys(volumeByMuscle).length > 0 && (
               <div className="mt-4 rounded-xl p-3"
                 style={{ background: 'rgba(8,13,28,0.82)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="text-xs text-slate-500 uppercase tracking-widest mb-2">Volume Summary</div>
+                <div className="text-xs text-slate-500 uppercase tracking-widest mb-2">{t('workout_volume')}</div>
                 {Object.entries(volumeByMuscle).map(([muscle, vol]) => {
                   const pr = muscleVolumePRs[muscle] || 0;
                   const isPR = vol > pr;
@@ -823,7 +826,7 @@ export default function WorkoutTab({
                   boxShadow: '0 0 20px rgba(250,204,21,0.25)',
                 }}
               >
-                ✓ Complete Workout
+                ✓ {t('workout_done')}
               </button>
             )}
           </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MUSCLE_COLORS } from '../constants';
+import { useT } from '../i18n/LangContext';
 import { ArchiveScene } from './PixelScene';
 import GameIcon from './GameIcon';
 import { getVolumeByMuscle } from '../utils/gameLogic';
@@ -102,7 +103,7 @@ function WorkoutCard({ workout }) {
           </div>
         </div>
         <div className="text-slate-700 text-xs mt-1.5">
-          {expanded ? '▲ hide' : '▼ show exercises'}
+          {expanded ? '▲' : '▼'}
         </div>
       </button>
 
@@ -116,6 +117,7 @@ function WorkoutCard({ workout }) {
 }
 
 export default function HistoryTab({ workouts }) {
+  const t = useT();
   const completed = [...workouts]
     .filter(w => w.completed)
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -146,8 +148,8 @@ export default function HistoryTab({ workouts }) {
         <ArchiveScene />
         <div className="relative z-10"><GameIcon name="scroll" size={48} color="#facc15" /></div>
         <div className="relative z-10">
-          <div className="neon-text neon-text-pulse" style={{ color: '#facc15', fontSize: '14px', letterSpacing: '2px' }}>NO RECORDS YET</div>
-          <div className="neon-text mt-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '2px' }}>COMPLETE YOUR FIRST WORKOUT</div>
+          <div className="neon-text neon-text-pulse" style={{ color: '#facc15', fontSize: '14px', letterSpacing: '2px' }}>{t('history_no_workouts')}</div>
+          <div className="neon-text mt-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '2px' }}>{t('workout_start')}</div>
         </div>
       </div>
     );
@@ -168,8 +170,8 @@ export default function HistoryTab({ workouts }) {
       <div className="absolute inset-0 overflow-y-auto z-10 px-4 pb-6">
       <div className="pt-4 mb-4 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-cyan-400 font-bold text-lg">History</h2>
-          <span className="text-slate-500 text-sm">{completed.length} sessions</span>
+          <h2 className="text-cyan-400 font-bold text-lg">{t('history_title')}</h2>
+          <span className="text-slate-500 text-sm">{completed.length} {t('history_sessions')}</span>
         </div>
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl"
           style={{ background: 'rgba(8,13,28,0.82)', border: '1px solid rgba(34,211,238,0.15)' }}>
@@ -182,10 +184,10 @@ export default function HistoryTab({ workouts }) {
               color: selectedIndex <= 0 ? '#64748b' : '#e2e8f0',
             }}
           >
-            ← Newer
+            {t('history_newer')}
           </button>
           <div className="text-center">
-            <div className="text-white font-semibold">Week of</div>
+            <div className="text-white font-semibold">{t('history_week_of')}</div>
             <div className="text-slate-400 text-sm">{formatWeekLabel(selectedWeekKey)}</div>
             <div className="text-slate-500 text-[11px] mt-1">
               {selectedIndex + 1} / {weekKeys.length}
@@ -200,7 +202,7 @@ export default function HistoryTab({ workouts }) {
               color: selectedIndex >= weekKeys.length - 1 ? '#64748b' : '#e2e8f0',
             }}
           >
-            Older →
+            {t('history_older')}
           </button>
         </div>
       </div>
@@ -208,7 +210,7 @@ export default function HistoryTab({ workouts }) {
       {/* lifetime totals */}
       <div className="rounded-xl p-3 mb-4"
         style={{ background: 'rgba(8,13,28,0.82)', border: '1px solid rgba(34,211,238,0.15)' }}>
-        <div className="text-xs text-slate-500 uppercase tracking-widest mb-2">Lifetime Volume</div>
+        <div className="text-xs text-slate-500 uppercase tracking-widest mb-2">{t('history_volume')}</div>
         <div className="flex flex-wrap gap-2">
           {Object.entries(grandTotal).map(([m, v]) => (
             <div key={m} className="text-xs">
@@ -222,7 +224,7 @@ export default function HistoryTab({ workouts }) {
       {workoutsForWeek.length === 0 ? (
         <div className="rounded-xl p-8 text-center"
           style={{ background: 'rgba(8,13,28,0.82)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="text-slate-500">No completed workouts for this week yet.</div>
+          <div className="text-slate-500">{t('history_no_workouts')}</div>
         </div>
       ) : (
         <div className="flex flex-col gap-3">

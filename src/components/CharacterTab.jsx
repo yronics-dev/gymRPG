@@ -15,28 +15,7 @@ import { getClassBonuses } from '../utils/classSystem';
 import CharacterSprite from './CharacterSprite';
 import CharacterRenderer from './CharacterRenderer';
 import SettingsModal from './SettingsModal';
-
-function t(key, lang) {
-  const TR = {
-    en: {
-      hero: 'HERO', level: 'LV', gold: 'GOLD', evolution: 'EVOLUTION AT',
-      equipment: 'EQUIPMENT', locked: 'LOCKED', comingSoon: 'COMING SOON',
-      combatStats: 'COMBAT STATS', muscleRanks: 'MUSCLE RANKS',
-      weakMuscles: 'WEAK MUSCLES', shop: 'GOLD SHOP',
-      weapon: 'WEAPON', helmet: 'HELMET', chest: 'CHEST ARMOR',
-      boots: 'BOOTS', ring: 'RING', special: 'SPECIAL',
-    },
-    nl: {
-      hero: 'HELD', level: 'NV', gold: 'GOUD', evolution: 'EVOLUTIE BIJ',
-      equipment: 'UITRUSTING', locked: 'VERGRENDELD', comingSoon: 'BINNENKORT',
-      combatStats: 'GEVECHT', muscleRanks: 'SPIERRANKEN',
-      weakMuscles: 'ZWAKKE SPIEREN', shop: 'GOUDWINKEL',
-      weapon: 'WAPEN', helmet: 'HELM', chest: 'PANTSER',
-      boots: 'LAARZEN', ring: 'RING', special: 'SPECIAAL',
-    },
-  };
-  return (TR[lang] || TR.en)[key] || key;
-}
+import { useT } from '../i18n/LangContext';
 
 const EQUIP_SLOTS = [
   { key: 'helmet',  icon: 'helmet',     color: '#f87171' },
@@ -47,7 +26,8 @@ const EQUIP_SLOTS = [
   { key: 'special', icon: 'orb',        color: '#4ade80' },
 ];
 
-function EquipSlot({ slot, aura, language, item, onUnequip }) {
+function EquipSlot({ slot, aura, item, onUnequip }) {
+  const t = useT();
   const [showTip, setShowTip] = useState(false);
   // Empty = dark grey; filled = rarity colour
   const borderColor = item ? item.rarityColor : 'rgba(71,85,105,0.45)';
@@ -82,7 +62,7 @@ function EquipSlot({ slot, aura, language, item, onUnequip }) {
         }
       </span>
       <div className="neon-text" style={{ color: labelColor, fontSize: '5px', letterSpacing: '0.5px', marginTop: 2, opacity: item ? 1 : 0.5 }}>
-        {item ? item.rarity.slice(0,3).toUpperCase() : t(slot.key, language).slice(0, 6).toUpperCase()}
+        {item ? item.rarity.slice(0,3).toUpperCase() : t(`char_slot_${slot.key}`).slice(0, 6).toUpperCase()}
       </div>
       {!item && (
         <div style={{ position:'absolute', top:2, right:2, opacity:0.25 }}>
@@ -118,7 +98,7 @@ function EquipSlot({ slot, aura, language, item, onUnequip }) {
             style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', fontSize: '6px' }}
             onClick={() => { onUnequip(slot.key); setShowTip(false); }}
           >
-            UNEQUIP
+            {t('char_unequip')}
           </button>
         </div>
       )}
@@ -225,6 +205,7 @@ function MuscleRankRow({ muscle, xp, isFocus }) {
 }
 
 function WardrobeShop({ coins, ownedClothing, equippedClothing, onBuyClothing, onEquipClothing }) {
+  const t = useT();
   const SLOTS = ['hat', 'pants', 'shoes', 'accessory'];
   const SLOT_LABELS = { hat: 'Hats', pants: 'Pants', shoes: 'Shoes', accessory: 'Accessories' };
   const [activeSlot, setActiveSlot] = useState('hat');
@@ -282,7 +263,7 @@ function WardrobeShop({ coins, ownedClothing, equippedClothing, onBuyClothing, o
                     fontSize: '7px',
                   }}
                 >
-                  {equipped ? '✓ EQUIPPED' : 'EQUIP'}
+                  {equipped ? `✓ ${t('char_equipped')}` : t('char_equip')}
                 </button>
               ) : item.cost === 0 ? (
                 <button
@@ -321,6 +302,7 @@ function GoldShop({
   ownedClothing, equippedClothing, onBuyClothing, onEquipClothing,
   onBuyStatUpgrade, onBuyAura, onEquipAura,
 }) {
+  const t = useT();
   const [shopTab, setShopTab] = useState('stats');
 
   return (
@@ -333,7 +315,7 @@ function GoldShop({
         style={{ background: 'linear-gradient(90deg, rgba(250,204,21,0.1), transparent)', borderBottom: '1px solid rgba(250,204,21,0.15)' }}
       >
         <div className="neon-text flex items-center gap-1.5" style={{ color: '#facc15', fontSize: '9px', letterSpacing: '2px' }}>
-          <GameIcon name="coin" size={12} color="#facc15" /> GOLD SHOP
+          <GameIcon name="coin" size={12} color="#facc15" /> {t('char_shop')}
         </div>
         <div className="neon-text flex items-center gap-1" style={{ color: '#facc15', fontSize: '11px', textShadow: '0 0 10px #facc15' }}>
           {coins} <GameIcon name="coin" size={12} color="#facc15" />
@@ -345,21 +327,21 @@ function GoldShop({
           { id: 'stats',    label: 'Stats'    },
           { id: 'wardrobe', label: 'Wardrobe' },
           { id: 'auras',    label: 'Auras'    },
-        ].map(t => (
+        ].map(tab => (
           <button
-            key={t.id}
-            onClick={() => setShopTab(t.id)}
+            key={tab.id}
+            onClick={() => setShopTab(tab.id)}
             className="flex-1 py-2"
             style={{
-              background: shopTab === t.id ? 'rgba(250,204,21,0.1)' : 'transparent',
-              borderBottom: shopTab === t.id ? '2px solid #facc15' : '2px solid transparent',
-              color: shopTab === t.id ? '#facc15' : '#475569',
+              background: shopTab === tab.id ? 'rgba(250,204,21,0.1)' : 'transparent',
+              borderBottom: shopTab === tab.id ? '2px solid #facc15' : '2px solid transparent',
+              color: shopTab === tab.id ? '#facc15' : '#475569',
               fontFamily: 'Courier New',
               fontSize: '9px',
               letterSpacing: '1px',
             }}
           >
-            {t.label}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -457,7 +439,7 @@ function GoldShop({
                         fontSize: '7px',
                       }}
                     >
-                      {equipped ? '✓ EQUIPPED' : 'EQUIP'}
+                      {equipped ? `✓ ${t('char_equipped')}` : t('char_equip')}
                     </button>
                   ) : (
                     <button
@@ -487,6 +469,7 @@ function GoldShop({
 
 // ─── Item Detail Popup ────────────────────────────────────────────────────────
 function ItemPopup({ item, equippedItems, onEquip, onUnequip, onClose }) {
+  const t = useT();
   if (!item) return null;
   const isEquipped = equippedItems[item.slot]?.id === item.id;
   return (
@@ -552,7 +535,7 @@ function ItemPopup({ item, equippedItems, onEquip, onUnequip, onClose }) {
             className="w-full py-3 rounded-xl neon-text"
             style={{ background: 'rgba(248,113,113,0.12)', border: '2px solid rgba(248,113,113,0.5)',
                      color: '#f87171', fontSize: '10px', letterSpacing: 3, cursor: 'pointer' }}>
-            UNEQUIP
+            {t('char_unequip')}
           </button>
         ) : (
           <button onClick={() => { onEquip && onEquip(item); onClose(); }}
@@ -563,7 +546,7 @@ function ItemPopup({ item, equippedItems, onEquip, onUnequip, onClose }) {
               color: item.rarityColor, fontSize: '10px', letterSpacing: 3,
               boxShadow: `0 0 16px ${item.rarityGlow}66`, cursor: 'pointer',
             }}>
-            ✓ EQUIP
+            ✓ {t('char_equip')}
           </button>
         )}
       </div>
@@ -576,6 +559,7 @@ const SLOT_FILTERS = ['ALL', 'helmet', 'chest', 'boots', 'weapon', 'ring', 'spec
 const RARITY_ORDER = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 };
 
 function InventoryModal({ inventory, equippedItems, onEquip, onUnequip, onClose }) {
+  const t = useT();
   const [slotFilter, setSlotFilter] = React.useState('ALL');
   const [popup, setPopup] = React.useState(null);
   const [search, setSearch] = React.useState('');
@@ -706,7 +690,7 @@ function InventoryModal({ inventory, equippedItems, onEquip, onUnequip, onClose 
                       fontSize: 7, color: '#4ade80', fontFamily: 'Courier New', letterSpacing: 1,
                       background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
                       borderRadius: 4, padding: '2px 6px', alignSelf: 'flex-start',
-                    }}>✓ EQUIPPED</div>
+                    }}>✓ {t('char_equipped')}</div>
                   )}
                 </button>
               );
@@ -735,6 +719,7 @@ export default function CharacterTab({
   purchasedSkills = [],
   onPrestige,
 }) {
+  const t = useT();
   const [showSettings, setShowSettings] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showPrestigeConfirm, setShowPrestigeConfirm] = useState(false);
@@ -776,7 +761,7 @@ export default function CharacterTab({
         style={{ background: '#060d1aee', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${aura}18` }}
       >
         <div className="neon-text" style={{ color: aura, fontSize: '11px', letterSpacing: '3px', textShadow: `0 0 8px ${aura}` }}>
-          {t('hero', language)}
+          {t('char_hero')}
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -809,7 +794,6 @@ export default function CharacterTab({
                 key={slot.key}
                 slot={slot}
                 aura={aura}
-                language={language}
                 item={equippedItems[slot.key] || null}
                 onUnequip={onUnequipItem || (() => {})}
               />
@@ -823,7 +807,6 @@ export default function CharacterTab({
                 key={slot.key}
                 slot={slot}
                 aura={aura}
-                language={language}
                 item={equippedItems[slot.key] || null}
                 onUnequip={onUnequipItem || (() => {})}
               />
@@ -857,7 +840,7 @@ export default function CharacterTab({
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
               <div className="neon-text px-2 py-0.5 rounded-sm"
                 style={{ background: 'rgba(4,8,18,0.92)', border: `1px solid ${aura}88`, color: aura, fontSize: '8px', textShadow: `0 0 6px ${aura}`, whiteSpace: 'nowrap' }}>
-                {t('level', language)}.{level}
+                {t('char_level')}.{level}
               </div>
               {prestige?.count > 0 && (
                 <div className="neon-text px-1.5 py-0.5 rounded-sm"
@@ -998,11 +981,11 @@ export default function CharacterTab({
         {warnings.length > 0 && (
           <div className="mb-4 rounded-sm p-3" style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)' }}>
             <div className="neon-text mb-1.5 flex items-center gap-1" style={{ color: '#f87171', fontSize: '8px', letterSpacing: '1px' }}>
-              <GameIcon name="impact" size={10} color="#f87171" /> {t('weakMuscles', language)}
+              <GameIcon name="impact" size={10} color="#f87171" /> {t('char_weak_muscles')}
             </div>
             {warnings.map(m => (
               <div key={m} className="neon-text" style={{ color: '#475569', fontSize: '7px', marginBottom: '2px' }}>
-                • <span style={{ color: MUSCLE_COLORS[m] }}>{m}</span> — {language === 'nl' ? 'bazen doen extra schade!' : 'bosses deal extra damage!'}
+                • <span style={{ color: MUSCLE_COLORS[m] }}>{m}</span> — {t('char_boss_extra_dmg')}
               </div>
             ))}
           </div>
@@ -1010,7 +993,7 @@ export default function CharacterTab({
 
         {/* ── Combat stats ────────────────────────── */}
         <div className="mt-1">
-          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('combatStats', language)}</div>
+          <div className="neon-text mb-3" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('char_combat_stats')}</div>
           <div className="flex flex-col gap-4">
             {Object.keys(STAT_INFO).filter(k => !STAT_INFO[k].goldOnly).map(key => (
               <StatBar key={key} statKey={key} xp={statXP[key] || 0} stat={stats[key] || 0} upgradeCount={statUpgrades[key] || 0} />
@@ -1037,7 +1020,7 @@ export default function CharacterTab({
 
         {/* ── Muscle ranks ────────────────────────── */}
         <div className="mt-5">
-          <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('muscleRanks', language)}</div>
+          <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('char_muscle_ranks')}</div>
           <div className="rounded-sm px-4 py-3" style={{ background: '#080e1a', border: '1px solid rgba(255,255,255,0.05)' }}>
             {MUSCLE_GROUPS.map(m => (
               <MuscleRankRow key={m} muscle={m} xp={muscleXP[m] || 0} isFocus={focusSet.has(m)} />

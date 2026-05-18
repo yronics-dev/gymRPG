@@ -705,13 +705,14 @@ function getNewSprite(boss) {
   }
   // Element-based mapping for bosses (and mob fallthrough)
   switch (boss.element) {
-    case 'Fire':    case 'Lava':   return FireDemon;
-    case 'Ice':                    return IceGolem;
+    case 'Fire':    case 'Lava':            return FireDemon;
+    case 'Ice':     case 'Crystal':        return IceGolem;
     case 'Shadow':  case 'Void':
-    case 'Blood':                  return ShadowWraith;
-    case 'Thunder':                return ThunderTitan;
-    case 'Earth':   case 'Poison': return EarthColossus;
-    default:                       return null;   // Wind, Crystal, Storm → pixel art
+    case 'Blood':                          return ShadowWraith;
+    case 'Thunder': case 'Storm':          return ThunderTitan;
+    case 'Earth':   case 'Poison':         return EarthColossus;
+    case 'Wind':                           return ZombieBrute;
+    default:                               return null;
   }
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GameIcon from './GameIcon';
+import { useT } from '../i18n/LangContext';
 
 function QuestRow({ quest, wasCompleted }) {
   const pct = Math.min(100, (quest.progress / quest.target) * 100);
@@ -78,6 +79,7 @@ export default function PostWorkoutOverlay({
   onEquipLoot,
   onDone,
 }) {
+  const t = useT();
   const [step, setStep] = useState(0);
 
   // Auto-advance event step after 1.2s
@@ -134,7 +136,7 @@ export default function PostWorkoutOverlay({
               style={{ color: isBonus ? '#4ade80' : isMalus ? '#f87171' : '#22d3ee', fontSize: '13px', letterSpacing: '4px', textShadow: isBonus ? '0 0 16px #4ade80' : 'none' }}
             >
               {event?.icon && <GameIcon name={event.icon} size={16} color={isBonus ? '#4ade80' : isMalus ? '#f87171' : '#22d3ee'} />}
-              WORKOUT COMPLETE!
+              {t('workout_done')}!
             </div>
             {event && event.type !== 'normal' && (
               <div className="neon-text mt-1" style={{ color: event.color, fontSize: '8px', letterSpacing: '2px' }}>
@@ -149,7 +151,7 @@ export default function PostWorkoutOverlay({
               className="rounded-sm p-3 mb-3"
               style={{ background: 'rgba(6,10,20,0.85)', border: '1px solid rgba(34,211,238,0.15)' }}
             >
-              <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>XP GAINED</div>
+              <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('gen_xp')} +</div>
               <div className="grid grid-cols-2 gap-1.5 mb-2">
                 {xpEntries.map(([muscle, xp]) => (
                   <div key={muscle} className="flex items-center justify-between">
@@ -162,7 +164,7 @@ export default function PostWorkoutOverlay({
                 className="flex items-center justify-between pt-2"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
               >
-                <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>TOTAL</span>
+                <span className="neon-text" style={{ color: '#475569', fontSize: '7px' }}>{t('workout_volume')}</span>
                 <span className="neon-text" style={{ color: '#4ade80', fontSize: '11px', textShadow: '0 0 8px #4ade80' }}>
                   +{Math.floor(totalXP)} XP
                 </span>
@@ -212,7 +214,7 @@ export default function PostWorkoutOverlay({
           {/* Quests */}
           {questUpdates.length > 0 && (
             <div className="mb-3">
-              <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>DAILY QUESTS</div>
+              <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>{t('workout_streak')}</div>
               <div className="flex flex-col gap-1.5">
                 {questUpdates.map(q => (
                   <QuestRow
@@ -240,7 +242,7 @@ export default function PostWorkoutOverlay({
                   letterSpacing: '2px',
                 }}
               >
-                ✓ EQUIP
+                ✓ {t('loot_equip')}
               </button>
             </div>
           )}
@@ -256,7 +258,7 @@ export default function PostWorkoutOverlay({
               letterSpacing: '3px',
             }}
           >
-            CONTINUE →
+            {t('loot_done')} →
           </button>
         </div>
       )}

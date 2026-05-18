@@ -1,5 +1,6 @@
 import React from 'react';
 import GameIcon from './GameIcon';
+import { useT } from '../i18n/LangContext';
 
 const TIMER_PRESETS = [
   { label: '30s', secs: 30 },
@@ -14,6 +15,7 @@ export default function SettingsModal({
   language, onChangeLanguage,
   currentUser, onLogout,
 }) {
+  const t = useT();
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col justify-end"
@@ -31,7 +33,7 @@ export default function SettingsModal({
         >
           <div className="neon-text flex items-center gap-2" style={{ color: '#22d3ee', fontSize: '10px', letterSpacing: '3px' }}>
             <GameIcon name="gear" size={14} color="#22d3ee" />
-            {language === 'nl' ? 'INSTELLINGEN' : 'SETTINGS'}
+            {t('char_settings')}
           </div>
           <button
             onClick={onClose}
@@ -47,7 +49,7 @@ export default function SettingsModal({
           {/* Language */}
           <div>
             <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
-              {language === 'nl' ? 'TAAL' : 'LANGUAGE'}
+              LANGUAGE
             </div>
             <div className="flex gap-2">
               {[
@@ -77,7 +79,7 @@ export default function SettingsModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="neon-text" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
-                {language === 'nl' ? 'RUSTTIMER' : 'REST TIMER'}
+                {t('workout_rest_timer')}
               </div>
               <div className="neon-text" style={{ color: '#22d3ee', fontSize: '10px', textShadow: '0 0 8px #22d3ee' }}>
                 {Math.floor(timerTotal / 60)}m {timerTotal % 60 > 0 ? `${timerTotal % 60}s` : ''}
@@ -102,14 +104,14 @@ export default function SettingsModal({
               ))}
             </div>
             <div className="neon-text mt-2 text-center" style={{ color: '#1e2d3d', fontSize: '7px' }}>
-              {language === 'nl' ? 'Timer start na elk oefening' : 'Timer starts after each exercise'}
+              {t('workout_rest_timer')} — auto
             </div>
           </div>
 
           {/* Account */}
           <div>
             <div className="neon-text mb-2" style={{ color: '#475569', fontSize: '7px', letterSpacing: '3px' }}>
-              {language === 'nl' ? 'ACCOUNT' : 'ACCOUNT'}
+              ACCOUNT
             </div>
             <div
               className="flex items-center justify-between p-3 rounded-sm"
@@ -121,7 +123,7 @@ export default function SettingsModal({
                 className="neon-text px-3 py-1.5 rounded-sm pixel-btn"
                 style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171', fontSize: '7px', letterSpacing: '1px' }}
               >
-                {language === 'nl' ? 'UITLOGGEN' : 'LOGOUT'}
+                LOGOUT
               </button>
             </div>
           </div>

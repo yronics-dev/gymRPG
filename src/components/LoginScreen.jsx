@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import GameIcon from './GameIcon';
+import { useT } from '../i18n/LangContext';
 
 function getAccounts() {
   try { return JSON.parse(localStorage.getItem('gymrpg_accounts') || '{}'); }
@@ -11,6 +12,7 @@ function saveAccounts(accounts) {
 }
 
 export default function LoginScreen({ onLogin }) {
+  const t = useT();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode]         = useState('login');
@@ -19,19 +21,19 @@ export default function LoginScreen({ onLogin }) {
   function handleSubmit() {
     const name = username.trim().toLowerCase();
     const pass = password.trim();
-    if (!name || name.length < 2) return setError('Username must be at least 2 characters');
-    if (!pass || pass.length < 4) return setError('Password must be at least 4 characters');
+    if (!name || name.length < 2) return setError(t('login_error_short'));
+    if (!pass || pass.length < 4) return setError(t('login_error_pass'));
 
     const accounts = getAccounts();
 
     if (mode === 'register') {
-      if (accounts[name]) return setError('Username already taken');
+      if (accounts[name]) return setError(t('login_error_short'));
       accounts[name] = pass;
       saveAccounts(accounts);
       onLogin(name);
     } else {
-      if (!accounts[name]) return setError('No account found — create one first');
-      if (accounts[name] !== pass) return setError('Wrong password');
+      if (!accounts[name]) return setError(t('login_error_wrong'));
+      if (accounts[name] !== pass) return setError(t('login_error_wrong'));
       onLogin(name);
     }
   }
@@ -85,8 +87,8 @@ export default function LoginScreen({ onLogin }) {
           style={{ border: '1px solid rgba(34,211,238,0.15)' }}
         >
           {[
-            { id: 'login',    label: 'LOGIN' },
-            { id: 'register', label: 'NEW HERO' },
+            { id: 'login',    label: t('login_btn') },
+            { id: 'register', label: t('login_create') },
           ].map(m => (
             <button
               key={m.id}
@@ -107,7 +109,7 @@ export default function LoginScreen({ onLogin }) {
 
         <div className="flex flex-col gap-3">
           <div>
-            <div className="neon-text mb-1" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>USERNAME</div>
+            <div className="neon-text mb-1" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>{t('login_username')}</div>
             <input
               type="text"
               value={username}
@@ -126,7 +128,7 @@ export default function LoginScreen({ onLogin }) {
             />
           </div>
           <div>
-            <div className="neon-text mb-1" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>PASSWORD</div>
+            <div className="neon-text mb-1" style={{ color: '#475569', fontSize: '7px', letterSpacing: '2px' }}>{t('login_password')}</div>
             <input
               type="password"
               value={password}
@@ -163,7 +165,7 @@ export default function LoginScreen({ onLogin }) {
             fontSize: '10px', letterSpacing: '3px',
           }}
         >
-          {mode === 'login' ? 'ENTER ARENA' : 'CREATE HERO'}
+          {mode === 'login' ? t('login_title') : t('login_create')}
         </button>
       </div>
 

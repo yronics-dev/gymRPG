@@ -32,3 +32,4 @@ export { default as IconTrophy }        from './IconTrophy';
 export { default as IconLock }          from './IconLock';
 export { default as IconCalendar }      from './IconCalendar';
 export { default as IconPotion }        from './IconPotion';
+export { default as IconHero }          from './IconHero';

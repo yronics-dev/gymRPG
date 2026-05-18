@@ -17,7 +17,7 @@ import {
   IconMuscleShoulders, IconMuscleBack, IconMuscleCore,
   IconMuscleLegs, IconMuscleGlutes, IconCardio,
   IconImpact, IconDodge, IconHeal, IconTrophy, IconLock,
-  IconCalendar, IconPotion,
+  IconCalendar, IconPotion, IconHero,
 } from '../assets/icons';
 
 const ICON_MAP = {
@@ -66,6 +66,9 @@ const ICON_MAP = {
   impact: IconImpact,
   dodge:  IconDodge,
   heal:   IconHeal,
+
+  // Character
+  hero:   IconHero,
 
   // Aliases
   atk:    IconSword,
