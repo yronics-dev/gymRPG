@@ -244,6 +244,7 @@ export default function DungeonRun({
   equippedItems = {}, playerLevel, todayMuscles = [],
   finalBoss, onLootEarned, onComplete, onClose,
   purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
+  mmrTier = 0,
 }) {
   const t = useT();
   const dungeonSeed = Math.floor(Date.now() / 60000); // changes every minute for variety
@@ -300,7 +301,7 @@ export default function DungeonRun({
   }
 
   function handleBossVictory() {
-    const loot = generateChestLoot(dungeonSeed + enemyIdx);
+    const loot = generateChestLoot(dungeonSeed + enemyIdx, mmrTier);
     setChestItems(loot);
     setPhase('chest');
   }

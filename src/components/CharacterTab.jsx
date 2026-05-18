@@ -6,6 +6,7 @@ import GameIcon from './GameIcon';
 import { SLOT_ICON_MAP } from './GameIcon';
 import ItemIcon from './ItemIcon';
 import { SanctumScene } from './PixelScene';
+import CharacterBackground from './backgrounds/CharacterBackground';
 import {
   getStats, getStatXP, getTotalXP, getLevel, getWeaknessWarnings,
   getMuscleRank, getMuscleRankProgress, xpForLevel, getXPInCurrentLevel,
@@ -29,73 +30,137 @@ const EQUIP_SLOTS = [
 function EquipSlot({ slot, aura, item, onUnequip }) {
   const t = useT();
   const [showTip, setShowTip] = useState(false);
-  // Empty = dark grey; filled = rarity colour
-  const borderColor = item ? item.rarityColor : 'rgba(71,85,105,0.45)';
-  const bgColor     = item ? item.rarityGlow  : 'rgba(71,85,105,0.06)';
-  const accentColor = item ? item.rarityColor : '#334155';
-  const labelColor  = item ? item.rarityColor : '#475569';
+
+  const isRight = slot.key === 'weapon' || slot.key === 'ring' || slot.key === 'special';
+
+  const borderColor = item ? item.rarityColor       : `${slot.color}55`;
+  const bgColor     = item ? item.rarityGlow        : 'rgba(4,8,18,0.72)';
+  const glowColor   = item ? item.rarityColor       : slot.color;
+  const labelColor  = item ? item.rarityColor       : `${slot.color}99`;
+  const slotLabel   = t(`char_slot_${slot.key}`).slice(0,5).toUpperCase();
 
   return (
-    <div
-      className="flex flex-col items-center justify-center"
-      style={{
-        width: 52, height: 52,
-        background: `linear-gradient(135deg, ${bgColor}, rgba(4,8,18,0.92))`,
-        border: `2px solid ${borderColor}`,
-        borderRadius: 6,
-        boxShadow: item
-          ? `0 0 12px ${bgColor}, inset 0 0 8px rgba(0,0,0,0.3)`
-          : 'inset 0 0 8px rgba(0,0,0,0.5)',
-        position: 'relative',
-        cursor: item ? 'pointer' : 'default',
-      }}
-      onClick={() => { if (item) setShowTip(p => !p); }}
-    >
-      {/* Corner accent */}
-      <div style={{ position:'absolute', top:-1, left:-1, width:6, height:6, background: accentColor, borderRadius:1, opacity: item ? 0.9 : 0.5 }} />
-      <div style={{ position:'absolute', bottom:-1, right:-1, width:6, height:6, background: accentColor, borderRadius:1, opacity: item ? 0.9 : 0.5 }} />
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      {/* Main slot box */}
+      <div
+        style={{
+          width: 64, height: 64,
+          background: item
+            ? `linear-gradient(145deg, ${bgColor}44, rgba(4,8,18,0.88))`
+            : 'rgba(4,8,18,0.72)',
+          border: item
+            ? `2px solid ${borderColor}`
+            : `1.5px dashed ${borderColor}`,
+          borderRadius: 8,
+          boxShadow: item
+            ? `0 0 18px ${glowColor}55, 0 0 6px ${glowColor}33, inset 0 0 12px rgba(0,0,0,0.4)`
+            : `inset 0 0 10px rgba(0,0,0,0.6)`,
+          position: 'relative',
+          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'visible',
+          transition: 'box-shadow 0.2s, border-color 0.2s',
+        }}
+        onClick={() => setShowTip(p => !p)}
+      >
+        {/* Corner gems — only when item equipped */}
+        {item && [
+          { top: -3, left: -3 }, { top: -3, right: -3 },
+          { bottom: -3, left: -3 }, { bottom: -3, right: -3 },
+        ].map((pos, i) => (
+          <div key={i} style={{
+            position: 'absolute', ...pos, width: 6, height: 6,
+            background: item.rarityColor,
+            borderRadius: 1,
+            boxShadow: `0 0 5px ${item.rarityColor}`,
+          }} />
+        ))}
 
-      <span style={{ opacity: item ? 1 : 0.35, filter: `drop-shadow(0 0 ${item ? 6 : 2}px rgba(0,0,0,0.8))` }}>
-        {item
-          ? <ItemIcon name={item.name} size={22} color={item.rarityColor}/>
-          : <GameIcon name={slot.icon} size={18} color={slot.color}/>
-        }
-      </span>
-      <div className="neon-text" style={{ color: labelColor, fontSize: '5px', letterSpacing: '0.5px', marginTop: 2, opacity: item ? 1 : 0.5 }}>
-        {item ? item.rarity.slice(0,3).toUpperCase() : t(`char_slot_${slot.key}`).slice(0, 6).toUpperCase()}
+        {/* Icon */}
+        <span style={{
+          opacity: item ? 1 : 0.3,
+          filter: item ? `drop-shadow(0 0 8px ${item.rarityColor})` : 'none',
+        }}>
+          {item
+            ? <ItemIcon name={item.name} size={28} color={item.rarityColor} />
+            : <GameIcon name={slot.icon} size={22} color={slot.color} />
+          }
+        </span>
+
+        {/* Rarity label inside slot when equipped */}
+        {item && (
+          <div className="neon-text" style={{
+            color: item.rarityColor, fontSize: '5.5px',
+            letterSpacing: '0.5px', marginTop: 2, opacity: 0.9,
+          }}>
+            {item.rarity.slice(0,3).toUpperCase()}
+          </div>
+        )}
       </div>
-      {!item && (
-        <div style={{ position:'absolute', top:2, right:2, opacity:0.25 }}>
-          <GameIcon name="lock" size={7} color="#475569" />
-        </div>
-      )}
 
-      {/* Tooltip on tap */}
-      {item && showTip && (
+      {/* Slot label below box */}
+      <div className="neon-text" style={{
+        color: labelColor, fontSize: '6px',
+        letterSpacing: '0.8px', textAlign: 'center',
+        textShadow: item ? `0 0 6px ${item.rarityColor}88` : 'none',
+      }}>
+        {slotLabel}
+      </div>
+
+      {/* Tooltip popup */}
+      {showTip && item && (
         <div
-          className="absolute z-50 rounded-sm p-2 flex flex-col gap-1"
+          className="absolute z-50 rounded p-2 flex flex-col gap-1"
           style={{
-            background: '#060d1a',
-            border: `1px solid ${item.rarityColor}88`,
-            boxShadow: `0 0 16px ${item.rarityGlow}`,
-            width: 130,
-            left: slot.key === 'weapon' || slot.key === 'ring' || slot.key === 'special' ? 'auto' : '100%',
-            right: slot.key === 'weapon' || slot.key === 'ring' || slot.key === 'special' ? '100%' : 'auto',
+            background: '#07101f',
+            border: `1px solid ${item.rarityColor}99`,
+            boxShadow: `0 0 20px ${item.rarityGlow}, 0 8px 24px rgba(0,0,0,0.8)`,
+            width: 138,
+            left:  isRight ? 'auto' : '110%',
+            right: isRight ? '110%' : 'auto',
             top: '50%',
             transform: 'translateY(-50%)',
-            marginLeft: 6, marginRight: 6,
           }}
           onClick={e => e.stopPropagation()}
         >
-          <div className="neon-text" style={{ color: item.rarityColor, fontSize: '7px', letterSpacing: '1px' }}>{item.name}</div>
-          {item.atk   > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#f87171', fontSize: '6px' }}><GameIcon name="sword"     size={8} color="#f87171" /> +{item.atk} ATK</div>}
-          {item.def   > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#60a5fa', fontSize: '6px' }}><GameIcon name="shield"    size={8} color="#60a5fa" /> +{item.def} DEF</div>}
-          {item.hp    > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#4ade80', fontSize: '6px' }}><GameIcon name="heart"     size={8} color="#4ade80" /> +{item.hp} HP</div>}
-          {item.crit  > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#facc15', fontSize: '6px' }}><GameIcon name="lightning" size={8} color="#facc15" /> +{item.crit}% CRIT</div>}
-          {item.dodge > 0 && <div className="neon-text flex items-center gap-1" style={{ color: '#a78bfa', fontSize: '6px' }}><GameIcon name="wing"      size={8} color="#a78bfa" /> +{item.dodge}% DODGE</div>}
+          <div className="neon-text" style={{ color: item.rarityColor, fontSize: '7.5px', letterSpacing: '1px', marginBottom: 2 }}>
+            {item.name}
+          </div>
+          {item.atk   > 0 && (
+            <div className="neon-text flex items-center gap-1" style={{ color: '#f87171', fontSize: '6.5px' }}>
+              <GameIcon name="sword"     size={9} color="#f87171" /> +{item.atk} ATK
+            </div>
+          )}
+          {item.def   > 0 && (
+            <div className="neon-text flex items-center gap-1" style={{ color: '#60a5fa', fontSize: '6.5px' }}>
+              <GameIcon name="shield"    size={9} color="#60a5fa" /> +{item.def} DEF
+            </div>
+          )}
+          {item.hp    > 0 && (
+            <div className="neon-text flex items-center gap-1" style={{ color: '#4ade80', fontSize: '6.5px' }}>
+              <GameIcon name="heart"     size={9} color="#4ade80" /> +{item.hp} HP
+            </div>
+          )}
+          {item.crit  > 0 && (
+            <div className="neon-text flex items-center gap-1" style={{ color: '#facc15', fontSize: '6.5px' }}>
+              <GameIcon name="lightning" size={9} color="#facc15" /> +{item.crit}% CRIT
+            </div>
+          )}
+          {item.dodge > 0 && (
+            <div className="neon-text flex items-center gap-1" style={{ color: '#a78bfa', fontSize: '6.5px' }}>
+              <GameIcon name="wing"      size={9} color="#a78bfa" /> +{item.dodge}% DODGE
+            </div>
+          )}
           <button
-            className="neon-text mt-1 py-0.5 rounded-sm text-center"
-            style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', fontSize: '6px' }}
+            className="neon-text mt-1.5 py-1 rounded-sm text-center w-full"
+            style={{
+              background: 'rgba(248,113,113,0.1)',
+              border: '1px solid rgba(248,113,113,0.35)',
+              color: '#f87171', fontSize: '6.5px',
+            }}
             onClick={() => { onUnequip(slot.key); setShowTip(false); }}
           >
             {t('char_unequip')}
@@ -780,128 +845,210 @@ export default function CharacterTab({
         </div>
       </div>
 
-        {/* ── Hero stage — full-width, scene + character + floating slots ── */}
-        <div className="relative overflow-hidden mb-0" style={{ height: '62vw', minHeight: 240, maxHeight: 320 }}>
-          <SanctumScene />
+        {/* ══════════════════════════════════════════════════════════
+             HERO STAGE — full illustrated scene + floating slots
+        ══════════════════════════════════════════════════════════ */}
+        <div
+          className="relative overflow-hidden"
+          style={{ height: 'calc(100svh - 170px)', minHeight: 460, maxHeight: 680 }}
+        >
+          {/* ── Rich SVG background ── */}
+          <CharacterBackground />
 
-          {/* Gradient overlay bottom */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(6,13,26,0.1) 0%, transparent 40%, rgba(6,13,26,0.85) 100%)', zIndex: 1 }} />
-
-          {/* LEFT equipment column */}
-          <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 5, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {EQUIP_SLOTS.slice(0, 3).map(slot => (
-              <EquipSlot
-                key={slot.key}
-                slot={slot}
-                aura={aura}
-                item={equippedItems[slot.key] || null}
-                onUnequip={onUnequipItem || (() => {})}
-              />
-            ))}
-          </div>
-
-          {/* RIGHT equipment column */}
-          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 5, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {EQUIP_SLOTS.slice(3).map(slot => (
-              <EquipSlot
-                key={slot.key}
-                slot={slot}
-                aura={aura}
-                item={equippedItems[slot.key] || null}
-                onUnequip={onUnequipItem || (() => {})}
-              />
-            ))}
-          </div>
-
-          {/* Character portrait frame — centered */}
+          {/* ── Soft gradient at very bottom so stat bar blends in ── */}
           <div style={{
-            position: 'absolute', left: '50%', top: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 4,
-            width: 148, height: 168,
-            border: `3px solid ${aura}`,
-            borderRadius: 6,
-            boxShadow: `0 0 0 1px rgba(0,0,0,0.8), 0 0 24px ${aura}55, inset 0 0 20px rgba(0,0,0,0.4)`,
-            background: 'rgba(4,8,18,0.25)',
-            overflow: 'visible',
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: 120,
+            background: 'linear-gradient(to bottom, transparent, rgba(4,8,18,0.95))',
+            zIndex: 2, pointerEvents: 'none',
+          }} />
+
+          {/* ── Name + XP — floats over the gradient at the bottom ── */}
+          <div style={{
+            position: 'absolute', bottom: 10, left: 16, right: 16,
+            zIndex: 6,
           }}>
-            {/* Corner gems */}
-            {[{top:-4,left:-4},{top:-4,right:-4},{bottom:-4,left:-4},{bottom:-4,right:-4}].map((p,i)=>(
-              <div key={i} style={{ position:'absolute', ...p, width:8, height:8, background: aura, borderRadius:1, boxShadow:`0 0 6px ${aura}` }} />
-            ))}
-            <div className="flex items-end justify-center w-full h-full" style={{ overflow: 'visible', paddingBottom: 4 }}>
-              <CharacterRenderer level={level} equippedItems={equippedItems} size={148} />
-            </div>
-          </div>
-
-          {/* Level + title badges — compact overlay */}
-          <div style={{ position: 'absolute', top: 8, left: 74, right: 74, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3, pointerEvents: 'none' }}>
-            {/* Level + prestige on one line */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-              <div className="neon-text px-2 py-0.5 rounded-sm"
-                style={{ background: 'rgba(4,8,18,0.92)', border: `1px solid ${aura}88`, color: aura, fontSize: '8px', textShadow: `0 0 6px ${aura}`, whiteSpace: 'nowrap' }}>
-                {t('char_level')}.{level}
-              </div>
-              {prestige?.count > 0 && (
-                <div className="neon-text px-1.5 py-0.5 rounded-sm"
-                  style={{ background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.5)', color: '#facc15', fontSize: '6px', whiteSpace: 'nowrap' }}>
-                  ★{prestige.count}
-                </div>
-              )}
-            </div>
-            {/* Title */}
-            {playerTitle && (
-              <div className="neon-text px-2 py-0.5 rounded-sm"
-                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerTitle.color}55`, color: playerTitle.color, fontSize: '6px', letterSpacing: '1px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {playerTitle.title.toUpperCase()}
-              </div>
-            )}
-            {/* Class */}
-            {playerClass && playerClass.id !== 'NOVICE' && (
-              <div className="neon-text px-2 py-0.5 rounded-sm flex items-center gap-1"
-                style={{ background: 'rgba(4,8,18,0.9)', border: `1px solid ${playerClass.color}88`, color: playerClass.color, fontSize: '6px', whiteSpace: 'nowrap' }}>
-                <GameIcon name={playerClass.icon} size={9} color={playerClass.color}/> {playerClass.name.toUpperCase()}
-              </div>
-            )}
-          </div>
-
-          {/* Name + XP — bottom overlay */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 6, padding: '0 16px 10px' }}>
             <input
               type="text"
               value={characterName}
               onChange={e => setCharacterName(e.target.value)}
               className="w-full text-center bg-transparent outline-none"
-              style={{ color: '#f1f5f9', fontFamily: 'Courier New', fontSize: '15px', fontWeight: 'bold', letterSpacing: '2px', borderBottom: `1px solid ${aura}44` }}
+              style={{
+                color: '#f1f5f9', fontFamily: 'Courier New',
+                fontSize: '15px', fontWeight: 'bold', letterSpacing: '2px',
+                borderBottom: `1px solid ${aura}55`,
+                textShadow: `0 0 12px ${aura}88`,
+              }}
               placeholder="HERO NAME"
             />
             <div className="mt-1.5">
-              <div className="h-2 w-full rounded-sm overflow-hidden" style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${aura}33` }}>
-                <div style={{ width: `${xpPct}%`, height: '100%', background: `linear-gradient(90deg, ${aura}88, ${aura})`, boxShadow: `0 0 6px ${aura}`, transition: 'width 1s ease' }} />
+              <div className="h-2 w-full rounded-sm overflow-hidden"
+                style={{ background: 'rgba(0,0,0,0.6)', border: `1px solid ${aura}33` }}>
+                <div style={{
+                  width: `${xpPct}%`, height: '100%',
+                  background: `linear-gradient(90deg, ${aura}77, ${aura})`,
+                  boxShadow: `0 0 8px ${aura}`, transition: 'width 1s ease',
+                }} />
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>{xpPct.toFixed(0)}%</span>
-                <span className="neon-text" style={{ color: '#334155', fontSize: '6px' }}>
+                <span className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>
+                  {xpPct.toFixed(0)}%
+                </span>
+                <span className="neon-text" style={{ color: '#475569', fontSize: '6px' }}>
                   {nextMilestone ? `→ LV.${nextMilestone}` : `LV.${level+1} — ${xpToNext.toFixed(0)} XP`}
                 </span>
               </div>
             </div>
           </div>
+
+          {/* ── LEFT equipment column ── */}
+          <div style={{
+            position: 'absolute', left: 10, top: '50%',
+            transform: 'translateY(-52%)', zIndex: 5,
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            {EQUIP_SLOTS.slice(0, 3).map(slot => (
+              <EquipSlot
+                key={slot.key} slot={slot} aura={aura}
+                item={equippedItems[slot.key] || null}
+                onUnequip={onUnequipItem || (() => {})}
+              />
+            ))}
+          </div>
+
+          {/* ── RIGHT equipment column ── */}
+          <div style={{
+            position: 'absolute', right: 10, top: '50%',
+            transform: 'translateY(-52%)', zIndex: 5,
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            {EQUIP_SLOTS.slice(3).map(slot => (
+              <EquipSlot
+                key={slot.key} slot={slot} aura={aura}
+                item={equippedItems[slot.key] || null}
+                onUnequip={onUnequipItem || (() => {})}
+              />
+            ))}
+          </div>
+
+          {/* ── Character sprite — feet pinned to rune circle ── */}
+          {/*
+              SVG uses preserveAspectRatio="xMidYMax slice":
+              bottom of SVG (y=700) always aligns to container bottom.
+              Rune center is at SVG y=545 → always 155px from container bottom.
+              We set bottom:155 so character feet land exactly on the rune.
+          */}
+          <div style={{
+            position: 'absolute',
+            left: '50%', bottom: 155,
+            transform: 'translateX(-50%)',
+            zIndex: 4,
+            width: 152,
+            overflow: 'visible',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+          }}>
+            <CharacterRenderer level={level} equippedItems={equippedItems} size={152} />
+          </div>
+
+          {/* ── Badge row: Level · Prestige · Title · Class ── */}
+          <div style={{
+            position: 'absolute', top: 10, left: 0, right: 0,
+            zIndex: 6, display: 'flex', justifyContent: 'center',
+            alignItems: 'center', gap: 5, flexWrap: 'wrap',
+            padding: '0 90px',
+            pointerEvents: 'none',
+          }}>
+            {/* Lv badge */}
+            <div className="neon-text px-2 py-0.5 rounded-sm"
+              style={{
+                background: 'rgba(4,8,18,0.88)',
+                border: `1px solid ${aura}88`, color: aura,
+                fontSize: '8px', textShadow: `0 0 8px ${aura}`,
+                whiteSpace: 'nowrap',
+              }}>
+              Lv.{level}
+            </div>
+            {prestige?.count > 0 && (
+              <div className="neon-text px-1.5 py-0.5 rounded-sm"
+                style={{ background: 'rgba(250,204,21,0.15)', border: '1px solid rgba(250,204,21,0.5)', color: '#facc15', fontSize: '7px' }}>
+                ★{prestige.count}
+              </div>
+            )}
+            {playerTitle && (
+              <div className="neon-text px-2 py-0.5 rounded-sm"
+                style={{ background: 'rgba(4,8,18,0.88)', border: `1px solid ${playerTitle.color}55`, color: playerTitle.color, fontSize: '6px', letterSpacing: '1px' }}>
+                {playerTitle.title.toUpperCase()}
+              </div>
+            )}
+            {playerClass && playerClass.id !== 'NOVICE' && (
+              <div className="neon-text px-2 py-0.5 rounded-sm flex items-center gap-1"
+                style={{ background: 'rgba(4,8,18,0.88)', border: `1px solid ${playerClass.color}77`, color: playerClass.color, fontSize: '6px' }}>
+                <GameIcon name={playerClass.icon} size={8} color={playerClass.color} />
+                {playerClass.name.toUpperCase()}
+              </div>
+            )}
+          </div>
+
+          {/* ── Inventory button — top right corner ── */}
+          <button
+            onClick={() => setShowInventory(true)}
+            className="neon-text flex items-center gap-1.5 px-2.5 py-1.5 rounded"
+            style={{
+              position: 'absolute', top: 10, right: 10, zIndex: 7,
+              background: 'rgba(4,8,18,0.85)',
+              border: '1px solid rgba(192,132,252,0.5)',
+              color: '#c084fc', fontSize: '7.5px', letterSpacing: '1px',
+              boxShadow: '0 0 12px rgba(192,132,252,0.25)',
+            }}
+          >
+            <GameIcon name="chest" size={12} color="#c084fc" />
+            BAG
+            {inventory.length > 0 && (
+              <span style={{
+                background: 'rgba(192,132,252,0.2)',
+                border: '1px solid rgba(192,132,252,0.4)',
+                borderRadius: 3, padding: '0 4px',
+                fontSize: '6.5px',
+              }}>
+                {inventory.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* ── Quick stats bar ──────────────────────── */}
-        <div className="grid grid-cols-4 gap-0" style={{ borderTop: `1px solid ${aura}22`, background: 'rgba(4,8,18,0.95)' }}>
-          {QUICK_STATS.map((s, i) => (
-            <div
-              key={s.label}
-              className="flex flex-col items-center py-3"
-              style={{ borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
-            >
-              <GameIcon name={s.icon} size={13} color={s.color} />
-              <div className="neon-text mt-1" style={{ color: s.color, fontSize: '11px', textShadow: `0 0 6px ${s.color}` }}>{s.val}</div>
-              <div className="neon-text" style={{ color: '#334155', fontSize: '6px', letterSpacing: '1px' }}>{s.label}</div>
-            </div>
-          ))}
+        {/* ══════════════════════════════════════════════════════════
+             BOTTOM STAT BAR — JRPG style
+        ══════════════════════════════════════════════════════════ */}
+        <div style={{
+          background: 'rgba(4,8,18,0.97)',
+          borderTop: `2px solid ${aura}33`,
+          backdropFilter: 'blur(8px)',
+        }}>
+          {/* Stat row */}
+          <div className="grid grid-cols-4 gap-0">
+            {QUICK_STATS.map((s, i) => (
+              <div
+                key={s.label}
+                className="flex flex-col items-center py-3"
+                style={{ borderRight: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
+              >
+                {/* Colored icon with glow */}
+                <div style={{ filter: `drop-shadow(0 0 4px ${s.color})` }}>
+                  <GameIcon name={s.icon} size={14} color={s.color} />
+                </div>
+                <div className="neon-text mt-1" style={{
+                  color: s.color, fontSize: '12px', fontWeight: 'bold',
+                  textShadow: `0 0 8px ${s.color}88`,
+                }}>
+                  {s.val}
+                </div>
+                <div className="neon-text" style={{ color: '#334155', fontSize: '6px', letterSpacing: '1.5px' }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── Streak + class row ──────────────────── */}
@@ -940,40 +1087,16 @@ export default function CharacterTab({
           </div>
         </div>
 
-        {/* ── Inventory button (opens modal) ─────────────── */}
-        <div className="px-4 mb-4">
-          <button
-            onClick={() => setShowInventory(true)}
-            className="w-full flex items-center justify-between py-3 px-3 rounded-sm pixel-btn"
-            style={{
-              background: 'linear-gradient(135deg, rgba(192,132,252,0.12), rgba(192,132,252,0.04))',
-              border: '1px solid rgba(192,132,252,0.35)',
-            }}
-          >
-            <div className="neon-text flex items-center gap-2" style={{ color: '#c084fc', fontSize: '8px', letterSpacing: '2px' }}>
-              <GameIcon name="chest" size={14} color="#c084fc" />
-              INVENTORY
-              {inventory.length > 0 && (
-                <span className="neon-text px-1.5 py-0.5 rounded-sm"
-                  style={{ background: 'rgba(192,132,252,0.2)', border: '1px solid rgba(192,132,252,0.4)', fontSize: '7px', color: '#c084fc' }}>
-                  {inventory.length}
-                </span>
-              )}
-            </div>
-            <div className="neon-text" style={{ color: '#c084fc', fontSize: '10px' }}>→</div>
-          </button>
-
-          {/* Inventory popup modal */}
-          {showInventory && (
-            <InventoryModal
-              inventory={inventory}
-              equippedItems={equippedItems}
-              onEquip={onEquipItem}
-              onUnequip={onUnequipItem}
-              onClose={() => setShowInventory(false)}
-            />
-          )}
-        </div>
+        {/* ── Inventory modal (triggered by BAG button in hero stage) ── */}
+        {showInventory && (
+          <InventoryModal
+            inventory={inventory}
+            equippedItems={equippedItems}
+            onEquip={onEquipItem}
+            onUnequip={onUnequipItem}
+            onClose={() => setShowInventory(false)}
+          />
+        )}
 
         <div className="px-4">
 
@@ -1138,7 +1261,7 @@ export default function CharacterTab({
           <div className="neon-text mb-2" style={{ color: '#334155', fontSize: '7px', letterSpacing: '3px' }}>HOW STATS WORK</div>
           {Object.entries(STAT_INFO).map(([key, info]) => (
             <div key={key} className="py-1 flex gap-2 items-start">
-              <span style={{ fontSize: '12px' }}>{info.icon}</span>
+              <GameIcon name={info.icon} size={12} color={info.color} />
               <span className="neon-text" style={{ color: info.color, fontSize: '7px', minWidth: '28px' }}>{info.label}</span>
               <span className="neon-text" style={{ color: '#334155', fontSize: '7px' }}>{info.desc}</span>
             </div>

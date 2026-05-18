@@ -3,7 +3,7 @@ import { ELEMENT_THEMES, MUSCLE_COLORS } from '../constants';
 import { useT } from '../i18n/LangContext';
 import { DungeonScene } from './PixelScene';
 import GameIcon from './GameIcon';
-import { generateDailyBoss, generateTrainingBoss, generateLeagueBoss } from '../utils/bossGenerator';
+import { generateDailyBoss, generateTrainingBoss, generateLeagueBoss, withBattleVariance } from '../utils/bossGenerator';
 import { getLevel, getPlayerBattleStats, getTodayKey, getDateKey } from '../utils/gameLogic';
 import BossSprite from './BossSprite';
 import BattleArena from './BattleArena';
@@ -407,6 +407,7 @@ export default function BossTab({
   equippedClothing = {}, equippedItems = {},
   onBossCleared, onBossDefeat, todayKey, leagueKills = 0, onLeagueBossDefeated,
   onLootEarned, purchasedSkills = [], classBonuses = {}, skillTreeStats = {},
+  dungeonMMR = 0, onDungeonComplete,
 }) {
   const t = useT();
   const currentDayKey = todayKey || getTodayKey();
@@ -473,6 +474,14 @@ export default function BossTab({
   }
 
   if (inDungeon) {
+    const mmrTier   = Math.floor(Math.min(5000, Math.max(0, dungeonMMR)) / 100); // 0-50
+    const mmrDiff   = 1 + mmrTier * 0.08; // 1.0× at 0 MMR → 5.0× at 5000 MMR
+    const baseBoss  = generateTrainingBoss(playerLevel, Date.now());
+    const scaledBoss = {
+      ...baseBoss,
+      maxHP: Math.round(baseBoss.maxHP * mmrDiff),
+      atk:   Math.round(baseBoss.atk   * mmrDiff),
+    };
     return (
       <DungeonRun
         muscleXP={muscleXP}
@@ -482,7 +491,8 @@ export default function BossTab({
         equippedItems={equippedItems}
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
-        finalBoss={generateTrainingBoss(playerLevel, Date.now())}
+        finalBoss={withBattleVariance(scaledBoss)}
+        mmrTier={mmrTier}
         purchasedSkills={purchasedSkills}
         classBonuses={classBonuses}
         skillTreeStats={skillTreeStats}
@@ -491,6 +501,7 @@ export default function BossTab({
           setInDungeon(false);
           setDungeonResult(won ? 'win' : 'lose');
           setTimeout(() => setDungeonResult(null), 4000);
+          if (onDungeonComplete) onDungeonComplete(won);
         }}
         onClose={() => setInDungeon(false)}
       />
@@ -500,7 +511,7 @@ export default function BossTab({
   if (inBattle) {
     return (
       <BattleArena
-        boss={boss}
+        boss={withBattleVariance(boss)}
         muscleXP={muscleXP}
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
@@ -520,7 +531,7 @@ export default function BossTab({
   if (inTraining && trainingBoss) {
     return (
       <BattleArena
-        boss={trainingBoss}
+        boss={withBattleVariance(trainingBoss)}
         muscleXP={muscleXP}
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}
@@ -541,7 +552,7 @@ export default function BossTab({
   if (inLeague) {
     return (
       <BattleArena
-        boss={leagueBoss}
+        boss={withBattleVariance(leagueBoss)}
         muscleXP={muscleXP}
         playerLevel={playerLevel}
         todayMuscles={todayMuscles}

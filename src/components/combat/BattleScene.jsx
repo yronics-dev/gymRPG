@@ -240,6 +240,291 @@ function Fan({ f }) {
   );
 }
 
+// ── Element-based battle arena backgrounds ───────────────────────────────────
+function BgArena({ color }) {
+  return (
+    <svg viewBox="0 0 360 260" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"
+      style={{ position:'absolute', inset:0, imageRendering:'pixelated' }} shapeRendering="crispEdges">
+      <rect width="360" height="260" fill="#1a6fd4"/>
+      {[0,40,80,120].map((y,i)=>(
+        <rect key={i} x="0" y={y} width="360" height="40" fill={['#2278d8','#2880e0','#3088e4','#48a0f0'][i]}/>
+      ))}
+      {/* Sun */}
+      <rect x="290" y="8" width="36" height="36" fill="#ffd832"/>
+      <rect x="294" y="12" width="28" height="28" fill="#ffe448"/>
+      {/* Stone wall rows */}
+      {[0,1,2].map(row=>(
+        <React.Fragment key={row}>
+          {[0,48,96,144,192,240,288,336].map((x,ci)=>(
+            <rect key={ci} x={x+(row%2)*24} y={140+row*24} width="46" height="22"
+              fill={row%2===0?'#a08850':'#987e44'} stroke="#6a5830" strokeWidth="1"/>
+          ))}
+        </React.Fragment>
+      ))}
+      {/* Sand floor */}
+      <rect x="0" y="210" width="360" height="50" fill="#c8922a"/>
+      {[0,60,120,180,240,300].map((x,i)=>(
+        <rect key={i} x={x} y="210" width="58" height="50" fill={i%2===0?'#d4a030':'#c0851e'}/>
+      ))}
+      {/* Torches */}
+      {[18, 326].map((tx,i)=>(
+        <g key={i}>
+          <rect x={tx}   y="168" width="6" height="14" fill="#5c3010"/>
+          <rect x={tx-2} y="154" width="10" height="16" fill="#f08020"/>
+          <rect x={tx}   y="150" width="6" height="8"   fill="#ffc040"/>
+        </g>
+      ))}
+      <ellipse cx="180" cy="222" rx="60" ry="8" fill="#d4a030" opacity="0.4"/>
+    </svg>
+  );
+}
+
+function BgDungeon({ color }) {
+  return (
+    <svg viewBox="0 0 360 260" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"
+      style={{ position:'absolute', inset:0, imageRendering:'pixelated' }} shapeRendering="crispEdges">
+      <rect width="360" height="260" fill="#0a0810"/>
+      {[0,40,80,120,160].map((y,i)=>(
+        <rect key={i} x="0" y={y} width="360" height="40" fill={['#0c0c18','#0e0e1c','#100f20','#121022','#141224'][i]}/>
+      ))}
+      {/* Brick walls */}
+      {[0,1,2,3].map(row=>(
+        <React.Fragment key={row}>
+          {[0,48,96,144,192,240,288,336].map((x,ci)=>(
+            <rect key={ci} x={x+(row%2)*24} y={60+row*24} width="46" height="22"
+              fill={row%2===0?'#1a1420':'#181220'} stroke="#0a0810" strokeWidth="1"/>
+          ))}
+        </React.Fragment>
+      ))}
+      {/* Stalactites */}
+      {[20,70,130,185,240,295,340].map((x,i)=>(
+        <rect key={i} x={x} y="0" width={8+(i%3)*4} height={20+(i%3)*12} fill="#1c1828"/>
+      ))}
+      {/* Dark arched door */}
+      <rect x="145" y="80" width="70" height="130" fill="#040208"/>
+      <rect x="145" y="80" width="70" height="130" fill={color} opacity="0.05"/>
+      {/* Poison puddles */}
+      <ellipse cx="100" cy="235" rx="28" ry="7" fill="#1a4a06" opacity="0.8"/>
+      <ellipse cx="260" cy="238" rx="22" ry="6" fill="#1a4a06" opacity="0.7"/>
+      {/* Floor */}
+      <rect x="0" y="220" width="360" height="40" fill="#100e18"/>
+      {[0,60,120,180,240,300].map((x,i)=>(
+        <rect key={i} x={x} y="220" width="58" height="40" fill={i%2===0?'#161220':'#120e1c'} stroke="#0a0810" strokeWidth="1"/>
+      ))}
+      {/* Skulls */}
+      {[40,300].map((sx,i)=>(
+        <g key={i}>
+          <rect x={sx}    y="155" width="20" height="18" fill="#1e1a28"/>
+          <rect x={sx+4}  y="159" width="6"  height="6"  fill={color} opacity="0.8"/>
+          <rect x={sx+10} y="159" width="6"  height="6"  fill={color} opacity="0.8"/>
+        </g>
+      ))}
+      {/* Torches */}
+      {[60, 290].map((tx,i)=>(
+        <g key={i}>
+          <rect x={tx}   y="120" width="6" height="12" fill="#2a2030"/>
+          <rect x={tx-2} y="106" width="10" height="16" fill="#8c2c00"/>
+          <rect x={tx}   y="102" width="6" height="8"   fill="#e06020"/>
+        </g>
+      ))}
+      <rect x="0" y="0" width="360" height="260" fill={color} opacity="0.04"/>
+    </svg>
+  );
+}
+
+function BgTemple({ color }) {
+  return (
+    <svg viewBox="0 0 360 260" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"
+      style={{ position:'absolute', inset:0, imageRendering:'pixelated' }} shapeRendering="crispEdges">
+      <rect width="360" height="260" fill="#1a0400"/>
+      {[0,40,80,120,160].map((y,i)=>(
+        <rect key={i} x="0" y={y} width="360" height="40" fill={['#200800','#280c00','#2e0e02','#341204','#3c1608'][i]}/>
+      ))}
+      {/* Stone temple walls */}
+      {[0,1,2,3].map(row=>(
+        <React.Fragment key={row}>
+          {[0,48,96,144,192,240,288,336].map((x,ci)=>(
+            <rect key={ci} x={x+(row%2)*24} y={60+row*24} width="46" height="22"
+              fill={row%2===0?'#3a1c0c':'#301408'} stroke="#1a0c04" strokeWidth="1"/>
+          ))}
+        </React.Fragment>
+      ))}
+      {/* Idol silhouette */}
+      <rect x="155" y="70" width="50" height="110" fill="#3c1c08"/>
+      <rect x="163" y="62" width="34" height="32"  fill="#3c1c08"/>
+      <rect x="171" y="74" width="8"  height="8"   fill="#e84000" opacity="0.9"/>
+      <rect x="185" y="74" width="8"  height="8"   fill="#e84000" opacity="0.9"/>
+      {/* Braziers */}
+      {[70, 270].map((fx,i)=>(
+        <g key={i}>
+          <rect x={fx-2} y="155" width="20" height="12" fill="#6a3018"/>
+          <rect x={fx+2} y="135" width="12" height="22" fill="#c04000"/>
+          <rect x={fx+4} y="128" width="8"  height="10" fill="#e06020"/>
+          <rect x={fx+5} y="124" width="6"  height="6"  fill="#ffd060"/>
+        </g>
+      ))}
+      {/* Lava floor */}
+      <rect x="0" y="218" width="360" height="42" fill="#8c1c00"/>
+      {[0,60,120,180,240,300].map((x,i)=>(
+        <rect key={i} x={x} y="218" width="58" height="42" fill={i%2===0?'#c43000':'#b02800'}/>
+      ))}
+      {[20,80,160,240,310].map((x,i)=>(
+        <ellipse key={i} cx={x} cy="228" rx={18+(i%3)*6} ry="5" fill="#f06020" opacity="0.6"/>
+      ))}
+      <rect x="0" y="0" width="360" height="260" fill={color} opacity="0.05"/>
+    </svg>
+  );
+}
+
+function BgCrystal({ color }) {
+  return (
+    <svg viewBox="0 0 360 260" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"
+      style={{ position:'absolute', inset:0, imageRendering:'pixelated' }} shapeRendering="crispEdges">
+      <rect width="360" height="260" fill="#04060e"/>
+      {[0,40,80,120,160].map((y,i)=>(
+        <rect key={i} x="0" y={y} width="360" height="40" fill={['#06080f','#080c14','#0a1018','#0c121c','#0e1420'][i]}/>
+      ))}
+      {/* Stone walls */}
+      {[0,1,2].map(row=>(
+        <React.Fragment key={row}>
+          {[0,48,96,144,192,240,288,336].map((x,ci)=>(
+            <rect key={ci} x={x+(row%2)*24} y={80+row*24} width="46" height="22"
+              fill={row%2===0?'#0e1828':'#0c1424'} stroke="#060a14" strokeWidth="1"/>
+          ))}
+        </React.Fragment>
+      ))}
+      {/* Crystal formations */}
+      {[30,80,130,220,280,330].map((x,i)=>(
+        <g key={i}>
+          <rect x={x} y={120-(i%3)*20} width={12+(i%2)*8} height={60+(i%3)*20} fill={i%2===0?'#3030d0':'#6020b0'}/>
+          <rect x={x+2} y={122-(i%3)*20} width={8+(i%2)*4} height={56+(i%3)*20} fill={i%2===0?'#5050f0':'#8040d0'}/>
+        </g>
+      ))}
+      {/* Central shrine */}
+      <rect x="160" y="80" width="40" height="140" fill="#3030c0"/>
+      <rect x="164" y="82" width="32" height="136" fill="#5050e0"/>
+      <rect x="164" y="82" width="6"  height="60"  fill="#a0b0ff" opacity="0.3"/>
+      <ellipse cx="180" cy="220" rx="50" ry="10" fill="#3030d0" opacity="0.5"/>
+      {/* Icicles from ceiling */}
+      {[20,70,130,200,260,310,350].map((x,i)=>(
+        <rect key={i} x={x} y="0" width={8+(i%3)*4} height={18+(i%3)*14} fill={i%2===0?'#2020a0':'#5020a0'}/>
+      ))}
+      {/* Floor */}
+      <rect x="0" y="218" width="360" height="42" fill="#080c1c"/>
+      {[0,60,120,180,240,300].map((x,i)=>(
+        <rect key={i} x={x} y="218" width="58" height="42" fill={i%2===0?'#0c1028':'#0a0e22'} stroke="#060810" strokeWidth="1"/>
+      ))}
+      {[20,100,200,290].map((x,i)=>(
+        <rect key={i} x={x} y="218" width="2" height="42" fill={color} opacity="0.5"/>
+      ))}
+      <rect x="0" y="0" width="360" height="260" fill={color} opacity="0.04"/>
+    </svg>
+  );
+}
+
+function BgFrozen({ color }) {
+  return (
+    <svg viewBox="0 0 360 260" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"
+      style={{ position:'absolute', inset:0, imageRendering:'pixelated' }} shapeRendering="crispEdges">
+      <rect width="360" height="260" fill="#020810"/>
+      {[0,40,80,120,160].map((y,i)=>(
+        <rect key={i} x="0" y={y} width="360" height="40" fill={['#040c18','#060e1c','#081020','#0a1224','#0c1628'][i]}/>
+      ))}
+      {/* Aurora bands */}
+      {[
+        {x:0,   y:10, w:140, h:50, c:'#003838', op:0.5},
+        {x:80,  y:5,  w:120, h:60, c:'#001840', op:0.4},
+        {x:180, y:12, w:110, h:45, c:'#200030', op:0.4},
+        {x:260, y:8,  w:100, h:55, c:'#003020', op:0.4},
+      ].map((a,i)=>(
+        <rect key={i} x={a.x} y={a.y} width={a.w} height={a.h} fill={a.c} opacity={a.op}/>
+      ))}
+      {/* Ice walls */}
+      {[0,1,2].map(row=>(
+        <React.Fragment key={row}>
+          {[0,50,100,150,200,250,300].map((x,ci)=>(
+            <rect key={ci} x={x+(row%2)*25} y={80+row*28} width="48" height="26"
+              fill={row%2===0?'#0e2238':'#0a1e34'} stroke="#061628" strokeWidth="1"/>
+          ))}
+        </React.Fragment>
+      ))}
+      {/* Frozen creature silhouette */}
+      <rect x="150" y="90"  width="60" height="90"  fill="#102040" opacity="0.8"/>
+      <rect x="158" y="84"  width="44" height="30"  fill="#102040" opacity="0.8"/>
+      <rect x="130" y="105" width="24" height="14"  fill="#102040" opacity="0.7"/>
+      <rect x="206" y="105" width="24" height="14"  fill="#102040" opacity="0.7"/>
+      <rect x="168" y="94"  width="8"  height="8"   fill="#00e0ff" opacity="0.9"/>
+      <rect x="184" y="94"  width="8"  height="8"   fill="#00e0ff" opacity="0.9"/>
+      <rect x="150" y="90"  width="60" height="90"  fill="#4080b0" opacity="0.1"/>
+      {/* Icicles from ceiling */}
+      {[15,60,110,165,210,260,310,350].map((x,i)=>(
+        <React.Fragment key={i}>
+          <rect x={x}   y="0" width={10+(i%3)*4} height={22+(i%3)*14} fill="#1a3a5c"/>
+          <rect x={x+2} y="2" width={4+(i%3)*2}  height={18+(i%3)*10} fill="#3060a0"/>
+        </React.Fragment>
+      ))}
+      {/* Frost floor */}
+      <rect x="0" y="220" width="360" height="40" fill="#0a1e34"/>
+      {[0,60,120,180,240,300].map((x,i)=>(
+        <rect key={i} x={x} y="220" width="58" height="40" fill={i%2===0?'#0e2440':'#0a1e38'} stroke="#061628" strokeWidth="1"/>
+      ))}
+      {[30,120,210,300].map((x,i)=>(
+        <ellipse key={i} cx={x} cy="222" rx={20+(i%3)*8} ry="4" fill={color} opacity="0.3"/>
+      ))}
+      <rect x="0" y="0" width="360" height="260" fill={color} opacity="0.04"/>
+    </svg>
+  );
+}
+
+function BgWind({ color }) {
+  return (
+    <svg viewBox="0 0 360 260" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"
+      style={{ position:'absolute', inset:0, imageRendering:'pixelated' }} shapeRendering="crispEdges">
+      <rect width="360" height="260" fill="#022c22"/>
+      {[0,40,80,120].map((y,i)=>(
+        <rect key={i} x="0" y={y} width="360" height="40" fill={['#064e3b','#065f46','#047857','#059669'][i]} opacity="0.7"/>
+      ))}
+      {[20,60,100,150,200,260,310].map((x,i)=>(
+        <rect key={i} x={x} y={30+(i%4)*18} width={40+(i%3)*20} height="2" fill={color} opacity="0.2"/>
+      ))}
+      {[30,140,240].map((x,i)=>(
+        <g key={i}>
+          <rect x={x} y={100+(i%2)*30} width="80" height="20" fill="#065f46" opacity="0.9"/>
+          <rect x={x+5} y={96+(i%2)*30} width="70" height="16" fill="#047857" opacity="0.7"/>
+        </g>
+      ))}
+      {[0,1,2,3].map(row=>(
+        <React.Fragment key={row}>
+          {[0,52,104,156,208,260,312].map((x,ci)=>(
+            <rect key={ci} x={x+(row%2)*26} y={140+row*24} width="50" height="22"
+              fill={row%2===0?'#065f46':'#047857'} stroke="#022c22" strokeWidth="1" opacity="0.8"/>
+          ))}
+        </React.Fragment>
+      ))}
+      <rect x="0" y="218" width="360" height="42" fill="#065f46" opacity="0.95"/>
+      {[0,50,110,180,240,300].map((x,i)=>(
+        <rect key={i} x={x} y="218" width="48" height="42" fill={i%2===0?'#047857':'#065f46'}/>
+      ))}
+      {[40,120,200,290].map((x,i)=>(
+        <ellipse key={i} cx={x} cy="218" rx={25+(i%2)*10} ry="8" fill="#10b981" opacity="0.4"/>
+      ))}
+      <rect x="0" y="0" width="360" height="260" fill={color} opacity="0.04"/>
+    </svg>
+  );
+}
+
+function CombatBackground({ element, color }) {
+  const map = {
+    Fire: BgTemple, Lava: BgTemple,
+    Ice: BgFrozen, Storm: BgFrozen, Water: BgFrozen,
+    Shadow: BgDungeon, Void: BgDungeon, Blood: BgDungeon, Poison: BgDungeon,
+    Thunder: BgArena, Earth: BgArena, Wind: BgWind,
+    Crystal: BgCrystal, Electric: BgCrystal,
+  };
+  const Bg = map[element] || BgArena;
+  return <Bg color={color}/>;
+}
+
 function StadiumCrowd({ themeColor, bossHPPct, playerHPPct, phase }) {
   const excited = phase === 'victory' || bossHPPct < 30 || playerHPPct < 25;
   const rowDefs = [
@@ -935,12 +1220,15 @@ export default function BattleScene({
       <div ref={arenaRef} style={{
         position: 'relative', height: 260, flexShrink: 0, overflow: 'hidden',
         margin: '10px 12px 0',
-        background: `linear-gradient(135deg, ${themeBg}dd 0%, #05080f 100%)`,
         border: `1px solid ${themeColor}44`,
         borderRadius: 8,
         boxShadow: `0 0 32px ${themeGlow}, inset 0 0 60px rgba(0,0,0,0.5)`,
         transform: 'translateZ(0)',
       }}>
+        {/* Element-based pixel-art background */}
+        <CombatBackground element={boss.element} color={themeColor}/>
+        {/* Dark overlay to keep fighters readable */}
+        <div style={{ position:'absolute', inset:0, background:`${themeBg}55`, pointerEvents:'none', zIndex:0 }}/>
         {/* Scanline overlay inside box */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,

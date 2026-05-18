@@ -131,14 +131,66 @@ export function generateLootItem(seed) {
   };
 }
 
-// ─── Generate chest loot (1-2 items) ─────────────────────────────────────────
-export function generateChestLoot(dungeonSeed, doubleLoot = false) {
-  const item1 = generateLootItem(dungeonSeed);
-  if (doubleLoot || item1.rarity === 'Legendary' || item1.rarity === 'Epic') {
-    const item2 = generateLootItem(dungeonSeed + 88888);
-    return [item1, item2];
+// ─── Generate chest loot (MMR-aware) ─────────────────────────────────────────
+// mmrTier = Math.floor(dungeonMMR / 100), range 0-50.
+// tier 0-9:  1 item, normal rarity
+// tier 10-19: 2 items
+// tier 20-29: 2 items, 1 forced Rare+
+// tier 30-39: 3 items, 1 forced Epic+
+// tier 40-50: 3 items, 1 forced Legendary (best effort)
+export function generateChestLoot(dungeonSeed, mmrTier = 0) {
+  const tier = Math.max(0, Math.min(50, mmrTier));
+
+  // How many items to drop
+  const count = tier >= 30 ? 3 : tier >= 10 ? 2 : 1;
+
+  const items = [];
+  for (let i = 0; i < count; i++) {
+    items.push(generateLootItem(dungeonSeed + i * 88888));
   }
-  return [item1];
+
+  // Force rarity upgrade on the first item based on tier
+  if (tier >= 40 && items[0]) {
+    const legendary = LOOT_RARITIES.find(r => r.name === 'Legendary');
+    if (legendary) {
+      const m = legendary.mult;
+      const base = items[0];
+      items[0] = { ...base, rarity: 'Legendary', rarityColor: legendary.color, rarityGlow: legendary.glow,
+        atk: Math.round((base.atk || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+        def: Math.round((base.def || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+        hp:  Math.round((base.hp  || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+        name: base.name.replace(/^(Common|Uncommon|Rare|Epic|Legendary) /, `Legendary `),
+      };
+    }
+  } else if (tier >= 30 && items[0]) {
+    const epic = LOOT_RARITIES.find(r => r.name === 'Epic');
+    if (epic && !['Epic','Legendary'].includes(items[0].rarity)) {
+      const m = epic.mult;
+      const base = items[0];
+      items[0] = { ...base, rarity: 'Epic', rarityColor: epic.color, rarityGlow: epic.glow,
+        atk: Math.round((base.atk || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+        def: Math.round((base.def || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+        hp:  Math.round((base.hp  || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+        name: base.name.replace(/^(Common|Uncommon|Rare|Epic|Legendary) /, `Epic `),
+      };
+    }
+  } else if (tier >= 20 && items[0]) {
+    if (['Common','Uncommon'].includes(items[0].rarity)) {
+      const rare = LOOT_RARITIES.find(r => r.name === 'Rare');
+      if (rare) {
+        const m = rare.mult;
+        const base = items[0];
+        items[0] = { ...base, rarity: 'Rare', rarityColor: rare.color, rarityGlow: rare.glow,
+          atk: Math.round((base.atk || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+          def: Math.round((base.def || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+          hp:  Math.round((base.hp  || 0) / (LOOT_RARITIES.find(r=>r.name===base.rarity)?.mult||1) * m),
+          name: base.name.replace(/^(Common|Uncommon|Rare|Epic|Legendary) /, `Rare `),
+        };
+      }
+    }
+  }
+
+  return items;
 }
 
 // ─── Post-workout loot roll ────────────────────────────────────────────────────

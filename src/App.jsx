@@ -80,6 +80,7 @@ export default function App() {
   const [characterName, setCharacterName] = useLocalStorage(`${u}gymrpg_character_name`, 'Hero');
   const [timerTotal, setTimerTotal]     = useLocalStorage(`${u}gymrpg_timer_duration`, DEFAULT_TIMER);
   const [language, setLanguage]         = useLocalStorage(`gymrpg_language`, 'en');
+  const [dungeonMMR, setDungeonMMR]     = useLocalStorage(`${u}gymrpg_dungeon_mmr`, 0);
 
   // Stat upgrades purchased with gold
   const [statUpgrades, setStatUpgrades] = useLocalStorage(`${u}gymrpg_stat_upgrades`, {
@@ -545,6 +546,10 @@ export default function App() {
         purchasedSkills={purchasedSkills}
         classBonuses={classBonuses}
         skillTreeStats={skillTree.derivedStats}
+        dungeonMMR={dungeonMMR}
+        onDungeonComplete={(won) =>
+          setDungeonMMR(prev => Math.min(5000, Math.max(0, prev + (won ? 5 : -5))))
+        }
       />
     ),
     skills: (

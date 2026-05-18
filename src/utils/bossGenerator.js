@@ -145,3 +145,18 @@ export function generateLeagueBoss(playerLevel = 1, killCount = 0) {
     maxHP, atk, speed, level: lvl, diffMult: scaleMult, diffLabel, scaleMult, tier,
   };
 }
+
+// Applies a fresh ±5% random variance to a boss's HP and ATK each battle.
+// Returns a new boss object — the original is unchanged so the card still
+// shows the base stats; only the actual fight gets the roll.
+export function withBattleVariance(boss) {
+  const roll = () => 0.95 + Math.random() * 0.10; // uniform [0.95, 1.05]
+  const hpMult  = roll();
+  const atkMult = roll();
+  return {
+    ...boss,
+    maxHP: Math.max(1, Math.round(boss.maxHP * hpMult)),
+    atk:   Math.max(1, Math.round(boss.atk   * atkMult)),
+    battleVariance: { hp: hpMult, atk: atkMult }, // keep for debug / display
+  };
+}
